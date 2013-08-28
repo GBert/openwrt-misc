@@ -1,0 +1,2 @@
+sml/include/* /usr/include
+sml.pc /usr/lib/pkgconfig

@@ -1,0 +1,13 @@
+prefix=/usr 
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: libSML
+Description: Library for the Smart Messaging Language (SML)
+Version: 0.1
+URL: http://github.com/dailab/libsml
+Requires: uuid >= 2.16
+Libs: -L${libdir} -lsml
+Libs.private: -luuid
+Cflags: -I${includedir}/sml
