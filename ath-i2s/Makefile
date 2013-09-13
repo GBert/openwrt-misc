@@ -15,8 +15,8 @@ include $(INCLUDE_DIR)/package.mk
 
 define KernelPackage/ath-i2s
   SUBMENU:=Other modules
-  TITLE:=Atheros 934x I2S module
-  DEPENDS:=@GPIO_SUPPORT
+  TITLE:=Atheros 934X I2S module
+  DEPENDS:=
   FILES:=$(PKG_BUILD_DIR)/ath_i2s.ko
   KCONFIG:=
 endef
