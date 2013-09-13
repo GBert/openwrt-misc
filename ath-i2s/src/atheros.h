@@ -7,7 +7,7 @@
 #include <linux/compiler.h>
 #include <linux/types.h>
 #include <asm/addrspace.h>
-#include <linux/autoconf.h>
+// #include <linux/autoconf.h>
 
 /*
  * Set everything to zero. The corresponding header will
@@ -94,7 +94,7 @@ typedef unsigned int ath_reg_t;
 #define OFS_DIVISOR_LSB		(0 * REG_OFFSET)
 #define OFS_DIVISOR_MSB		(1 * REG_OFFSET)
 
-#if defined(CONFIG_MACH_AR724x)
+/* #if defined(CONFIG_MACH_AR724x)
 #	include <724x.h>
 #elif defined(CONFIG_MACH_AR933x)
 #	include <933x.h>
@@ -103,7 +103,7 @@ typedef unsigned int ath_reg_t;
 #else
 #	error "Building atheros BSP for unknown device"
 #endif
-
+*/
 /*
  * GPIO Access & Control
  */
@@ -168,7 +168,7 @@ int ath_i2c_raw_read_bytes_from_addr(int addr, unsigned char *buffer, int count)
  * ath_spi_disable_soft_acess(); ------- enable HW control of SPI bus
  * ath_spi_up(); ----------------------- enable others to access SPI bus releasing semaphore
  */
-void ath_spi_init(void);
+/*void ath_spi_init(void);
 void ath_spi_down(void);
 void ath_spi_up(void);
 
@@ -193,11 +193,11 @@ unsigned int ath_spi_raw_input_u32(void);
 void ath_spi_flash_read_page(unsigned int addr, unsigned char *data, int len);
 void ath_spi_flash_write_page(unsigned int addr, unsigned char *data, int len);
 void ath_spi_flash_sector_erase(unsigned int addr);
-
+*/
 /*
  * Allow access to cs0-2 when GPIO Function enables cs0-2 through SPI register.
  */
-static inline void
+/*static inline void
 ath_spi_enable_cs0(void)
 {
 	unsigned int cs;
@@ -236,10 +236,11 @@ ath_spi_disable_cs(void)
 	ath_spi_disable_soft_access();
 	ath_spi_up();
 }
-
+*/
 /*
  * Example usage to access BOOT flash
  */
+/*
 static inline void
 ath_spi_flash_cs0_sector_erase(unsigned int addr)
 {
@@ -255,7 +256,7 @@ ath_spi_flash_cs0_write_page(unsigned int addr, unsigned char *data, int len)
 	ath_spi_flash_write_page(addr, data, len);
 	ath_spi_disable_cs();
 }
-
+*/
 
 /* Low-level routines */
 void ath_dma_addr_wr(int chan, unsigned int val);
@@ -335,9 +336,9 @@ unsigned char __ath_readb(const volatile void __iomem *p);
 unsigned short __ath_readw(const volatile void __iomem *p);
 void ap_usb_led_on(void);
 void ap_usb_led_off(void);
-
+/*
 #ifdef CONFIG_PCI
 void ath_pci_irq_init(int);
 #endif
-
+i*/
 #endif /* _ATHEROS_H */

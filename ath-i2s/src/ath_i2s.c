@@ -12,7 +12,7 @@
 #include <linux/fcntl.h>	/* O_ACCMODE */
 #include <linux/seq_file.h>
 #include <linux/cdev.h>
-#include <asm/system.h>		/* cli(), *_flags */
+// #include <asm/system.h>		/* cli(), *_flags */
 #include <asm/uaccess.h>	/* copy_*_user */
 #include <asm/io.h>
 #include <linux/dma-mapping.h>
@@ -21,7 +21,7 @@
 
 #include "atheros.h"
 #include "934x.h"
-#include ":qath_i2s.h"
+#include "ath_i2s.h"
 
 #undef AOW 
 #undef USE_MEMCPY
