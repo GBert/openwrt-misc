@@ -16,6 +16,7 @@
 #include <linux/platform_device.h>
 #include <linux/serial_core.h>
 #include <linux/console.h>
+#include <linux/tty_flip.h>
 
 #include "934x.h"
 #include "atheros.h"
