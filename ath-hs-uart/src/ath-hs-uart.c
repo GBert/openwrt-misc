@@ -17,7 +17,7 @@
 #include <linux/serial_core.h>
 #include <linux/console.h>
 
-#include <atheros.h>
+#include "atheros.h"
 
 typedef struct {
 	struct tty_driver	*tty;
