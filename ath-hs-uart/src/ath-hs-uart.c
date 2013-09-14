@@ -17,6 +17,7 @@
 #include <linux/serial_core.h>
 #include <linux/console.h>
 
+#include "934x.h"
 #include "atheros.h"
 
 typedef struct {
