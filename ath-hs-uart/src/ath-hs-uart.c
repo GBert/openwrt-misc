@@ -18,6 +18,7 @@
 #include <linux/console.h>
 #include <linux/tty_flip.h>
 
+#define CONFIG_ATH_HS_UART 1
 #include "934x.h"
 #include "atheros.h"
 

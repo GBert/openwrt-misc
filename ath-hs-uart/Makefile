@@ -17,7 +17,7 @@ define KernelPackage/ath-hs-uart
   SUBMENU:=Other modules
   TITLE:=Atheros 934X High Speed Uart
   DEPENDS:=
-  FILES:=$(PKG_BUILD_DIR)/ath_hs-uart.ko
+  FILES:=$(PKG_BUILD_DIR)/ath-hs-uart.ko
   KCONFIG:=
 endef
 
