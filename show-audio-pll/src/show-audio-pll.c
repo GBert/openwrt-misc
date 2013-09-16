@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
         die_errno("mmio_map() failed");
 
     audio_pll_config = mmio_readl(&pll_io, 0x30);
-    audio_pll_modulation = mmio_readl(&pll_io, 0x3c);  
+    audio_pll_modulation = mmio_readl(&pll_io, 0x34);  
     
     mmio_unmap(&pll_io);
 
