@@ -22,13 +22,18 @@ int main(int argc, char **argv) {
     if (mmio_map(&pll_io, ATH_PLL_CONFIG, ATH_PLL_MAX))
         die_errno("mmio_map() failed");
 
+    printf("mmio_map done\n");
     mmio_unmap(&pll_io);
+    printf("unmap mmio_map done\n");
 
 /*  <PLL frequency> = <REFCLK frequency>/ REFDIV * (DIV_INT = DIV_FRAC/(2<<18-1))/2<<POSTPLLDIV
     <MCLK Frequency> = <PLL Frequency>/EXT_DIV F_mclk = (F_REFCLK/REFDIV) * (NINT.NFRAC)/((2<<POSTPLLPWD) * (EXT_DIV))
 */
-    audio_pll_config = mmio_readl(&pll_io, 0x30);
-    audio_pll_modulation = mmio_readl(&pll_io, 0x3c);  
+    printf("read regs\n");
+    
+    audio_pll_config = mmio_readl(&pll_io, 0x30>>2);
+    audio_pll_modulation = mmio_readl(&pll_io, 0x3c>>2);  
+    printf("read regs done\n");
 
     audio_pll_ext_div=AUDIO_PLL_CONFIG_EXT_DIV_GET(audio_pll_config);
     audio_pll_postplldiv=AUDIO_PLL_CONFIG_POSTPLLDIV_GET(audio_pll_config);
