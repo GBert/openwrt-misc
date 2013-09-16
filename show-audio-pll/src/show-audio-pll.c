@@ -19,22 +19,13 @@ int main(int argc, char **argv) {
     char *pll_input[ATH_PLL_MAX];
 
     bzero(pll_input, sizeof(pll_input));
-    printf("read registers 0x%08X length 0x%02X\n", ATH_PLL_CONFIG,ATH_PLL_MAX);
     if (mmio_map(&pll_io, ATH_PLL_CONFIG, ATH_PLL_MAX))
         die_errno("mmio_map() failed");
 
-    printf("mmio_map done\n");
-    mmio_unmap(&pll_io);
-    printf("unmap mmio_map done\n");
-
-/*  <PLL frequency> = <REFCLK frequency>/ REFDIV * (DIV_INT = DIV_FRAC/(2<<18-1))/2<<POSTPLLDIV
-    <MCLK Frequency> = <PLL Frequency>/EXT_DIV F_mclk = (F_REFCLK/REFDIV) * (NINT.NFRAC)/((2<<POSTPLLPWD) * (EXT_DIV))
-*/
-    printf("read reg audio_pll_config\n");
     audio_pll_config = mmio_readl(&pll_io, 0x30);
-    printf("read reg audio_pll_modulation\n");
     audio_pll_modulation = mmio_readl(&pll_io, 0x3c);  
-    printf("read regs done\n");
+    
+    mmio_unmap(&pll_io);
 
     audio_pll_ext_div=AUDIO_PLL_CONFIG_EXT_DIV_GET(audio_pll_config);
     audio_pll_postplldiv=AUDIO_PLL_CONFIG_POSTPLLDIV_GET(audio_pll_config);
@@ -55,6 +46,10 @@ int main(int argc, char **argv) {
     printf("audio_pll_tgt_div_frac: %04X\n", audio_pll_tgt_div_frac);
     printf("audio_pll_mod_start: %04X\n", audio_pll_mod_start);
     printf("\n");
+
+    /*  <PLL frequency> = <REFCLK frequency>/ REFDIV * (DIV_INT = DIV_FRAC/(2<<18-1))/2<<POSTPLLDIV
+        <MCLK Frequency> = <PLL Frequency>/EXT_DIV F_mclk = (F_REFCLK/REFDIV) * (NINT.NFRAC)/((2<<POSTPLLPWD) * (EXT_DIV))
+    */
 
     pll_freq_multi = audio_pll_tgt_div_int + (float)(audio_pll_tgt_div_frac/(float)(2<<17));
     vcofreq = (float)(REF_CLK / audio_pll_refdiv) * pll_freq_multi; 
