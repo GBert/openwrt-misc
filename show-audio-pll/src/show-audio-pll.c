@@ -62,6 +62,7 @@ int main(int argc, char **argv) {
         printf("Audio PLL multi :     %3.03f\n", pll_freq_multi);
         printf("Audio PLL frequency : %3.03f MHz\n", vcofreq/1E6);
         printf("Audio MCLK frequency: %3.03f MHz\n", mclk_freq/1E6);
+        printf("I2S   MCLK frequency: %3.03f MHz\n", mclk_freq/1E6/2);
     }
     return 0;
 }
