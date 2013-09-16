@@ -39,16 +39,16 @@ int main(int argc, char **argv) {
         audio_pll_tgt_div_int=AUDIO_PLL_MODULATION_TGT_DIV_INT_GET(audio_pll_modulation);
         audio_pll_mod_start=AUDIO_PLL_MODULATION_START_GET(audio_pll_modulation);
 
-        printf("audio_pll_config: %08X\n", audio_pll_config);
-        printf("audio_pll_refdiv: %04X\n", audio_pll_refdiv);
-        printf("audio_pll_postplldiv: %04X\n", audio_pll_postplldiv);
-        printf("audio_pll_ext_div: %04X\n", audio_pll_ext_div);
+        printf("audio_pll_config: 0x%08X\n", audio_pll_config);
+        printf("audio_pll_refdiv:     0x%04X\n", audio_pll_refdiv);
+        printf("audio_pll_postplldiv: 0x%04X\n", audio_pll_postplldiv);
+        printf("audio_pll_ext_div:    0x%04X\n", audio_pll_ext_div);
         printf("\n");
 
-        printf("audio_pll_modulation: %08X\n", audio_pll_modulation);
-        printf("audio_pll_tgt_div_int: %04X\n", audio_pll_tgt_div_int);
-        printf("audio_pll_tgt_div_frac: %04X\n", audio_pll_tgt_div_frac);
-        printf("audio_pll_mod_start: %04X\n", audio_pll_mod_start);
+        printf("audio_pll_modulation: 0x%08X\n", audio_pll_modulation);
+        printf("audio_pll_tgt_div_int:  0x%04X\n", audio_pll_tgt_div_int);
+        printf("audio_pll_tgt_div_frac: 0x%04X\n", audio_pll_tgt_div_frac);
+        printf("audio_pll_mod_start:    0x%04X\n", audio_pll_mod_start);
         printf("\n");
 
         /*  <PLL frequency> = <REFCLK frequency>/ REFDIV * (DIV_INT = DIV_FRAC/(2<<18-1))/2<<POSTPLLDIV
