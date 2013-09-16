@@ -59,7 +59,7 @@ int main(int argc, char **argv) {
         vcofreq = (float)(REF_CLK / audio_pll_refdiv) * pll_freq_multi; 
         mclk_freq = vcofreq / (float)(2<< audio_pll_postplldiv * (audio_pll_ext_div >>1) );
         printf("reference frequency : %3.03f MHz\n", REF_CLK/1E6);
-        printf("Audio PLL multi :    %3.03f MHz\n", pll_freq_multi);
+        printf("Audio PLL multi :     %3.03f\n", pll_freq_multi);
         printf("Audio PLL frequency : %3.03f MHz\n", vcofreq/1E6);
         printf("Audio MCLK frequency: %3.03f MHz\n", mclk_freq/1E6);
     }
