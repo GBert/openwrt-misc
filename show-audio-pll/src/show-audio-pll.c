@@ -19,6 +19,7 @@ int main(int argc, char **argv) {
     char *pll_input[ATH_PLL_MAX];
 
     bzero(pll_input, sizeof(pll_input));
+    printf("read registers 0x%08X length 0x%02X\n", ATH_PLL_CONFIG,ATH_PLL_MAX);
     if (mmio_map(&pll_io, ATH_PLL_CONFIG, ATH_PLL_MAX))
         die_errno("mmio_map() failed");
 
