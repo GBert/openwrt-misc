@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
         die_errno("mmio_map() failed");
 
     audio_pll_config = mmio_readl(&pll_io, 0x30);
-    audio_pll_modulation = mmio_readl(&pll_io, 0x3c);  
+    audio_pll_modulation = mmio_readl(&pll_io, 0x34);  
     
     mmio_unmap(&pll_io);
 
@@ -31,6 +31,7 @@ int main(int argc, char **argv) {
         printf("bypassing Audio PLL\n");
         printf("reference frequency : %3.03f MHz\n", REF_CLK/1E6);
     } else {
+        printf("audio_pll_modulation: 0x%08X\n", audio_pll_modulation);
         audio_pll_ext_div=AUDIO_PLL_CONFIG_EXT_DIV_GET(audio_pll_config);
         audio_pll_postplldiv=AUDIO_PLL_CONFIG_POSTPLLDIV_GET(audio_pll_config);
         audio_pll_refdiv=AUDIO_PLL_CONFIG_REFDIV_GET(audio_pll_config);
