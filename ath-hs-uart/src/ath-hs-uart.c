@@ -17,6 +17,7 @@
 #include <linux/serial_core.h>
 #include <linux/console.h>
 #include <linux/tty_flip.h>
+#include <linux/tty.h>
 
 #define CONFIG_ATH_HS_UART 1
 #include "934x.h"
@@ -29,7 +30,7 @@ typedef struct {
 				get;
 } ath_hs_uart_softc_t;
 
-int32_t serial_inited;
+/* int32_t serial_inited; */
 
 u8 UartGetPoll()
 {
@@ -48,11 +49,11 @@ u8 UartGetPoll()
 void UartPut(u8 byte)
 {
 	u_int32_t tx_data;
-	if (!serial_inited) {
+/*	if (!serial_inited) {
 		serial_inited = 1;
 		UartInit();
 	}
-
+*/
 	do {
 		tx_data = ath_reg_rd(0xB8500000);	// UART DATA Reg
 	} while ((tx_data & 0x200) != 0x200);
@@ -360,3 +361,7 @@ static int __init ath_hs_uart_console_init(void)
 	return 0;
 }
 console_initcall(ath_hs_uart_console_init);
+
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("Gerhard Bertelsmann");
+MODULE_DESCRIPTION("Atheros AR934x HS Uart driver");
