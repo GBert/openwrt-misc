@@ -1,4 +1,4 @@
-const char gpio_output_function_description[92][18]={
+const char * gpio_output_function_description[] = {
     "GPIO",
     "RES01",
     "RES02",
@@ -93,7 +93,7 @@ const char gpio_output_function_description[92][18]={
     "RES_91"
 };
 
-char gpio_input_function_description[24][15]={
+const char * gpio_input_function_description[] = {
     "SPI_MISO",
     "UART0_SIN",
     "RES0",
@@ -120,7 +120,7 @@ char gpio_input_function_description[24][15]={
     "UART1_CTS"
 };
 
-const char wr_841n_v8[24][10]={
+const char * wr_841n_v8[] = {
     "JP2 pin 9",
     "JP2 pin 3",
     "JP2 pin 5",
