@@ -29,6 +29,37 @@ typedef struct {
 				get;
 } ath_hs_uart_softc_t;
 
+u8 UartGetPoll()
+{
+	char ch;
+	u_int32_t rx_data;
+
+	do {
+		rx_data = ath_reg_rd(0xB8500000);	// UART DATA Reg
+	} while ((rx_data & 0x100) != 0x100);
+	ch = rx_data & 0xff;
+	ath_reg_wr(0xB8500000, 0x100);
+
+	return ch;
+}
+
+void UartPut(u8 byte)
+{
+	u_int32_t tx_data;
+/*	if (!serial_inited) {
+		serial_inited = 1;
+		UartInit();
+	}
+*/
+	do {
+		tx_data = ath_reg_rd(0xB8500000);	// UART DATA Reg
+	} while ((tx_data & 0x200) != 0x200);
+
+	tx_data = byte | 0x200;
+	ath_reg_wr(0xB8500000, tx_data);
+	//tx_data = ath_reg_rd(0xB8500000);
+
+}
 ath_hs_uart_softc_t	ath_hs_uart_softc;
 
 void ath_hs_uart_init(void)
