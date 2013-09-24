@@ -29,6 +29,8 @@ typedef struct {
 				get;
 } ath_hs_uart_softc_t;
 
+int32_t serial_inited;
+
 u8 UartGetPoll()
 {
 	char ch;
@@ -46,11 +48,11 @@ u8 UartGetPoll()
 void UartPut(u8 byte)
 {
 	u_int32_t tx_data;
-/*	if (!serial_inited) {
+	if (!serial_inited) {
 		serial_inited = 1;
 		UartInit();
 	}
-*/
+
 	do {
 		tx_data = ath_reg_rd(0xB8500000);	// UART DATA Reg
 	} while ((tx_data & 0x200) != 0x200);
