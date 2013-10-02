@@ -14,7 +14,7 @@ PKG_RELEASE:=1
 include $(INCLUDE_DIR)/package.mk
 
 define KernelPackage/spi-config
-  SUBMENU:=Other modules
+  SUBMENU:=SPI Support
   TITLE:=SPI Config
   DEPENDS:=
   FILES:=$(PKG_BUILD_DIR)/spi-config.ko

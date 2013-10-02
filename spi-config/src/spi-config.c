@@ -17,9 +17,8 @@
  */
 
 #define DRV_NAME        "spi_config"
-#define DEFAULT_DRIVER "spidev"
 #define DEFAULT_SPEED  500000
-#define DEFAULT_PARAM DEFAULT_DRIVER":500000"
+#define MAX_DEVICES 16
 
 #include <linux/kernel.h>
 #include <linux/module.h>
@@ -34,44 +33,32 @@
 #include <linux/string.h>
 #include <linux/spi/spi.h>
 
-#include <linux/can/platform/mcp251x.h>
-
 /* the module parameters */
-static int bus=0;
-module_param(bus, int, S_IRUGO);
-MODULE_PARM_DESC(bus, "SPI bus id - default: 0");
-static char* dev0=DEFAULT_PARAM;
-module_param(dev0, charp, S_IRUGO);
-MODULE_PARM_DESC(dev0, "SPI device 0 driver - default: "DEFAULT_PARAM);
-static char* dev1=DEFAULT_PARAM;
-module_param(dev1, charp, S_IRUGO);
-MODULE_PARM_DESC(dev1, "SPI device 1 driver - default: "DEFAULT_PARAM);
+static char* devices="";
+module_param(devices, charp, S_IRUGO);
+MODULE_PARM_DESC(devices, "SPI device configs");
+/* the devices that we have registered */
+static struct spi_device *spi_devices[MAX_DEVICES];
+static int spi_devices_count=0;
 
-/* the actual devices we will register - need this information to unregister them as well */
-static struct spi_board_info spi_board_devices[2];
-static struct spi_device *spi_devices[2];
-
-/* define the master */
-struct spi_master *master=NULL;
-
-/* the actual register code */
-static struct spi_device *parameterToDevice(int,int,char*, struct spi_board_info*);
-
+static void register_device(char *devdesc);
+static void release_device(struct spi_device * dev);
 
 static int __init spi_config_init(void)
 {
-	master=spi_busnum_to_master(bus);
-	if (!master) {
-		printk(KERN_ERR "spi_config: no master for spi%d found\n", bus);
-        }
-
-	/* and register devices */
-	spi_devices[0]=parameterToDevice(bus,0,dev0,&spi_board_devices[0]);
-	if (!spi_devices[0]) { printk(KERN_ERR "spi_config_init: could not register spi%i.%i as %s",bus,0,dev0); return -ENODEV; }
-
-	spi_devices[1]=parameterToDevice(bus,1,dev1,&spi_board_devices[1]);
-	if (!spi_devices[1]) { printk(KERN_ERR "spi_config_init: could not register spi%i.%i as %s",bus,1,dev1); return -ENODEV; }
-
+	char *head=devices;
+	char *idx=NULL;
+	/* clean up the spi_devices array */
+	memset(spi_devices,0,sizeof(spi_devices));
+	/* parse the devices parameter */
+	while(*head) {
+		/* find delimiter and create a separator */
+		idx=strchr(head,',');if (idx) { *idx=0; }
+		/* now parse the argument - if it is not "empty" */
+		if (*head) { register_device(head); }
+		/* and skip to next section and contine - exiting if there was no more ","*/
+		if (idx) { head=idx+1; } else { break;}
+	}
 	/* and return OK */
         return 0;
 }
@@ -79,97 +66,219 @@ module_init(spi_config_init);
 
 static void __exit spi_config_exit(void)
 {
+	int i;
 	/* unregister devices */
-	spi_unregister_device(spi_devices[0]);
-	spi_unregister_device(spi_devices[1]);
-
+	for(i=0;i<MAX_DEVICES;i++) {
+		if (spi_devices[i]) {
+			release_device(spi_devices[i]);
+			spi_devices[i]=NULL;
+		}
+	}
 	/* and return */
 	return;
 }
 module_exit(spi_config_exit);
 
-static void parameterToDevice_mcp251x(int bus, int dev,char* param,struct spi_board_info* brd);
-static struct spi_device * parameterToDevice(int bus, int dev,char* param,struct spi_board_info* brd) {
-	char* idx, *head;
-	long int tmp;
-	/* check dev */
-	if (!param) { param=DEFAULT_PARAM; }
-	if (!param[0]) { param=DEFAULT_PARAM; }
-	/* clean the device structure with some defaults */
+static void register_device(char *devdesc) {
+	char *tmp;
+	int i;
+	/* the board we configure */
+	struct spi_board_info *brd;
+	int brd_irq_gpio; /* an info that is not in the board */
+
+	/* the master to which we connect */
+	struct spi_master *master;
+	/* log the parameter */
+	printk(KERN_INFO "spi_config_register: device description: %s\n", devdesc);
+
+	/* allocate the board and fill with defaults */
+	brd=kmalloc(sizeof(struct spi_board_info),GFP_KERNEL);
 	memset(brd,0,sizeof(struct spi_board_info));
+        brd->bus_num=0xffff;
+        brd->chip_select=-1;
 	brd->max_speed_hz=DEFAULT_SPEED;
-	brd->bus_num=bus;
-	brd->chip_select=dev;
-	brd->mode=SPI_MODE_0;
-	/* now check/set the parameters */
-	head=param;
-	/* the driver name */
-	/* replace separator */
-	idx=strchr(head,':');if (idx) { *idx=0; } 
-	/* copy the driver name to the structure */
-	strncpy(brd->modalias,head,sizeof(brd->modalias));
-	/* restore terminator and return if subsequent zero or return if no terminator was found */
-	if (idx) { *idx=':'; head=idx+1; } else { head=NULL;goto parameterToDevice_custom; }
+        brd->mode=SPI_MODE_0;
+	brd->irq=-1;
+	brd_irq_gpio=-1;
 
-	/* now parse the spi speed*/
-	/* replace separator */
-	idx=strchr(head,':');if (idx) { *idx=0; } 
-	/* parse the head if not 0 */
-	if (*head) {
-		if (kstrtol(head,10,&tmp)) {
-			printk(KERN_INFO " spi_config:spi%i.%i:%s: bad max_spi_speed in %s\n", bus,dev,brd->modalias,param);
-			return NULL;
+	/* now parse the device description */
+	while((tmp=strsep(&devdesc,":"))) {
+		char* key,*value;
+		value=tmp;
+		key=strsep(&value,"=");
+		if (!value) {
+			printk(KERN_ERR " spi_config_register: incomplete argument: %s - no value\n",key);
+			goto register_device_err;
+		}
+		if (strcmp(key,"bus")==0) {
+			if (kstrtos16(value,10,&brd->bus_num)) {
+				printk(KERN_ERR " spi_config_register: %s=%s can not get parsed - ignoring config\n",key,value);
+				goto register_device_err;
+			}
+		} else if (strcmp(key,"cs")==0) {
+			if (kstrtou16(value,10,&brd->chip_select)) {
+				printk(KERN_ERR " spi_config_register: %s=%s can not get parsed - ignoring config\n",key,value);
+				goto register_device_err;
+			}
+		} else if (strcmp(key,"speed")==0) {
+			if (kstrtoint(value,10,&brd->max_speed_hz)) {
+				printk(KERN_ERR " spi_config_register: %s=%s can not get parsed - ignoring config\n",key,value);
+				goto register_device_err;
+			}
+		} else if (strcmp(key,"gpioirq")==0) {
+			if (kstrtoint(value,10,&brd_irq_gpio)) {
+				printk(KERN_ERR " spi_config_register: %s=%s can not get parsed - ignoring config\n",key,value);
+				goto register_device_err;
+			}
+			brd->irq=gpio_to_irq(brd_irq_gpio);
+		} else if (strcmp(key,"irq")==0) {
+			if (kstrtoint(value,10,&brd->irq)) {
+				printk(KERN_ERR " spi_config_register: %s=%s can not get parsed - ignoring config\n",key,value);
+				goto register_device_err;
+			}
+		} else if (strcmp(key,"mode")==0) {
+			if (kstrtou8(value,10,&brd->mode)) {
+				printk(KERN_ERR " spi_config_register: %s=%s can not get parsed - ignoring config\n",key,value);
+				goto register_device_err;
+			}
+		} else if (strcmp(key,"modalias")==0) {
+			strncpy(brd->modalias,value,sizeof(brd->modalias));
+		} else if (strcmp(key,"pd")==0) {
+			/* get the length of pd */
+			u8 len=0;
+			char hex[3];
+			char *src=value;
+			char *dst;
+			/* copy hex from arg */
+			hex[0]=*(src++);
+			hex[1]=*(src++);
+			hex[2]=0;
+			if (kstrtou8(hex,16,&len)) {
+				printk(KERN_ERR " spi_config_register: the pd length can not get parsed in %s - ignoring config\n",value);
+				goto register_device_err;
+			}
+			/* now we allocate it */
+			brd->platform_data=dst=kmalloc(len,GFP_KERNEL);
+			memset(dst,0,len);
+			/* and now we fill it in with the rest of the data */
+			while (len) {
+				hex[0]=*(src++);
+				if (!hex[0]) { break; }
+				hex[1]=*(src++);
+				if (!hex[1]) {
+					printk(KERN_ERR " spi_config_register: the pd data is not of expected length in %s - ignoring config\n",
+						value);
+					goto register_device_err;
+				}
+				if (kstrtou8(hex,16,dst)) {
+					printk(KERN_ERR " spi_config_register: the pd data could not get parsed for %s in %s - ignoring config\n",
+						hex,value);
+				} else {
+					dst++;len--;
+				}
+			}
 		} else {
-			brd->max_speed_hz=tmp;
+			printk(KERN_ERR " spi_config_register: unsupported argument %s\n",key);
+			goto register_device_err;
 		}
 	}
-	printk(KERN_INFO " spi_config:spi%i.%i:%s: max spi speed=%d\n", bus,dev,brd->modalias,brd->max_speed_hz);
-	/* restore terminator and return if subsequent zero or return if no terminator was found */
-	if (idx) { *idx=':'; head=idx+1; } else { head=NULL;goto parameterToDevice_custom; }
-
-	/* now parse the irq section*/
-	/* replace separator */
-	idx=strchr(head,':');if (idx) { *idx=0; } 
-	/* parse the head if not 0 */
-	if (*head) {
-		if (kstrtol(head,10,&tmp)) {
-			printk(KERN_INFO " spi_config:spi%i.%i:%s: bad GPIO for irq in %s\n", bus,dev,brd->modalias,param);
-			return NULL;
-		} else {
-			brd->irq=gpio_to_irq(tmp);
-			printk(KERN_INFO " spi_config:spi%i.%i:%s: got GPIO %ld mapped to irq %d\n", bus,dev,brd->modalias,tmp,brd->irq);
+	/* now check if things are set correctly */
+	/* first the bus */
+	if (brd->bus_num==0xffff) {
+		printk(KERN_ERR " spi_config_register: bus not set - ignoring config \n");
+		goto register_device_err;
+	}
+	/* getting the master info */
+	master=spi_busnum_to_master(brd->bus_num);
+	if (!master) {
+		printk(KERN_ERR " spi_config_register: no spi%i bus found - ignoring config\n",brd->bus_num);
+		goto register_device_err;
+	}
+	/* now the chip_select */
+	if (brd->chip_select<0) {
+		printk(KERN_ERR " spi_config_register:spi%i: cs not set - ignoring config\n",brd->bus_num);
+		goto register_device_err;
+	}
+	if (brd->chip_select>master->num_chipselect) {
+		printk(KERN_ERR " spi_config_register:spi%i: cs=%i not possible for this bus - max_cs= %i - ignoring config\n",
+			brd->bus_num,brd->chip_select,master->num_chipselect);
+		goto register_device_err;
+	}
+	/* check if we are not in the list of registered devices already */
+	for(i=0;i<spi_devices_count;i++) {
+		if (
+			(spi_devices[i])
+			&& (brd->bus_num==spi_devices[i]->master->bus_num)
+			&& (brd->chip_select==spi_devices[i]->chip_select)
+			) {
+			printk(KERN_ERR " spi_config_register:spi%i.%i: allready assigned - ignoring config\n",
+				brd->bus_num,brd->chip_select);
+			return;
 		}
 	}
-	/* restore terminator and return if subsequent zero or return if no terminator was found */
-	if (idx) { *idx=':'; head=idx+1; } else { head=NULL;goto parameterToDevice_custom; };
-
-	/* now we can check other stuff - depending on driver */
-parameterToDevice_custom:
-	if ((strcmp(brd->modalias,"mcp2515")==0)||(strcmp(brd->modalias,"mcp2515")==0)) {
-		parameterToDevice_mcp251x(bus,dev,head,brd);
+	/* now check modalias */
+	if (!brd->modalias[0]) {
+		printk(KERN_ERR " spi_config_register:spi%i.%i: modalias not set - ignoring config\n",
+			brd->bus_num,brd->chip_select);
+		goto register_device_err;
 	}
-	/* and register it */
-	return spi_new_device(master,brd);
-};
-
-static void parameterToDevice_mcp251x(int bus, int dev,char* param,struct spi_board_info* brd) {
-	long int clock=16000000;
+	/* check speed is "reasonable" */
+	if (brd->max_speed_hz<2048) {
+		printk(KERN_ERR " spi_config_register:spi%i.%i:%s: speed is set too low at %i\n",
+			brd->bus_num,brd->chip_select,brd->modalias,brd->max_speed_hz);
+		goto register_device_err;
+	}
 	
-	/* allocate platform data */
-	struct mcp251x_platform_data *pd=kmalloc(sizeof(struct mcp251x_platform_data),GFP_KERNEL);
-	if (!pd) { return; }
-	brd->platform_data=pd;
-	/* clear and fill it */
-	memset(pd,0,sizeof(struct mcp251x_platform_data));
-	pd->irq_flags              = IRQF_TRIGGER_FALLING|IRQF_ONESHOT;
-	/* here we can now add additional arguments from brd */
-	if ((param)&&(*param)) {
-		if (kstrtol(param,10,&clock)) {
-			printk(KERN_INFO " spi_config:spi%i.%i:%s: bad oscilator frequency: %s\n", bus,dev,brd->modalias,param);
+	/* register the device */
+	if ((spi_devices[spi_devices_count]=spi_new_device(master,brd))) {
+		/* now report the settings */
+		if (spi_devices[spi_devices_count]->irq<0) {
+			printk(KERN_INFO "spi_config_register:spi%i.%i: registering modalias=%s with max_speed_hz=%i mode=%i and no interrupt\n",
+				spi_devices[spi_devices_count]->master->bus_num,
+				spi_devices[spi_devices_count]->chip_select,
+				spi_devices[spi_devices_count]->modalias,
+				spi_devices[spi_devices_count]->max_speed_hz,
+				spi_devices[spi_devices_count]->mode
+				);
+		} else {
+			printk(KERN_INFO "spi_config_register:spi%i.%i: registering modalias=%s with max_speed_hz=%i mode=%i and gpio/irq=%i/%i\n",
+				spi_devices[spi_devices_count]->master->bus_num,
+				spi_devices[spi_devices_count]->chip_select,
+				spi_devices[spi_devices_count]->modalias,
+				spi_devices[spi_devices_count]->max_speed_hz,
+				spi_devices[spi_devices_count]->mode,
+				brd_irq_gpio,
+				spi_devices[spi_devices_count]->irq
+				);
 		}
+		if (spi_devices[spi_devices_count]->dev.platform_data) {
+			printk(KERN_INFO "spi_config_register:spi%i.%i:%s: platform data=%32ph\n",
+				spi_devices[spi_devices_count]->master->bus_num,
+				spi_devices[spi_devices_count]->chip_select,
+				spi_devices[spi_devices_count]->modalias,
+				spi_devices[spi_devices_count]->dev.platform_data
+				);
+		}
+		spi_devices_count++;
+	} else {
+		printk(KERN_ERR "spi_config_register:spi%i.%i:%s: failed to register device\n", brd->bus_num,brd->chip_select,brd->modalias);
+		goto register_device_err;
 	}
-	pd->oscillator_frequency   = clock;
-	printk(KERN_INFO " spi_config:spi%i.%i:%s: got oscilator frequency of %ld hz\n", bus,dev,brd->modalias,clock);
+
+	/* and return successfull */
+	return;
+	/* error handling code */
+register_device_err:
+	if (brd->platform_data) { kfree(brd->platform_data); }
+	kfree(brd);
+	return;
+}
+
+static void release_device(struct spi_device *spi) {
+	printk(KERN_INFO "spi_config_unregister:spi%i.%i: unregister device with modalias %s\n", spi->master->bus_num,spi->chip_select,spi->modalias);
+	/* unregister device */
+	spi_unregister_device(spi);
+	/* seems as if unregistering also means that the structures get freed as well - kernel crashes, so we do not do it */
 }
 
 /* the module description */
