@@ -28,13 +28,13 @@
 #include <linux/err.h>
 #include <linux/platform_device.h>
 #include <linux/io.h>
-#include <mach/gpio.h>
+#include <linux/gpio.h>
 #include <linux/irq.h>
 
 #include <linux/string.h>
 #include <linux/spi/spi.h>
 
-
+#include <linux/can/platform/mcp251x.h>
 
 /* the module parameters */
 static int bus=0;
@@ -62,7 +62,8 @@ static int __init spi_config_init(void)
 {
 	master=spi_busnum_to_master(bus);
 	if (!master) {
-		printk(KERN_ERR "spi_config: no master for spi%l found\n", (unsigned int) bus);
+		printk(KERN_ERR "spi_config: no master for spi%d found\n", bus);
+        }
 
 	/* and register devices */
 	spi_devices[0]=parameterToDevice(bus,0,dev0,&spi_board_devices[0]);
@@ -151,7 +152,6 @@ parameterToDevice_custom:
 	return spi_new_device(master,brd);
 };
 
-#include <linux/can/platform/mcp251x.h>
 static void parameterToDevice_mcp251x(int bus, int dev,char* param,struct spi_board_info* brd) {
 	long int clock=16000000;
 	
