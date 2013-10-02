@@ -1,2 +1,2 @@
-obj-${CONFIG_GPIO_PROXY}	:= gpio-proxy.o
+obj-${CONFIG_GPIO_PROXY}	+= gpio-proxy.o
 

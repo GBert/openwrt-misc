@@ -14,7 +14,7 @@ PKG_RELEASE:=1
 
 include $(INCLUDE_DIR)/package.mk
 
-define KernelPackage/ath-i2s
+define KernelPackage/gpio-proxy
   SUBMENU:=Other modules
   TITLE:=Kernel driver for GPIO remote access
   DEPENDS:=
@@ -26,7 +26,7 @@ define KernelPackage/ath-i2s
   KCONFIG:=
 endef
 
-define KernelPackage/ath-i2s/description
+define KernelPackage/gpio-proxy/description
   Kernel Module for remote GPIO access
 endef
 

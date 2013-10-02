@@ -17,7 +17,7 @@ define Package/gpio-proxyd
   SECTION:=utils
   CATEGORY:=Utilities
   TITLE:=gpio-proxyd daemon
-  DEPENDS:=kmod-gpio-proxy
+  DEPENDS:=+kmod-gpio-proxy
   MAINTAINER:=Gerhard Bertelsmann
 endef
 
