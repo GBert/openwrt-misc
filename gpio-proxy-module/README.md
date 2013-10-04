@@ -31,5 +31,5 @@ mark gpio-proxyd under 'Utilities' and compile with
 `make package/gpio-proxy-module/{clean,compile} V=s`
 
 
-copy 'bin/<platform>/kmod-gpio-proxy\*' and 'bin/<platform>/gpio-proxyd\*' to your OpenWrt router and install it
+copy 'bin/\<platform\>/kmod-gpio-proxy\*' and 'bin/\<platform\>/gpio-proxyd\*' to your OpenWrt router and install it
 
