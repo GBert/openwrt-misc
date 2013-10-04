@@ -139,8 +139,9 @@ static int gpio_proxy_ioctl(struct inode *inode, struct file *file,
 
 
 static struct file_operations gpio_proxy_fops = {
-	.owner	= THIS_MODULE,
-	.ioctl	= gpio_proxy_ioctl,
+	.owner		= THIS_MODULE,
+	//.ioctl	= gpio_proxy_ioctl,
+	.unlocked_ioctl	= gpio_proxy_ioctl,
 };
 
 static struct miscdevice gpio_proxy_device = {
