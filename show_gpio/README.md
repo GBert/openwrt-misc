@@ -13,8 +13,8 @@ root@OpenWrt:~# show-gpio
              GPIO 06 O SPI_CLK
              GPIO 07 O SPI_MOSI
              GPIO 08 I SPI_MISO
-   JP1 pin 3 GPIO 09 I UART0\_SIN
-   JP1 pin 2 GPIO 10 O UART0\_SOUT
+   JP1 pin 2 GPIO 09 I UART0\_SIN
+   JP1 pin 1 GPIO 10 O UART0\_SOUT
              GPIO 11 O GPIO
        LED 1 GPIO 12 O GPIO
        LED 2 GPIO 13 O GPIO
