@@ -318,8 +318,8 @@ static int __init ath_hs_uart_user_init(void)
 	tty = alloc_tty_driver(1);
 	tty->owner		= THIS_MODULE;
 	tty->driver_name	= "Atheros hs-uart";
-	tty->num		= 1;
-	tty->name		= "ttyS";
+	tty->num		= 0;
+	tty->name		= "ttyHS";
 	tty->major		= TTY_MAJOR;
 	tty->minor_start	= 64;
 	tty->type		= TTY_DRIVER_TYPE_SERIAL;
