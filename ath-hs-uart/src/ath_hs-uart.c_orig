@@ -16,12 +16,8 @@
 #include <linux/platform_device.h>
 #include <linux/serial_core.h>
 #include <linux/console.h>
-#include <linux/tty_flip.h>
-#include <linux/tty.h>
 
-#define CONFIG_ATH_HS_UART 1
-#include "934x.h"
-#include "atheros.h"
+#include <atheros.h>
 
 typedef struct {
 	struct tty_driver	*tty;
@@ -30,39 +26,6 @@ typedef struct {
 				get;
 } ath_hs_uart_softc_t;
 
-uint32_t serial_inited;
-
-u8 UartGetPoll()
-{
-	char ch;
-	u_int32_t rx_data;
-
-	do {
-		rx_data = ath_reg_rd(0xB8500000);	// UART DATA Reg
-	} while ((rx_data & 0x100) != 0x100);
-	ch = rx_data & 0xff;
-	ath_reg_wr(0xB8500000, 0x100);
-
-	return ch;
-}
-
-void UartPut(u8 byte)
-{
-	u_int32_t tx_data;
-/*	if (!serial_inited) {
-		serial_inited = 1;
-		UartInit();
-	}
-*/
-	do {
-		tx_data = ath_reg_rd(0xB8500000);	// UART DATA Reg
-	} while ((tx_data & 0x200) != 0x200);
-
-	tx_data = byte | 0x200;
-	ath_reg_wr(0xB8500000, tx_data);
-	//tx_data = ath_reg_rd(0xB8500000);
-
-}
 ath_hs_uart_softc_t	ath_hs_uart_softc;
 
 void ath_hs_uart_init(void)
@@ -127,8 +90,7 @@ void ath_hs_uart_init(void)
 	ath_reg_wr(ATH_HS_UART_CS, 0x2188);
 
 	serial_inited = 1;
-        /* TODO */
-	/* ath_sys_frequency(); */
+	ath_sys_frequency();
 	printk("step 0x%x scale 0x%x\n", clk_step, clk_scale);
 }
 
@@ -240,8 +202,7 @@ ath_hs_uart_ioctl(struct tty_struct *tty, struct file *filp, unsigned int cmd,
 {
 	switch (cmd) {
 	case TCFLSH:
-		/* TODO */
-		/* tty_buffer_flush(tty); */
+		tty_buffer_flush(tty);
 		break;
 	case TCGETS:
 	case TCSETS:
@@ -363,7 +324,3 @@ static int __init ath_hs_uart_console_init(void)
 	return 0;
 }
 console_initcall(ath_hs_uart_console_init);
-
-MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Gerhard Bertelsmann");
-MODULE_DESCRIPTION("Atheros AR934x HS Uart driver");
