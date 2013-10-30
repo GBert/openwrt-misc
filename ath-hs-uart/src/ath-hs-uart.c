@@ -164,7 +164,7 @@ struct tty_driver *ath_hs_uart_console_device(struct console *co, int *index)
 
 
 static struct console ath_hs_uart_console = {
-	.name		= "ttyS",
+	.name		= "ttyHS",
 	.write		= ath_hs_uart_console_write,
 	.device		= ath_hs_uart_console_device,
 	.setup		= ath_hs_uart_console_setup,

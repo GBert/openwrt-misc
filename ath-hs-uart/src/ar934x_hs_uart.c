@@ -33,7 +33,7 @@
 
 #include "ar934x_hs_uart.h"
 
-#define DRIVER_NAME "ar934x-uart"
+#define DRIVER_NAME "ar933x-uart"
 
 #define AR934X_HS_UART_MAX_SCALE	0xff
 #define AR934X_HS_UART_MAX_STEP		0xffff
@@ -42,6 +42,12 @@
 #define AR934X_HS_UART_MAX_BAUD		30000000
 
 #define AR934X_HS_DUMMY_STATUS_RD	0x01
+
+#define dprintk(args...) \
+    do { \
+       printk(KERN_INFO " ar934x-hs-uart : " args); \
+    } while (0)
+
 
 static struct uart_driver ar934x_hs_uart_driver;
 
@@ -61,12 +67,14 @@ static inline bool ar934x_hs_uart_console_enabled(void)
 static inline unsigned int ar934x_hs_uart_read(struct ar934x_hs_uart_port *up,
 					    int offset)
 {
+	dprintk("%s() read  io 0x%08X\n", __func__, up->port.membase + offset);
 	return readl(up->port.membase + offset);
 }
 
 static inline void ar934x_hs_uart_write(struct ar934x_hs_uart_port *up,
 				     int offset, unsigned int value)
 {
+	dprintk("%s() write io 0x%08X value 0x%08X\n", __func__, up->port.membase + offset, value);
 	writel(value, up->port.membase + offset);
 }
 
@@ -748,6 +756,7 @@ static struct platform_driver ar934x_hs_uart_platform_driver = {
 static int __init ar934x_hs_uart_init(void)
 {
 	int ret;
+	dprintk("%s() : init ...\n", __func__);
 
 	if (ar934x_hs_uart_console_enabled())
 		ar934x_hs_uart_driver.cons = &ar934x_hs_uart_console;
@@ -759,6 +768,7 @@ static int __init ar934x_hs_uart_init(void)
 	ret = platform_driver_register(&ar934x_hs_uart_platform_driver);
 	if (ret)
 		goto err_unregister_uart_driver;
+	dprintk("%s() : init done\n", __func__);
 
 	return 0;
 
@@ -772,6 +782,7 @@ static void __exit ar934x_hs_uart_exit(void)
 {
 	platform_driver_unregister(&ar934x_hs_uart_platform_driver);
 	uart_unregister_driver(&ar934x_hs_uart_driver);
+	dprintk("%s() : exit\n", __func__);
 }
 
 module_init(ar934x_hs_uart_init);
