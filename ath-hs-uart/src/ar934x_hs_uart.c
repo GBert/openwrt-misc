@@ -1,14 +1,14 @@
 /*
  *  Atheros AR934X SoC built-in HS UART driver
  *
- *  Copyright (C) 2013 Gerhard Bertelsmann <info@gerhard-bertelsmann>
+ *  Copyright (C) 2011 Gabor Juhos <juhosg@openwrt.org>
+ *   errors added by Gerhard Bertelsmann <info@gerhard-bertelsmann.de>
  *
- *  Based on drivers/tty/serial/ar933x_uart.c, by Gabor Juhos
+ *  Based on drivers/char/serial.c, by Linus Torvalds, Theodore Ts'o.
  *
  *  This program is free software; you can redistribute it and/or modify it
  *  under the terms of the GNU General Public License version 2 as published
  *  by the Free Software Foundation.
- *
  */
 
 #include <linux/module.h>
@@ -45,7 +45,7 @@
 
 #define dprintk(args...) \
     do { \
-       printk(KERN_INFO " ar934x-hs-uart 002 : " args); \
+       printk(KERN_INFO " ar934x-hs-uart 003 : " args); \
     } while (0)
 
 
@@ -605,7 +605,7 @@ static int ar934x_hs_uart_console_setup(struct console *co, char *options)
 }
 
 static struct console ar934x_hs_uart_console = {
-	.name		= "ttyHS",
+	.name		= "ttyATH",
 	.write		= ar934x_hs_uart_console_write,
 	.device		= uart_console_device,
 	.setup		= ar934x_hs_uart_console_setup,
@@ -625,7 +625,7 @@ static void ar934x_hs_uart_add_console_port(struct ar934x_hs_uart_port *up)
 static struct uart_driver ar934x_hs_uart_driver = {
 	.owner		= THIS_MODULE,
 	.driver_name	= DRIVER_NAME,
-	.dev_name	= "ttyHS",
+	.dev_name	= "ttyATH",
 	.nr		= CONFIG_SERIAL_AR933X_NR_UARTS,
 	.cons		= NULL, /* filled in runtime */
 };
@@ -799,6 +799,6 @@ module_init(ar934x_hs_uart_init);
 module_exit(ar934x_hs_uart_exit);
 
 MODULE_DESCRIPTION("Atheros AR934X HS UART driver");
-MODULE_AUTHOR("Gerhard Bertelsmann <info@gerhard-bertelsmann.de>");
+MODULE_AUTHOR("Gabor Juhos <juhosg@openwrt.org, Gerhard Bertelsmann <info@gerhard-bertelsmann.de>");
 MODULE_LICENSE("GPL v2");
 MODULE_ALIAS("platform:" DRIVER_NAME);
