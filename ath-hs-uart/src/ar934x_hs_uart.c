@@ -33,7 +33,7 @@
 
 #include "ar934x_hs_uart.h"
 
-#define DRIVER_NAME "ar933x-uart"
+#define DRIVER_NAME "ar934x-hs-uart"
 
 #define AR934X_HS_UART_MAX_SCALE	0xff
 #define AR934X_HS_UART_MAX_STEP		0xffff
@@ -775,6 +775,7 @@ static int __init ar934x_hs_uart_init(void)
 err_unregister_uart_driver:
 	uart_unregister_driver(&ar934x_hs_uart_driver);
 err_out:
+	dprintk("%s() : exit with error\n", __func__);
 	return ret;
 }
 
