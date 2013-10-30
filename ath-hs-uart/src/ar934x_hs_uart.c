@@ -45,7 +45,7 @@
 
 #define dprintk(args...) \
     do { \
-       printk(KERN_INFO " ar934x-hs-uart : " args); \
+       printk(KERN_INFO " ar934x-hs-uart 002 : " args); \
     } while (0)
 
 
@@ -463,11 +463,13 @@ static const char *ar934x_hs_uart_type(struct uart_port *port)
 
 static void ar934x_hs_uart_release_port(struct uart_port *port)
 {
+	dprintk("%s() : do\n", __func__);
 	/* Nothing to release ... */
 }
 
 static int ar934x_hs_uart_request_port(struct uart_port *port)
 {
+	dprintk("%s() : do\n", __func__);
 	/* UARTs always present */
 	return 0;
 }
@@ -639,6 +641,7 @@ static int ar934x_hs_uart_probe(struct platform_device *pdev)
 	int id;
 	int ret;
 
+	dprintk("%s() : in\n", __func__);
 	np = pdev->dev.of_node;
 	if (config_enabled(CONFIG_OF) && np) {
 		id = of_alias_get_id(np, "serial");
@@ -714,16 +717,19 @@ static int ar934x_hs_uart_probe(struct platform_device *pdev)
 		goto err_disable_clk;
 
 	platform_set_drvdata(pdev, up);
+	dprintk("%s() : out w/o error\n", __func__);
 	return 0;
 
 err_disable_clk:
 	clk_disable_unprepare(up->clk);
+	dprintk("%s() : out with error\n", __func__);
 	return ret;
 }
 
 static int ar934x_hs_uart_remove(struct platform_device *pdev)
 {
 	struct ar934x_hs_uart_port *up;
+	dprintk("%s() : in\n", __func__);
 
 	up = platform_get_drvdata(pdev);
 
@@ -731,6 +737,7 @@ static int ar934x_hs_uart_remove(struct platform_device *pdev)
 		uart_remove_one_port(&ar934x_hs_uart_driver, &up->port);
 		clk_disable_unprepare(up->clk);
 	}
+	dprintk("%s() : out\n", __func__);
 
 	return 0;
 }
@@ -758,8 +765,10 @@ static int __init ar934x_hs_uart_init(void)
 	int ret;
 	dprintk("%s() : init ...\n", __func__);
 
-	if (ar934x_hs_uart_console_enabled())
+	if (ar934x_hs_uart_console_enabled()) {
+		dprintk("%s() : is console\n", __func__);
 		ar934x_hs_uart_driver.cons = &ar934x_hs_uart_console;
+	};
 
 	ret = uart_register_driver(&ar934x_hs_uart_driver);
 	if (ret)
