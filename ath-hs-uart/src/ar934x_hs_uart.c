@@ -45,7 +45,7 @@
 
 #define dprintk(args...) \
     do { \
-       printk(KERN_INFO " ar934x-hs-uart 003 : " args); \
+       printk(KERN_INFO " ar934x-hs-uart 006 : " args); \
     } while (0)
 
 
@@ -626,7 +626,10 @@ static struct uart_driver ar934x_hs_uart_driver = {
 	.owner		= THIS_MODULE,
 	.driver_name	= DRIVER_NAME,
 	.dev_name	= "ttyATH",
-	.nr		= CONFIG_SERIAL_AR933X_NR_UARTS,
+	/* .major		= 5, */
+	/* .minor		= 64, */
+	/* .nr		= CONFIG_SERIAL_AR933X_NR_UARTS, */
+	.nr		= 1,
 	.cons		= NULL, /* filled in runtime */
 };
 
