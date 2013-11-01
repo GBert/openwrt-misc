@@ -45,7 +45,7 @@
 
 #define dprintk(args...) \
     do { \
-       printk(KERN_INFO " ar934x-hs-uart 010 : " args); \
+       printk(KERN_INFO " ar934x-hs-uart 012 : " args); \
     } while (0)
 
 
@@ -67,14 +67,14 @@ static inline bool ar934x_hs_uart_console_enabled(void)
 static inline unsigned int ar934x_hs_uart_read(struct ar934x_hs_uart_port *up,
 					    int offset)
 {
-	dprintk("%s() read  io 0x%08X\n", __func__, up->port.membase + offset);
+	dprintk("%s() read  io 0x%08X\n", __func__, (uint32_t) up->port.membase + offset);
 	return readl(up->port.membase + offset);
 }
 
 static inline void ar934x_hs_uart_write(struct ar934x_hs_uart_port *up,
 				     int offset, unsigned int value)
 {
-	dprintk("%s() write io 0x%08X value 0x%08X\n", __func__, up->port.membase + offset, value);
+	dprintk("%s() write io 0x%08X value 0x%08X\n", __func__, (uint32_t) up->port.membase + offset, value);
 	writel(value, up->port.membase + offset);
 }
 
@@ -777,7 +777,7 @@ static struct resource ar934x_hs_uart_resources[] = {
 };
 
 static struct platform_device ar934x_hs_uart_device = {
-        .name           = "ar934x-hs-uart",
+        .name           = DRIVER_NAME,
         .id             = -1,
         .resource       = ar934x_hs_uart_resources,
         .num_resources  = ARRAY_SIZE(ar934x_hs_uart_resources),
