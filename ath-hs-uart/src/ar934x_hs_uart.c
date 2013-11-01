@@ -776,6 +776,7 @@ static struct resource ar934x_hs_uart_resources[] = {
         },
 };
 
+static struct ar933x_uart_platform_data ar933x_uart_data;
 static struct platform_device ar934x_hs_uart_device = {
         .name           = DRIVER_NAME,
         .id             = -1,
