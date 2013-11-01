@@ -45,7 +45,7 @@
 
 #define dprintk(args...) \
     do { \
-       printk(KERN_INFO " ar934x-hs-uart 006 : " args); \
+       printk(KERN_INFO " ar934x-hs-uart 010 : " args); \
     } while (0)
 
 
@@ -763,6 +763,26 @@ static struct platform_driver ar934x_hs_uart_platform_driver = {
 	},
 };
 
+static struct resource ar934x_hs_uart_resources[] = {
+        {
+                .start  = AR934X_UART1_BASE,
+                .end    = AR934X_UART1_BASE + AR934X_UART1_SIZE - 1,
+                .flags  = IORESOURCE_MEM,
+        },
+        {
+                .start  = ATH79_MISC_IRQ(3),
+                .end    = ATH79_MISC_IRQ(3),
+                .flags  = IORESOURCE_IRQ,
+        },
+};
+
+static struct platform_device ar934x_hs_uart_device = {
+        .name           = "ar934x-hs-uart",
+        .id             = -1,
+        .resource       = ar934x_hs_uart_resources,
+        .num_resources  = ARRAY_SIZE(ar934x_hs_uart_resources),
+};
+
 static int __init ar934x_hs_uart_init(void)
 {
 	int ret;
@@ -780,6 +800,8 @@ static int __init ar934x_hs_uart_init(void)
 	ret = platform_driver_register(&ar934x_hs_uart_platform_driver);
 	if (ret)
 		goto err_unregister_uart_driver;
+
+	platform_device_register(&ar934x_hs_uart_device);
 	dprintk("%s() : init done\n", __func__);
 
 	return 0;
@@ -793,6 +815,7 @@ err_out:
 
 static void __exit ar934x_hs_uart_exit(void)
 {
+	platform_device_unregister(&ar934x_hs_uart_device);
 	platform_driver_unregister(&ar934x_hs_uart_platform_driver);
 	uart_unregister_driver(&ar934x_hs_uart_driver);
 	dprintk("%s() : exit\n", __func__);
