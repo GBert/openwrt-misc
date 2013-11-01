@@ -770,8 +770,8 @@ static struct resource ar934x_hs_uart_resources[] = {
                 .flags  = IORESOURCE_MEM,
         },
         {
-                .start  = ATH79_MISC_IRQ(3),
-                .end    = ATH79_MISC_IRQ(3),
+                .start  = ATH79_MISC_IRQ(6),
+                .end    = ATH79_MISC_IRQ(6),
                 .flags  = IORESOURCE_IRQ,
         },
 };
