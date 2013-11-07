@@ -17,7 +17,8 @@ define KernelPackage/ath-i2s
   SUBMENU:=Other modules
   TITLE:=Atheros 934X I2S module
   DEPENDS:=
-  FILES:=$(PKG_BUILD_DIR)/ath_i2s.ko
+#  FILES:=$(PKG_BUILD_DIR)/ath_i2s.ko
+  FILES:=$(PKG_BUILD_DIR)/query_ioctl.ko
   KCONFIG:=
 endef
 

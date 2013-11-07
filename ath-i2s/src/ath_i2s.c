@@ -771,7 +771,7 @@ void ath_i2s_set_volume(uint32_t data)
 	ath_reg_wr(ATH_STEREO_VOLUME, data);
 }
 
-int ath_i2s_ioctl(struct inode *inode, struct file *filp,
+static long ath_i2s_ioctl(struct inode *inode, struct file *filp,
 		     unsigned int cmd, unsigned long arg)
 {
 	int data;
@@ -1093,7 +1093,7 @@ struct file_operations ath_i2s_fops = {
     .llseek  = ath_i2s_llseek,
     .read    = ath_i2s_read,
     .write   = ath_i2s_write,
-    .ioctl   = ath_i2s_ioctl,
+    .unlocked_ioctl   = ath_i2s_ioctl,
     .open    = ath_i2s_open,
     .release = ath_i2s_close,
 };
