@@ -83,11 +83,11 @@ static int __init bit_serial_init(void) {
         return ret;
     }
      
-    if (cl = class_create(THIS_MODULE, "chardrv")) {
-        printk(KERN_ERR "Can't crate char class\n");
+    if ((cl = class_create(THIS_MODULE, "chardrv")) == NULL ) {
+        printk(KERN_ERR "Can't create chardev class\n");
         goto ERR_CLASS_CREATE;
     }
-    if (dev_ret = device_create(cl, NULL, dev, NULL, "bit_serial")) {
+    if ((dev_ret = device_create(cl, NULL, dev, NULL, "bit_serial")) == NULL ) {
         printk(KERN_ERR "Can't create char device\n");
         goto ERR_DEV_CREATE;
     }
@@ -106,6 +106,7 @@ static void __exit bit_serial_exit(void) {
     class_destroy(cl);
     cdev_del(&c_dev);
     unregister_chrdev_region(dev, MINOR_CNT);
+    printk(KERN_INFO "bit serial driver unregistered\n");
 }
  
 module_init(bit_serial_init);
