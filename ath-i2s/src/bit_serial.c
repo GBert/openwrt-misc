@@ -83,7 +83,7 @@ static int __init bit_serial_init(void) {
         return ret;
     }
      
-    if (cl = class_create(THIS_MODULE, "char")) {
+    if (cl = class_create(THIS_MODULE, "chardrv")) {
         printk(KERN_ERR "Can't crate char class\n");
         goto ERR_CLASS_CREATE;
     }
