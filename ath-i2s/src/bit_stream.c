@@ -1,5 +1,5 @@
 /*
- *  Bit serialization device driver module using I2S
+ *  PoC  bit streaming device driver module using I2S
  *
  *  Copyright (C) 2013 Gerhard Bertelsmann
  *
@@ -28,24 +28,24 @@
 #define DRV_NAME        "bit_stream"
 #define DRV_DESC        "bit streaming using I2S"
 #define DRV_VERSION     "0.01"
- 
+
 static dev_t dev;
 static struct cdev c_dev;
 static struct class *cl;
 static int frequency;
  
 static long bit_stream_ioctl(struct file *f, unsigned int cmd, unsigned long arg) {
-    bit_stream_arg_t q;
- 
+    struct bit_stream_arg_t q; 
     switch (cmd) {
         case BIT_STREAM_GET_FREQ:
             q.frequency = frequency;
-            if (copy_to_user((bit_stream_arg_t *)arg, &q, sizeof(bit_stream_arg_t))) {
+            if (copy_to_user((struct bit_stream_arg_t *)arg, &q, sizeof(struct bit_stream_arg_t))) {
                 return -EACCES;
             }
             break;
         case BIT_STREAM_SET_FREQ:
-            if (copy_from_user(&q, (bit_stream_arg_t *)arg, sizeof(bit_stream_arg_t))) {
+            if (copy_from_user(&q, (struct bit_stream_arg_t *)arg, sizeof(struct bit_stream_arg_t))) {
+
                 return -EACCES;
             }
             frequency = q.frequency;
@@ -91,7 +91,7 @@ static int __init bit_stream_init(void) {
         printk(KERN_ERR "Can't create char device\n");
         goto ERR_DEV_CREATE;
     }
-    printk(KERN_INFO "bit stream driver unregistered\n");
+    printk(KERN_INFO "bit stream driver registered\n");
     return 0;
 
 ERR_DEV_CREATE:
