@@ -125,8 +125,14 @@ int main(int argc, char **argv) {
     }
     mmio_unmap(&io);
 
-    for (index=0; index<20; index++) {
-        gpio_input_function_reg = gpio_data[(GPIO_IN_ENABLE0 + index)>>2];
+    for (index=0; index<24; index++) {
+	if (index<20) {
+            gpio_input_function_reg = gpio_data[(GPIO_IN_ENABLE0 + index)>>2];
+            printf("index %02d 0x%08x \n", index, gpio_input_function_reg);
+        } else {
+	    gpio_input_function_reg = gpio_data[GPIO_IN_ENABLE9>>2];
+            printf("index %02d 0x%08x \n", index, gpio_input_function_reg);
+	}
         gpio_input_pin = (gpio_input_function_reg >> ((index & 0x03) << 3)) & 0xff ;
         if (gpio_input_pin) {
             gpio_input[gpio_input_pin]=gpio_input_function_description[index];
