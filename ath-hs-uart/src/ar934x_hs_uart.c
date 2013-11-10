@@ -388,6 +388,8 @@ static irqreturn_t ar934x_hs_uart_interrupt(int irq, void *dev_id)
 	struct ar934x_hs_uart_port *up = dev_id;
 	unsigned int status;
 
+	dprintk("  HS Uart int\n");
+
 	status = ar934x_hs_uart_read(up, AR934X_HS_UART_CS_REG);
 	if ((status & AR934X_HS_UART_CS_HOST_INT) == 0)
 		return IRQ_NONE;
@@ -776,7 +778,7 @@ static struct resource ar934x_hs_uart_resources[] = {
         },
 };
 
-static struct ar933x_uart_platform_data ar933x_uart_data;
+static struct ar934x_uart_platform_data ar934x_uart_data;
 static struct platform_device ar934x_hs_uart_device = {
         .name           = DRIVER_NAME,
         .id             = -1,
