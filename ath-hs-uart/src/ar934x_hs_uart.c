@@ -784,17 +784,26 @@ static struct platform_device ar934x_hs_uart_device = {
         .id             = -1,
         .resource       = ar934x_hs_uart_resources,
         .num_resources  = ARRAY_SIZE(ar934x_hs_uart_resources),
+	.dev = {
+		.platform_data  = &ar934x_uart_data,
+	},
 };
 
 static int __init ar934x_hs_uart_init(void)
 {
 	int ret;
+	unsigned long uart_clk_rate;
 	dprintk("%s() : init ...\n", __func__);
 
 	if (ar934x_hs_uart_console_enabled()) {
 		dprintk("%s() : is console\n", __func__);
 		ar934x_hs_uart_driver.cons = &ar934x_hs_uart_console;
 	};
+
+	/* TODO */
+	/* uart_clk_rate = ath79_get_sys_clk_rate("uart"); */
+	uart_clk_rate = 25000000;
+	ar934x_uart_data.uartclk = uart_clk_rate;
 
 	ret = uart_register_driver(&ar934x_hs_uart_driver);
 	if (ret)
