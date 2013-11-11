@@ -67,14 +67,14 @@ static inline bool ar934x_hs_uart_console_enabled(void)
 static inline unsigned int ar934x_hs_uart_read(struct ar934x_hs_uart_port *up,
 					    int offset)
 {
-	// dprintk("%s() read  io 0x%08X\n", __func__, (uint32_t) up->port.membase + offset);
+	dprintk("%s() read  io 0x%08X\n", __func__, (uint32_t) up->port.membase + offset);
 	return readl(up->port.membase + offset);
 }
 
 static inline void ar934x_hs_uart_write(struct ar934x_hs_uart_port *up,
 				     int offset, unsigned int value)
 {
-	// dprintk("%s() write io 0x%08X value 0x%08X\n", __func__, (uint32_t) up->port.membase + offset, value);
+	dprintk("%s() write io 0x%08X value 0x%08X\n", __func__, (uint32_t) up->port.membase + offset, value);
 	writel(value, up->port.membase + offset);
 }
 
@@ -792,7 +792,7 @@ static struct platform_device ar934x_hs_uart_device = {
 static int __init ar934x_hs_uart_init(void)
 {
 	int ret;
-	unsigned long uart_clk_rate;
+	/* unsigned long uart_clk_rate; */
 	dprintk("%s() : init ...\n", __func__);
 
 	if (ar934x_hs_uart_console_enabled()) {
@@ -802,8 +802,8 @@ static int __init ar934x_hs_uart_init(void)
 
 	/* TODO */
 	/* uart_clk_rate = ath79_get_sys_clk_rate("uart"); */
-	uart_clk_rate = 25000000;
-	ar934x_uart_data.uartclk = uart_clk_rate;
+	/* --- uart_clk_rate = 25000000; */
+	/* ar934x_uart_data.uartclk = uart_clk_rate; */
 
 	ret = uart_register_driver(&ar934x_hs_uart_driver);
 	if (ret)
@@ -837,6 +837,6 @@ module_init(ar934x_hs_uart_init);
 module_exit(ar934x_hs_uart_exit);
 
 MODULE_DESCRIPTION("Atheros AR934X HS UART driver");
-MODULE_AUTHOR("Gabor Juhos <juhosg@openwrt.org, Gerhard Bertelsmann <info@gerhard-bertelsmann.de>");
+MODULE_AUTHOR("Gabor Juhos <juhosg@openwrt.org, errors designed by Gerhard Bertelsmann <info@gerhard-bertelsmann.de>");
 MODULE_LICENSE("GPL v2");
 MODULE_ALIAS("platform:" DRIVER_NAME);

@@ -12,6 +12,10 @@
 #ifndef __AR934X_HS_UART_H
 #define __AR934X_HS_UART_H
 
+struct ar933x_uart_platform_data {
+	unsigned        uartclk;
+};
+
 #define AR71XX_APB_BASE				0x18000000
 #define AR934X_UART1_BASE        		(AR71XX_APB_BASE + 0x00500000)
 #define AR934X_UART1_SIZE        		0x14
