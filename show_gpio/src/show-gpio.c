@@ -114,6 +114,7 @@ int main(int argc, char **argv) {
     uint32_t gpio_data[32];
     struct mmio io;
     char gpio_direction;
+    char gpio_state;
     char *gpio_input[GPIO_MAX];
 
     bzero(gpio_input, sizeof(gpio_input));
@@ -128,6 +129,7 @@ int main(int argc, char **argv) {
     for (index=0; index<24; index++) {
 	if (index<20) {
             gpio_input_function_reg = gpio_data[(GPIO_IN_ENABLE0 + index)>>2];
+        /* there is a gap betwee GPIO_IN_ENABLE5 and GPIO_IN_ENABLE9 */
         } else {
 	    gpio_input_function_reg = gpio_data[GPIO_IN_ENABLE9>>2];
 	}
@@ -154,15 +156,30 @@ int main(int argc, char **argv) {
 		case 'O':
                     gpio_output_function_reg = gpio_data[(gpio+GPIO_OUT_FUNCTION0)>>2];
                     gpio_output_function = ((gpio_output_function_reg >> ((gpio & 0x03) << 3) & 0xff )) ;
-                    
-                    printf("%12s GPIO %02d %c %s\n", wr_841n_v8[gpio], gpio, gpio_direction, gpio_output_function_description[gpio_output_function] );
+                    /* check output state */
+		    if (gpio_output_function == 0 ) {
+		        if (gpio_data[GPIO_OUT>>2] && (1<<gpio)) {
+			    gpio_state = "h";
+                        } else {
+			    gpio_state = "l";
+		        }
+		    } else {
+                        gpio_state = "-";
+                    }
+                    printf("%12s GPIO %02d %c %c %s\n", wr_841n_v8[gpio], gpio, gpio_direction, gpio_state, 
+			 gpio_output_function_description[gpio_output_function] );
                     
                     break;
                 case 'I':
                     if (gpio_input[gpio]) {
                         printf("%12s GPIO %02d %c %s\n", wr_841n_v8[gpio], gpio, gpio_direction, gpio_input[gpio]);
                     } else {
-                        printf("%12s GPIO %02d %c GPIO\n", wr_841n_v8[gpio], gpio, gpio_direction);
+			if (gpio_data[GPIO_IN>>2] && (1<<gpio)) {
+				gpio_state = "h";
+                        } else {
+                            gpio_state = "l";
+                        }
+                        printf("%12s GPIO %02d %c %c GPIO\n", wr_841n_v8[gpio], gpio, gpio_direction, gpio_state);
                     } 
                     break;
             }
