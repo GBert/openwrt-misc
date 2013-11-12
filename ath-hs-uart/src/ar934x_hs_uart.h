@@ -12,7 +12,7 @@
 #ifndef __AR934X_HS_UART_H
 #define __AR934X_HS_UART_H
 
-struct ar933x_uart_platform_data {
+struct ar934x_uart_platform_data {
 	unsigned        uartclk;
 };
 

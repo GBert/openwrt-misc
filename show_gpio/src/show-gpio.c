@@ -147,10 +147,10 @@ int main(int argc, char **argv) {
         }
         
 	if ((gpio <= 3 ) & !(gpio_data[GPIO_FUNCTION>>2] && 1<<1)) {
-	    if (gpio == 0 ) printf("GPIO %02d %c TCK \n", gpio, gpio_direction);
-	    if (gpio == 1 ) printf("GPIO %02d %c TDI \n", gpio, gpio_direction);
-	    if (gpio == 2 ) printf("GPIO %02d %c TDO \n", gpio, gpio_direction);
-	    if (gpio == 3 ) printf("GPIO %02d %c TMS \n", gpio, gpio_direction);
+	    if (gpio == 0 ) printf("GPIO%02d %c TCK \n", gpio, gpio_direction);
+	    if (gpio == 1 ) printf("GPIO%02d %c TDI \n", gpio, gpio_direction);
+	    if (gpio == 2 ) printf("GPIO%02d %c TDO \n", gpio, gpio_direction);
+	    if (gpio == 3 ) printf("GPIO%02d %c TMS \n", gpio, gpio_direction);
 	} else {
             switch(gpio_direction) {
 		case 'O':
@@ -158,28 +158,28 @@ int main(int argc, char **argv) {
                     gpio_output_function = ((gpio_output_function_reg >> ((gpio & 0x03) << 3) & 0xff )) ;
                     /* check output state */
 		    if (gpio_output_function == 0 ) {
-		        if (gpio_data[GPIO_OUT>>2] && (1<<gpio)) {
-			    gpio_state = "h";
+		        if (gpio_data[GPIO_OUT>>2] & (1<<gpio)) {
+			    gpio_state = 'h';
                         } else {
-			    gpio_state = "l";
+			    gpio_state = 'l';
 		        }
 		    } else {
-                        gpio_state = "-";
+                        gpio_state = '-';
                     }
-                    printf("%12s GPIO %02d %c %c %s\n", wr_841n_v8[gpio], gpio, gpio_direction, gpio_state, 
+                    printf("%12s GPIO%02d %c %c %s\n", wr_841n_v8[gpio], gpio, gpio_direction, gpio_state, 
 			 gpio_output_function_description[gpio_output_function] );
                     
                     break;
                 case 'I':
                     if (gpio_input[gpio]) {
-                        printf("%12s GPIO %02d %c %s\n", wr_841n_v8[gpio], gpio, gpio_direction, gpio_input[gpio]);
+                        printf("%12s GPIO%02d %c - %s\n", wr_841n_v8[gpio], gpio, gpio_direction, gpio_input[gpio]);
                     } else {
-			if (gpio_data[GPIO_IN>>2] && (1<<gpio)) {
-				gpio_state = "h";
+			if (gpio_data[GPIO_IN>>2] & (1<<gpio)) {
+				gpio_state = 'h';
                         } else {
-                            gpio_state = "l";
+                            gpio_state = 'l';
                         }
-                        printf("%12s GPIO %02d %c %c GPIO\n", wr_841n_v8[gpio], gpio, gpio_direction, gpio_state);
+                        printf("%12s GPIO%02d %c %c GPIO\n", wr_841n_v8[gpio], gpio, gpio_direction, gpio_state);
                     } 
                     break;
             }
