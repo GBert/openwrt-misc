@@ -36,7 +36,7 @@ static struct resource ar933x_uart_resources[] = {
 
 static struct platform_device ar933x_uart_device = {
 	.name           = DRIVER_NAME,
-	.id             = -1,
+	.id             = 0,
 	.resource       = ar933x_uart_resources,
 	.num_resources  = ARRAY_SIZE(ar933x_uart_resources),
 };
