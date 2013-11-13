@@ -47,6 +47,12 @@
 #define AR934X_UART1_BASE      (AR71XX_APB_BASE + 0x00500000)
 #define AR934X_UART1_FIFO_SIZE	4
 
+struct tty_driver *uart_console_device(struct console *co, int *index)
+{
+	struct uart_driver *p = co->data;
+	*index = co->index;
+	return p->tty_driver;
+}
 static struct uart_driver ar933x_uart_driver;
 
 struct ar933x_uart_port {
