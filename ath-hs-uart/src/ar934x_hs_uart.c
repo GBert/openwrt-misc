@@ -69,14 +69,14 @@ static inline unsigned int ar934x_hs_uart_read(struct ar934x_hs_uart_port *up,
 {
 	unsigned int value;
 	value = readl(up->port.membase + offset);
-	dprintk("%s()  io 0x%08X  ->   0x%08X\n", __func__, (uint32_t) up->port.membase + offset, value);
+	// dprintk("%s()  io 0x%08X  ->   0x%08X\n", __func__, (uint32_t) up->port.membase + offset, value);
 	return value;
 }
 
 static inline void ar934x_hs_uart_write(struct ar934x_hs_uart_port *up,
 				     int offset, unsigned int value)
 {
-	dprintk("%s() io 0x%08X value 0x%08X\n", __func__, (uint32_t) up->port.membase + offset, value);
+	// dprintk("%s() io 0x%08X value 0x%08X\n", __func__, (uint32_t) up->port.membase + offset, value);
 	writel(value, up->port.membase + offset);
 }
 
@@ -336,8 +336,8 @@ static void ar934x_hs_uart_rx_chars(struct ar934x_hs_uart_port *up)
 
 		if (uart_handle_sysrq_char(&up->port, ch))
 			continue;
-		dprintk("%s() ignore_statusmask 0x%02X  AR934X_HS_DUMMY_STATUS_RD 0x%02\n", __func__, up->port.ignore_status_mask, AR934X_HS_DUMMY_STATUS_RD);
 		if ((up->port.ignore_status_mask & AR934X_HS_DUMMY_STATUS_RD) == 0)
+			dprintk("%s() send %02X", __func__, ch);
 			tty_insert_flip_char(port, ch, TTY_NORMAL);
 	} while (max_count-- > 0);
 
@@ -390,7 +390,7 @@ static irqreturn_t ar934x_hs_uart_interrupt(int irq, void *dev_id)
 	struct ar934x_hs_uart_port *up = dev_id;
 	unsigned int status;
 
-	dprintk("  HS Uart int\n");
+	// dprintk("  HS Uart int\n");
 
 	status = ar934x_hs_uart_read(up, AR934X_HS_UART_CS_REG);
 	if ((status & AR934X_HS_UART_CS_HOST_INT) == 0)
