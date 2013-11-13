@@ -44,9 +44,8 @@
 
 #define AR71XX_APB_BASE		0x18000000
 #define AR71XX_UART_SIZE        0x100
-#define AR934X_UART1_BASE	(AR71XX_APB_BASE + 0x00500000)
+#define AR934X_UART1_BASE      (AR71XX_APB_BASE + 0x00500000)
 #define AR934X_UART1_FIFO_SIZE	4
-/* #define CONFIG_SERIAL_AR933X_CONSOLE	1 */
 
 static struct uart_driver ar933x_uart_driver;
 
@@ -301,7 +300,7 @@ static void ar933x_uart_set_termios(struct uart_port *port,
 	/* reenable the UART */
 	ar933x_uart_rmw(up, AR933X_UART_CS_REG,
 			AR933X_UART_CS_IF_MODE_M << AR933X_UART_CS_IF_MODE_S,
-			AR933X_UART_CS_IF_MODE_DTE << AR933X_UART_CS_IF_MODE_S);
+			AR933X_UART_CS_IF_MODE_DCE << AR933X_UART_CS_IF_MODE_S);
 
 	spin_unlock_irqrestore(&up->port.lock, flags);
 
@@ -752,22 +751,22 @@ static struct platform_driver ar933x_uart_platform_driver = {
 
 static struct resource ar933x_uart_resources[] = {
 	{
-		.start	= AR934X_UART1_BASE,
-		.end	= AR934X_UART1_BASE + AR71XX_UART_SIZE - 1,
-		.flags	= IORESOURCE_MEM,
+		.start  = AR934X_UART1_BASE,
+		.end    = AR934X_UART1_BASE + AR71XX_UART_SIZE - 1,
+		.flags  = IORESOURCE_MEM,
 	},
 	{
-		.start	= ATH79_MISC_IRQ(6),
-		.end	= ATH79_MISC_IRQ(6),
-		.flags	= IORESOURCE_IRQ,
+		.start  = ATH79_MISC_IRQ(6),
+		.end    = ATH79_MISC_IRQ(6),
+		.flags  = IORESOURCE_IRQ,
 	},
 };
 
 static struct platform_device ar933x_uart_device = {
-	.name		= "ar933x-uart",
-	.id		= -1,
-	.resource	= ar933x_uart_resources,
-	.num_resources	= ARRAY_SIZE(ar933x_uart_resources),
+	.name           = "ar933x-uart",
+	.id             = -1,
+	.resource       = ar933x_uart_resources,
+	.num_resources  = ARRAY_SIZE(ar933x_uart_resources),
 };
 
 static int __init ar933x_uart_init(void)
