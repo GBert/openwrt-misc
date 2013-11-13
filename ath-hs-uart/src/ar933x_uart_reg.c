@@ -24,7 +24,7 @@
 static struct resource ar933x_uart_resources[] = {
 	{
 		.start  = AR934X_UART1_BASE,
-		.end    = AR934X_UART1_BASE + AR71XX_UART_SIZE - 1,
+		.end    = AR934X_UART1_BASE + 0x14 - 1,
 		.flags  = IORESOURCE_MEM,
 	},
 	{
@@ -36,7 +36,7 @@ static struct resource ar933x_uart_resources[] = {
 
 static struct platform_device ar933x_uart_device = {
 	.name           = DRIVER_NAME,
-	.id             = 0,
+	.id             = 1,
 	.resource       = ar933x_uart_resources,
 	.num_resources  = ARRAY_SIZE(ar933x_uart_resources),
 };
