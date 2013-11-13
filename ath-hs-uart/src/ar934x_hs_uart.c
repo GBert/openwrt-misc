@@ -802,11 +802,6 @@ static int __init ar934x_hs_uart_init(void)
 		ar934x_hs_uart_driver.cons = &ar934x_hs_uart_console;
 	};
 
-	/* TODO */
-	/* uart_clk_rate = ath79_get_sys_clk_rate("uart"); */
-	/* --- uart_clk_rate = 25000000; */
-	/* ar934x_uart_data.uartclk = uart_clk_rate; */
-
 	ret = uart_register_driver(&ar934x_hs_uart_driver);
 	if (ret)
 		goto err_out;

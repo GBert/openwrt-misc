@@ -773,8 +773,6 @@ static int __init ar933x_uart_init(void)
 {
 	int ret;
 
-	// platform_device_register(&ar933x_uart_device);
-
 	if (ar933x_uart_console_enabled())
 		ar933x_uart_driver.cons = &ar933x_uart_console;
 
@@ -785,6 +783,8 @@ static int __init ar933x_uart_init(void)
 	ret = platform_driver_register(&ar933x_uart_platform_driver);
 	if (ret)
 		goto err_unregister_uart_driver;
+
+	platform_device_register(&ar933x_uart_device);
 
 	return 0;
 
