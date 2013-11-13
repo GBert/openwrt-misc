@@ -45,7 +45,7 @@
 
 #define dprintk(args...) \
     do { \
-       printk(KERN_INFO " ar934x-hs-uart 021 : " args); \
+       printk(KERN_INFO " ar934x-hs-uart 022 : " args); \
     } while (0)
 
 
@@ -336,7 +336,7 @@ static void ar934x_hs_uart_rx_chars(struct ar934x_hs_uart_port *up)
 
 		if (uart_handle_sysrq_char(&up->port, ch))
 			continue;
-
+		dprintk("%s() ignore_statusmask 0x%02X  AR934X_HS_DUMMY_STATUS_RD 0x%02\n", __func__, up->port.ignore_status_mask, AR934X_HS_DUMMY_STATUS_RD);
 		if ((up->port.ignore_status_mask & AR934X_HS_DUMMY_STATUS_RD) == 0)
 			tty_insert_flip_char(port, ch, TTY_NORMAL);
 	} while (max_count-- > 0);
