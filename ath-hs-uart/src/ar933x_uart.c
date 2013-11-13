@@ -32,7 +32,7 @@
 
 #include <asm/mach-ath79/ar933x_uart.h>
 
-#define DRIVER_NAME "ar934x-uart"
+#define DRIVER_NAME "ar933x-uart"
 
 #define AR933X_UART_MAX_SCALE	0xff
 #define AR933X_UART_MAX_STEP	0xffff
