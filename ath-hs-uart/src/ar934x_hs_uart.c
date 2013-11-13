@@ -45,7 +45,7 @@
 
 #define dprintk(args...) \
     do { \
-       printk(KERN_INFO " ar934x-hs-uart 020 : " args); \
+       printk(KERN_INFO " ar934x-hs-uart 021 : " args); \
     } while (0)
 
 
@@ -67,14 +67,16 @@ static inline bool ar934x_hs_uart_console_enabled(void)
 static inline unsigned int ar934x_hs_uart_read(struct ar934x_hs_uart_port *up,
 					    int offset)
 {
-	dprintk("%s() read  io 0x%08X\n", __func__, (uint32_t) up->port.membase + offset);
-	return readl(up->port.membase + offset);
+	unsigned int value;
+	value = readl(up->port.membase + offset);
+	dprintk("%s()  io 0x%08X  ->   0x%08X\n", __func__, (uint32_t) up->port.membase + offset, value);
+	return value;
 }
 
 static inline void ar934x_hs_uart_write(struct ar934x_hs_uart_port *up,
 				     int offset, unsigned int value)
 {
-	dprintk("%s() write io 0x%08X value 0x%08X\n", __func__, (uint32_t) up->port.membase + offset, value);
+	dprintk("%s() io 0x%08X value 0x%08X\n", __func__, (uint32_t) up->port.membase + offset, value);
 	writel(value, up->port.membase + offset);
 }
 
