@@ -763,7 +763,7 @@ static struct resource ar933x_uart_resources[] = {
 };
 
 static struct platform_device ar933x_uart_device = {
-	.name           = "ar933x-uart",
+	.name           = DRIVER_NAME,
 	.id             = -1,
 	.resource       = ar933x_uart_resources,
 	.num_resources  = ARRAY_SIZE(ar933x_uart_resources),
@@ -773,7 +773,7 @@ static int __init ar933x_uart_init(void)
 {
 	int ret;
 
-	platform_device_register(&ar933x_uart_device);
+	// platform_device_register(&ar933x_uart_device);
 
 	if (ar933x_uart_console_enabled())
 		ar933x_uart_driver.cons = &ar933x_uart_console;
