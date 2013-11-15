@@ -44,6 +44,8 @@
 
 #define AR934X_HS_DUMMY_STATUS_RD	0x01
 
+#define CONFIG_SERIAL_AR933X_NR_UARTS	1
+
 #define dprintk(args...) \
     do { \
        printk(KERN_INFO " ar934x-hs-uart 022 : " args); \
@@ -623,7 +625,8 @@ static void ar934x_hs_uart_add_console_port(struct ar934x_hs_uart_port *up)
 {
 	if (!ar934x_hs_uart_console_enabled())
 		return;
-
+	
+	dprintk("%s() is console\n", __func__ );
 	ar934x_console_ports[up->port.line] = up;
 }
 
@@ -631,10 +634,7 @@ static struct uart_driver ar934x_hs_uart_driver = {
 	.owner		= THIS_MODULE,
 	.driver_name	= DRIVER_NAME,
 	.dev_name	= "ttyATH",
-	/* .major		= 5, */
-	/* .minor		= 64, */
-	/* .nr		= CONFIG_SERIAL_AR933X_NR_UARTS, */
-	.nr		= 1,
+	.nr		= CONFIG_SERIAL_AR933X_NR_UARTS,
 	.cons		= NULL, /* filled in runtime */
 };
 
