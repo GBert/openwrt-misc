@@ -33,7 +33,9 @@
 
 #include "ar934x_hs_uart.h"
 
-#define CONFIG_SERIAL_AR934X_HS_CONSOLE	y
+#undef CONFIG_SERIAL_AR934X_HS_CONSOLE
+#define CONFIG_SERIAL_AR933X_NR_UARTS	1
+
 #define DRIVER_NAME "ar934x-hs-uart"
 
 #define AR934X_HS_UART_MAX_SCALE	0xff
@@ -44,11 +46,9 @@
 
 #define AR934X_HS_DUMMY_STATUS_RD	0x01
 
-#define CONFIG_SERIAL_AR933X_NR_UARTS	1
-
 #define dprintk(args...) \
     do { \
-       printk(KERN_INFO " ar934x-hs-uart 022 : " args); \
+       printk(KERN_INFO " ar934x-hs-uart 030 : " args); \
     } while (0)
 
 
