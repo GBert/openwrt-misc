@@ -340,7 +340,7 @@ static void ar934x_hs_uart_rx_chars(struct ar934x_hs_uart_port *up)
 		if (uart_handle_sysrq_char(&up->port, ch))
 			continue;
 		if ((up->port.ignore_status_mask & AR934X_HS_DUMMY_STATUS_RD) == 0)
-			dprintk("%s() send %02X\n", __func__, ch);
+			dprintk("%s() send to tty %02X\n", __func__, ch);
 			tty_insert_flip_char(port, ch, TTY_NORMAL);
 	} while (max_count-- > 0);
 
