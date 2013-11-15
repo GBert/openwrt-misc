@@ -33,6 +33,7 @@
 
 #include "ar934x_hs_uart.h"
 
+#define CONFIG_SERIAL_AR934X_HS_CONSOLE	y
 #define DRIVER_NAME "ar934x-hs-uart"
 
 #define AR934X_HS_UART_MAX_SCALE	0xff
