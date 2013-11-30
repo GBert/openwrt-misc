@@ -241,8 +241,10 @@ static void ar934x_hs_uart_get_scale_step(unsigned int clk,
 			min_diff = diff;
 			*scale = tscale;
 			*step = tstep;
+		
 		}
 	}
+	dprintk("%s() clk:%d scale:0x%04X step:0x%04X baud:%d min_diff:%d\n", __func__, clk, *scale, *step, baud, min_diff);
 }
 
 static void ar934x_hs_uart_set_termios(struct uart_port *port,
