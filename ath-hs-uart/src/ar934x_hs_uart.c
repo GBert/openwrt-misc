@@ -48,7 +48,7 @@
 
 #define dprintk(args...) \
     do { \
-       printk(KERN_INFO " ar934x-hs-uart 030 : " args); \
+       printk(KERN_INFO " ar934x-hs-uart : " args); \
     } while (0)
 
 
@@ -79,7 +79,7 @@ static inline unsigned int ar934x_hs_uart_read(struct ar934x_hs_uart_port *up,
 static inline void ar934x_hs_uart_write(struct ar934x_hs_uart_port *up,
 				     int offset, unsigned int value)
 {
-	// dprintk("%s() io 0x%08X value 0x%08X\n", __func__, (uint32_t) up->port.membase + offset, value);
+	dprintk("%s() io 0x%08X value 0x%08X\n", __func__, (uint32_t) up->port.membase + offset, value);
 	writel(value, up->port.membase + offset);
 }
 
@@ -128,6 +128,7 @@ static inline void ar934x_hs_uart_putc(struct ar934x_hs_uart_port *up, int ch)
 
 	rdata = ch & AR934X_HS_UART_DATA_TX_RX_MASK;
 	rdata |= AR934X_HS_UART_DATA_TX_CSR;
+	dprintk("%s() write 0x%08X value 0x%08X\n", __func__, rdata, AR934X_HS_UART_DATA_REG);
 	ar934x_hs_uart_write(up, AR934X_HS_UART_DATA_REG, rdata);
 }
 
@@ -356,8 +357,10 @@ static void ar934x_hs_uart_tx_chars(struct ar934x_hs_uart_port *up)
 	struct circ_buf *xmit = &up->port.state->xmit;
 	int count;
 
+	dprintk("%s() check tx_stopped\n", __func__);
 	if (uart_tx_stopped(&up->port))
 		return;
+	dprintk("%s() tx running\n", __func__);
 
 	count = up->port.fifosize;
 	do {
