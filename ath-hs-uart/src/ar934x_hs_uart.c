@@ -79,7 +79,7 @@ static inline unsigned int ar934x_hs_uart_read(struct ar934x_hs_uart_port *up,
 static inline void ar934x_hs_uart_write(struct ar934x_hs_uart_port *up,
 				     int offset, unsigned int value)
 {
-	dprintk("%s() io 0x%08X value 0x%08X\n", __func__, (uint32_t) up->port.membase + offset, value);
+	// dprintk("%s() io 0x%08X value 0x%08X\n", __func__, (uint32_t) up->port.membase + offset, value);
 	writel(value, up->port.membase + offset);
 }
 
@@ -128,7 +128,7 @@ static inline void ar934x_hs_uart_putc(struct ar934x_hs_uart_port *up, int ch)
 
 	rdata = ch & AR934X_HS_UART_DATA_TX_RX_MASK;
 	rdata |= AR934X_HS_UART_DATA_TX_CSR;
-	dprintk("%s() write 0x%08X value 0x%08X\n", __func__, rdata, AR934X_HS_UART_DATA_REG);
+	// dprintk("%s() write 0x%08X value 0x%08X\n", __func__, rdata, AR934X_HS_UART_DATA_REG);
 	ar934x_hs_uart_write(up, AR934X_HS_UART_DATA_REG, rdata);
 }
 
@@ -309,6 +309,14 @@ static void ar934x_hs_uart_set_termios(struct uart_port *port,
 	ar934x_hs_uart_rmw_set(up, AR934X_HS_UART_CS_REG,
 			    AR934X_HS_UART_CS_HOST_INT_EN);
 
+	/* enable TX ready overide */
+	ar934x_hs_uart_rmw_set(up, AR934X_HS_UART_CS_REG,
+			    AR934X_HS_UART_CS_TX_READY_ORIDE);
+
+	/* enable RX ready overide */
+	ar934x_hs_uart_rmw_set(up, AR934X_HS_UART_CS_REG,
+			    AR934X_HS_UART_CS_RX_READY_ORIDE);
+
 	/* reenable the UART */
 	ar934x_hs_uart_rmw(up, AR934X_HS_UART_CS_REG,
 			AR934X_HS_UART_CS_IF_MODE_M << AR934X_HS_UART_CS_IF_MODE_S,
@@ -343,7 +351,7 @@ static void ar934x_hs_uart_rx_chars(struct ar934x_hs_uart_port *up)
 		if (uart_handle_sysrq_char(&up->port, ch))
 			continue;
 		if ((up->port.ignore_status_mask & AR934X_HS_DUMMY_STATUS_RD) == 0)
-//			dprintk("%s() send to tty %02X\n", __func__, ch);
+			// dprintk("%s() send to tty %02X\n", __func__, ch);
 			tty_insert_flip_char(port, ch, TTY_NORMAL);
 	} while (max_count-- > 0);
 
@@ -357,10 +365,10 @@ static void ar934x_hs_uart_tx_chars(struct ar934x_hs_uart_port *up)
 	struct circ_buf *xmit = &up->port.state->xmit;
 	int count;
 
-	dprintk("%s() check tx_stopped\n", __func__);
+	// dprintk("%s() check tx_stopped\n", __func__);
 	if (uart_tx_stopped(&up->port))
 		return;
-	dprintk("%s() tx running\n", __func__);
+	// dprintk("%s() tx running\n", __func__);
 
 	count = up->port.fifosize;
 	do {
@@ -475,13 +483,13 @@ static const char *ar934x_hs_uart_type(struct uart_port *port)
 
 static void ar934x_hs_uart_release_port(struct uart_port *port)
 {
-	dprintk("%s() : do\n", __func__);
+	// dprintk("%s() : do\n", __func__);
 	/* Nothing to release ... */
 }
 
 static int ar934x_hs_uart_request_port(struct uart_port *port)
 {
-	dprintk("%s() : do\n", __func__);
+	// dprintk("%s() : do\n", __func__);
 	/* UARTs always present */
 	return 0;
 }
@@ -654,7 +662,6 @@ static int ar934x_hs_uart_probe(struct platform_device *pdev)
 	int id;
 	int ret;
 
-	dprintk("%s() : in\n", __func__);
 	np = pdev->dev.of_node;
 	if (config_enabled(CONFIG_OF) && np) {
 		id = of_alias_get_id(np, "serial");
@@ -730,19 +737,16 @@ static int ar934x_hs_uart_probe(struct platform_device *pdev)
 		goto err_disable_clk;
 
 	platform_set_drvdata(pdev, up);
-	dprintk("%s() : out w/o error\n", __func__);
 	return 0;
 
 err_disable_clk:
 	clk_disable_unprepare(up->clk);
-	dprintk("%s() : out with error\n", __func__);
 	return ret;
 }
 
 static int ar934x_hs_uart_remove(struct platform_device *pdev)
 {
 	struct ar934x_hs_uart_port *up;
-	dprintk("%s() : in\n", __func__);
 
 	up = platform_get_drvdata(pdev);
 
@@ -750,7 +754,6 @@ static int ar934x_hs_uart_remove(struct platform_device *pdev)
 		uart_remove_one_port(&ar934x_hs_uart_driver, &up->port);
 		clk_disable_unprepare(up->clk);
 	}
-	dprintk("%s() : out\n", __func__);
 
 	return 0;
 }
@@ -801,7 +804,7 @@ static int __init ar934x_hs_uart_init(void)
 {
 	int ret;
 	/* unsigned long uart_clk_rate; */
-	dprintk("%s() : init ...\n", __func__);
+	// dprintk("%s() : init ...\n", __func__);
 
 	if (ar934x_hs_uart_console_enabled()) {
 		dprintk("%s() : is console\n", __func__);
@@ -817,7 +820,6 @@ static int __init ar934x_hs_uart_init(void)
 		goto err_unregister_uart_driver;
 
 	platform_device_register(&ar934x_hs_uart_device);
-	dprintk("%s() : init done\n", __func__);
 
 	return 0;
 
@@ -833,7 +835,6 @@ static void __exit ar934x_hs_uart_exit(void)
 	platform_device_unregister(&ar934x_hs_uart_device);
 	platform_driver_unregister(&ar934x_hs_uart_platform_driver);
 	uart_unregister_driver(&ar934x_hs_uart_driver);
-	dprintk("%s() : exit\n", __func__);
 }
 
 module_init(ar934x_hs_uart_init);
