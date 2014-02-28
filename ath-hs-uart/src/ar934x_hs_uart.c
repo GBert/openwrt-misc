@@ -452,6 +452,10 @@ static int ar934x_hs_uart_startup(struct uart_port *port)
 	ar934x_hs_uart_rmw_set(up, AR934X_HS_UART_CS_REG,
 			    AR934X_HS_UART_CS_HOST_INT_EN);
 
+	/* enable TX ready overide */
+	ar934x_hs_uart_rmw_set(up, AR934X_HS_UART_CS_REG,
+			    AR934X_HS_UART_CS_TX_READY_ORIDE);
+
 	/* Enable RX interrupts */
 	up->ier = AR934X_HS_UART_INT_RX_VALID;
 	ar934x_hs_uart_write(up, AR934X_HS_UART_INT_EN_REG, up->ier);
