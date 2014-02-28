@@ -178,7 +178,7 @@ static int ath79_i2s_drv_probe(struct platform_device *pdev)
 	return snd_soc_register_component(dev, &ath79_i2s_component, &ath79_i2s_dai, 1);
 }
 
-static int __exit ath79_i2s_drv_remove(struct platform_device *pdev)
+static int ath79_i2s_drv_remove(struct platform_device *pdev)
 {
 	snd_soc_unregister_component(&pdev->dev);
 	return 0;

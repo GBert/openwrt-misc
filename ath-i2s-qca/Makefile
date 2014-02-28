@@ -15,8 +15,8 @@ include $(INCLUDE_DIR)/package.mk
 
 define KernelPackage/ath-i2s-qca
   SUBMENU:=Other modules
-  TITLE:=Atheros 934X I2S module
-  DEPENDS:=
+  TITLE:=Qualcomm Atheros 934X I2S module
+  DEPENDS:=+kmod-snd-pcm +kmod-snd-soc-core
   FILES:=$(PKG_BUILD_DIR)/{snd-soc-ath79-i2s.ko,snd-soc-ath79-pcm.ko,snd-soc-ath79-codec.ko}
 #  FILES:=$(PKG_BUILD_DIR)/bit_stream.ko
   KCONFIG:=

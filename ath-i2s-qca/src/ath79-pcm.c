@@ -408,12 +408,12 @@ struct snd_soc_platform_driver ath79_soc_platform = {
 };
 EXPORT_SYMBOL_GPL(ath79_soc_platform);
 
-static int __init ath79_soc_platform_probe(struct platform_device *pdev)
+static int ath79_soc_platform_probe(struct platform_device *pdev)
 {
 	return snd_soc_register_platform(&pdev->dev, &ath79_soc_platform);
 }
 
-static int __exit ath79_soc_platform_remove(struct platform_device *pdev)
+static int ath79_soc_platform_remove(struct platform_device *pdev)
 {
 	snd_soc_unregister_platform(&pdev->dev);
 	return 0;

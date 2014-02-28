@@ -13,7 +13,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 snd-soc-ath79-pcm-objs := ath79-pcm.o ath79-mbox.o
-snd-soc-ath79-i2s-objs := ath79-i2s.o ath79-i2s-pll.o
+snd-soc-ath79-i2s-objs := ath79-i2s.o ath79-i2s-pll.o dev-audio.o
 snd-soc-ath79-codec-objs := ath79-internal-codec.o
 # snd-soc-db120-objs := qca-db120.o
 # snd-soc-cus227-objs := qca-cus227.o
