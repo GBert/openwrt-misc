@@ -31,9 +31,6 @@
 
 #define DRV_NAME	"ath79-i2s"
 
-// static int snd_soc_register_dai(struct device *dev, struct snd_soc_dai_driver *dai_drv);
-// void snd_soc_unregister_dai(struct device *dev);
-
 DEFINE_SPINLOCK(ath79_stereo_lock);
 
 void ath79_stereo_reset(void)
@@ -167,15 +164,23 @@ static struct snd_soc_dai_driver ath79_i2s_dai = {
 	.ops = &ath79_i2s_dai_ops,
 };
 
+static const struct snd_soc_component_driver ath79_i2s_component = {
+	.name           = "ath79-i2s",
+};
+
 static int ath79_i2s_drv_probe(struct platform_device *pdev)
 {
+	struct device *dev = &pdev->dev;
+
 	spin_lock_init(&ath79_stereo_lock);
-	return snd_soc_register_dai(&pdev->dev, &ath79_i2s_dai);
+	/* TODO snd_soc_register_dai -> snd_soc_register_component */
+	// return snd_soc_register_dai(&pdev->dev, &ath79_i2s_dai);
+	return snd_soc_register_component(dev, &ath79_i2s_component, &ath79_i2s_dai, 1);
 }
 
 static int __exit ath79_i2s_drv_remove(struct platform_device *pdev)
 {
-	snd_soc_unregister_dai(&pdev->dev);
+	snd_soc_unregister_component(&pdev->dev);
 	return 0;
 }
 
