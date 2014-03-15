@@ -23,6 +23,9 @@ EXPORT_SYMBOL_GPL(ath79_dma_base);
 void __iomem *ath79_stereo_base;
 EXPORT_SYMBOL_GPL(ath79_stereo_base);
 
+void __iomem *ath79_pll_base;
+EXPORT_SYMBOL_GPL(ath79_pll_base);
+
 void __iomem *ath79_audio_dpll_base;
 EXPORT_SYMBOL_GPL(ath79_audio_dpll_base);
 

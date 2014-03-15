@@ -17,8 +17,6 @@
 #include <linux/sysrq.h>
 #include <linux/delay.h>
 #include <linux/platform_device.h>
-#include <linux/of.h>
-#include <linux/of_platform.h>
 #include <linux/tty.h>
 #include <linux/tty_flip.h>
 #include <linux/serial_core.h>
@@ -26,175 +24,157 @@
 #include <linux/slab.h>
 #include <linux/io.h>
 #include <linux/irq.h>
-#include <linux/clk.h>
 
 #include <asm/div64.h>
 
-#include <asm/mach-ath79/ar933x_uart.h>
+#include "ar934x_hs_uart.h"
 
 #define DRIVER_NAME "ar933x-uart"
 
-#define AR933X_UART_MAX_SCALE	0xff
-#define AR933X_UART_MAX_STEP	0xffff
+#define AR934X_HS_UART_MAX_SCALE	0xff
+#define AR934X_HS_UART_MAX_STEP		0xffff
 
-#define AR933X_UART_MIN_BAUD	300
-#define AR933X_UART_MAX_BAUD	3000000
+#define AR934X_HS_UART_MIN_BAUD		300
+#define AR934X_HS_UART_MAX_BAUD		3000000
 
-#define AR933X_DUMMY_STATUS_RD	0x01
+#define AR934X_HS_DUMMY_STATUS_RD	0x01
 
-#define AR71XX_APB_BASE		0x18000000
-#define AR71XX_UART_SIZE        0x100
-#define AR934X_UART1_BASE      (AR71XX_APB_BASE + 0x00500000)
-#define AR934X_UART1_FIFO_SIZE	4
+static struct uart_driver ar934x_hs_uart_driver;
 
-struct tty_driver *uart_console_device(struct console *co, int *index)
-{
-	struct uart_driver *p = co->data;
-	*index = co->index;
-	return p->tty_driver;
-}
-static struct uart_driver ar933x_uart_driver;
-
-struct ar933x_uart_port {
+struct ar934x_hs_uart_port {
 	struct uart_port	port;
 	unsigned int		ier;	/* shadow Interrupt Enable Register */
 	unsigned int		min_baud;
 	unsigned int		max_baud;
-	struct clk		*clk;
 };
 
-static inline bool ar933x_uart_console_enabled(void)
-{
-	return config_enabled(CONFIG_SERIAL_AR933X_CONSOLE);
-}
-
-static inline unsigned int ar933x_uart_read(struct ar933x_uart_port *up,
+static inline unsigned int ar934x_hs_uart_read(struct ar934x_hs_uart_port *up,
 					    int offset)
 {
 	return readl(up->port.membase + offset);
 }
 
-static inline void ar933x_uart_write(struct ar933x_uart_port *up,
+static inline void ar934x_hs_uart_write(struct ar934x_hs_uart_port *up,
 				     int offset, unsigned int value)
 {
 	writel(value, up->port.membase + offset);
 }
 
-static inline void ar933x_uart_rmw(struct ar933x_uart_port *up,
+static inline void ar934x_hs_uart_rmw(struct ar934x_hs_uart_port *up,
 				  unsigned int offset,
 				  unsigned int mask,
 				  unsigned int val)
 {
 	unsigned int t;
 
-	t = ar933x_uart_read(up, offset);
+	t = ar934x_hs_uart_read(up, offset);
 	t &= ~mask;
 	t |= val;
-	ar933x_uart_write(up, offset, t);
+	ar934x_hs_uart_write(up, offset, t);
 }
 
-static inline void ar933x_uart_rmw_set(struct ar933x_uart_port *up,
+static inline void ar934x_hs_uart_rmw_set(struct ar934x_hs_uart_port *up,
 				       unsigned int offset,
 				       unsigned int val)
 {
-	ar933x_uart_rmw(up, offset, 0, val);
+	ar934x_hs_uart_rmw(up, offset, 0, val);
 }
 
-static inline void ar933x_uart_rmw_clear(struct ar933x_uart_port *up,
+static inline void ar934x_hs_uart_rmw_clear(struct ar934x_hs_uart_port *up,
 					 unsigned int offset,
 					 unsigned int val)
 {
-	ar933x_uart_rmw(up, offset, val, 0);
+	ar934x_hs_uart_rmw(up, offset, val, 0);
 }
 
-static inline void ar933x_uart_start_tx_interrupt(struct ar933x_uart_port *up)
+static inline void ar934x_hs_uart_start_tx_interrupt(struct ar934x_hs_uart_port *up)
 {
-	up->ier |= AR933X_UART_INT_TX_EMPTY;
-	ar933x_uart_write(up, AR933X_UART_INT_EN_REG, up->ier);
+	up->ier |= AR934X_HS_UART_INT_TX_EMPTY;
+	ar934x_hs_uart_write(up, AR934X_HS_UART_INT_EN_REG, up->ier);
 }
 
-static inline void ar933x_uart_stop_tx_interrupt(struct ar933x_uart_port *up)
+static inline void ar934x_hs_uart_stop_tx_interrupt(struct ar934x_hs_uart_port *up)
 {
-	up->ier &= ~AR933X_UART_INT_TX_EMPTY;
-	ar933x_uart_write(up, AR933X_UART_INT_EN_REG, up->ier);
+	up->ier &= ~AR934X_HS_UART_INT_TX_EMPTY;
+	ar934x_hs_uart_write(up, AR934X_HS_UART_INT_EN_REG, up->ier);
 }
 
-static inline void ar933x_uart_putc(struct ar933x_uart_port *up, int ch)
+static inline void ar934x_hs_uart_putc(struct ar934x_hs_uart_port *up, int ch)
 {
 	unsigned int rdata;
 
-	rdata = ch & AR933X_UART_DATA_TX_RX_MASK;
-	rdata |= AR933X_UART_DATA_TX_CSR;
-	ar933x_uart_write(up, AR933X_UART_DATA_REG, rdata);
+	rdata = ch & AR934X_HS_UART_DATA_TX_RX_MASK;
+	rdata |= AR934X_HS_UART_DATA_TX_CSR;
+	ar934x_hs_uart_write(up, AR934X_HS_UART_DATA_REG, rdata);
 }
 
-static unsigned int ar933x_uart_tx_empty(struct uart_port *port)
+static unsigned int ar934x_hs_uart_tx_empty(struct uart_port *port)
 {
-	struct ar933x_uart_port *up = (struct ar933x_uart_port *) port;
+	struct ar934x_hs_uart_port *up = (struct ar934x_hs_uart_port *) port;
 	unsigned long flags;
 	unsigned int rdata;
 
 	spin_lock_irqsave(&up->port.lock, flags);
-	rdata = ar933x_uart_read(up, AR933X_UART_DATA_REG);
+	rdata = ar934x_hs_uart_read(up, AR934X_HS_UART_DATA_REG);
 	spin_unlock_irqrestore(&up->port.lock, flags);
 
-	return (rdata & AR933X_UART_DATA_TX_CSR) ? 0 : TIOCSER_TEMT;
+	return (rdata & AR934X_HS_UART_DATA_TX_CSR) ? 0 : TIOCSER_TEMT;
 }
 
-static unsigned int ar933x_uart_get_mctrl(struct uart_port *port)
+static unsigned int ar934x_hs_uart_get_mctrl(struct uart_port *port)
 {
 	return TIOCM_CAR;
 }
 
-static void ar933x_uart_set_mctrl(struct uart_port *port, unsigned int mctrl)
+static void ar934x_hs_uart_set_mctrl(struct uart_port *port, unsigned int mctrl)
 {
 }
 
-static void ar933x_uart_start_tx(struct uart_port *port)
+static void ar934x_hs_uart_start_tx(struct uart_port *port)
 {
-	struct ar933x_uart_port *up = (struct ar933x_uart_port *) port;
+	struct ar934x_hs_uart_port *up = (struct ar934x_hs_uart_port *) port;
 
-	ar933x_uart_start_tx_interrupt(up);
+	ar934x_hs_uart_start_tx_interrupt(up);
 }
 
-static void ar933x_uart_stop_tx(struct uart_port *port)
+static void ar934x_hs_uart_stop_tx(struct uart_port *port)
 {
-	struct ar933x_uart_port *up = (struct ar933x_uart_port *) port;
+	struct ar934x_hs_uart_port *up = (struct ar934x_hs_uart_port *) port;
 
-	ar933x_uart_stop_tx_interrupt(up);
+	ar934x_hs_uart_stop_tx_interrupt(up);
 }
 
-static void ar933x_uart_stop_rx(struct uart_port *port)
+static void ar934x_hs_uart_stop_rx(struct uart_port *port)
 {
-	struct ar933x_uart_port *up = (struct ar933x_uart_port *) port;
+	struct ar934x_hs_uart_port *up = (struct ar934x_hs_uart_port *) port;
 
-	up->ier &= ~AR933X_UART_INT_RX_VALID;
-	ar933x_uart_write(up, AR933X_UART_INT_EN_REG, up->ier);
+	up->ier &= ~AR934X_HS_UART_INT_RX_VALID;
+	ar934x_hs_uart_write(up, AR934X_HS_UART_INT_EN_REG, up->ier);
 }
 
-static void ar933x_uart_break_ctl(struct uart_port *port, int break_state)
+static void ar934x_hs_uart_break_ctl(struct uart_port *port, int break_state)
 {
-	struct ar933x_uart_port *up = (struct ar933x_uart_port *) port;
+	struct ar934x_hs_uart_port *up = (struct ar934x_hs_uart_port *) port;
 	unsigned long flags;
 
 	spin_lock_irqsave(&up->port.lock, flags);
 	if (break_state == -1)
-		ar933x_uart_rmw_set(up, AR933X_UART_CS_REG,
-				    AR933X_UART_CS_TX_BREAK);
+		ar934x_hs_uart_rmw_set(up, AR934X_HS_UART_CS_REG,
+				    AR934X_HS_UART_CS_TX_BREAK);
 	else
-		ar933x_uart_rmw_clear(up, AR933X_UART_CS_REG,
-				      AR933X_UART_CS_TX_BREAK);
+		ar934x_hs_uart_rmw_clear(up, AR934X_HS_UART_CS_REG,
+				      AR934X_HS_UART_CS_TX_BREAK);
 	spin_unlock_irqrestore(&up->port.lock, flags);
 }
 
-static void ar933x_uart_enable_ms(struct uart_port *port)
+static void ar934x_hs_uart_enable_ms(struct uart_port *port)
 {
 }
 
 /*
  * baudrate = (clk / (scale + 1)) * (step * (1 / 2^17))
  */
-static unsigned long ar933x_uart_get_baud(unsigned int clk,
+static unsigned long ar934x_hs_uart_get_baud(unsigned int clk,
 					  unsigned int scale,
 					  unsigned int step)
 {
@@ -210,7 +190,7 @@ static unsigned long ar933x_uart_get_baud(unsigned int clk,
 	return t;
 }
 
-static void ar933x_uart_get_scale_step(unsigned int clk,
+static void ar934x_hs_uart_get_scale_step(unsigned int clk,
 				       unsigned int baud,
 				       unsigned int *scale,
 				       unsigned int *step)
@@ -222,7 +202,7 @@ static void ar933x_uart_get_scale_step(unsigned int clk,
 	*step = 0;
 
 	min_diff = baud;
-	for (tscale = 0; tscale < AR933X_UART_MAX_SCALE; tscale++) {
+	for (tscale = 0; tscale < AR934X_HS_UART_MAX_SCALE; tscale++) {
 		u64 tstep;
 		int diff;
 
@@ -230,10 +210,10 @@ static void ar933x_uart_get_scale_step(unsigned int clk,
 		tstep *= (2 << 16);
 		do_div(tstep, clk);
 
-		if (tstep > AR933X_UART_MAX_STEP)
+		if (tstep > AR934X_HS_UART_MAX_STEP)
 			break;
 
-		diff = abs(ar933x_uart_get_baud(clk, tscale, tstep) - baud);
+		diff = abs(ar934x_hs_uart_get_baud(clk, tscale, tstep) - baud);
 		if (diff < min_diff) {
 			min_diff = diff;
 			*scale = tscale;
@@ -242,11 +222,11 @@ static void ar933x_uart_get_scale_step(unsigned int clk,
 	}
 }
 
-static void ar933x_uart_set_termios(struct uart_port *port,
+static void ar934x_hs_uart_set_termios(struct uart_port *port,
 				    struct ktermios *new,
 				    struct ktermios *old)
 {
-	struct ar933x_uart_port *up = (struct ar933x_uart_port *) port;
+	struct ar934x_hs_uart_port *up = (struct ar934x_hs_uart_port *) port;
 	unsigned int cs;
 	unsigned long flags;
 	unsigned int baud, scale, step;
@@ -261,18 +241,18 @@ static void ar933x_uart_set_termios(struct uart_port *port,
 	cs = 0;
 	if (new->c_cflag & PARENB) {
 		if (!(new->c_cflag & PARODD))
-			cs |= AR933X_UART_CS_PARITY_EVEN;
+			cs |= AR934X_HS_UART_CS_PARITY_EVEN;
 		else
-			cs |= AR933X_UART_CS_PARITY_ODD;
+			cs |= AR934X_HS_UART_CS_PARITY_ODD;
 	} else {
-		cs |= AR933X_UART_CS_PARITY_NONE;
+		cs |= AR934X_HS_UART_CS_PARITY_NONE;
 	}
 
 	/* Mark/space parity is not supported */
 	new->c_cflag &= ~CMSPAR;
 
 	baud = uart_get_baud_rate(port, new, old, up->min_baud, up->max_baud);
-	ar933x_uart_get_scale_step(port->uartclk, baud, &scale, &step);
+	ar934x_hs_uart_get_scale_step(port->uartclk, baud, &scale, &step);
 
 	/*
 	 * Ok, we're now changing the port state. Do it with
@@ -281,8 +261,8 @@ static void ar933x_uart_set_termios(struct uart_port *port,
 	spin_lock_irqsave(&up->port.lock, flags);
 
 	/* disable the UART */
-	ar933x_uart_rmw_clear(up, AR933X_UART_CS_REG,
-		      AR933X_UART_CS_IF_MODE_M << AR933X_UART_CS_IF_MODE_S);
+	ar934x_hs_uart_rmw_clear(up, AR934X_HS_UART_CS_REG,
+		      AR934X_HS_UART_CS_IF_MODE_M << AR934X_HS_UART_CS_IF_MODE_S);
 
 	/* Update the per-port timeout. */
 	uart_update_timeout(port, new->c_cflag, baud);
@@ -291,22 +271,22 @@ static void ar933x_uart_set_termios(struct uart_port *port,
 
 	/* ignore all characters if CREAD is not set */
 	if ((new->c_cflag & CREAD) == 0)
-		up->port.ignore_status_mask |= AR933X_DUMMY_STATUS_RD;
+		up->port.ignore_status_mask |= AR934X_HS_DUMMY_STATUS_RD;
 
-	ar933x_uart_write(up, AR933X_UART_CLOCK_REG,
-			  scale << AR933X_UART_CLOCK_SCALE_S | step);
+	ar934x_hs_uart_write(up, AR934X_HS_UART_CLOCK_REG,
+			  scale << AR934X_HS_UART_CLOCK_SCALE_S | step);
 
 	/* setup configuration register */
-	ar933x_uart_rmw(up, AR933X_UART_CS_REG, AR933X_UART_CS_PARITY_M, cs);
+	ar934x_hs_uart_rmw(up, AR934X_HS_UART_CS_REG, AR934X_HS_UART_CS_PARITY_M, cs);
 
 	/* enable host interrupt */
-	ar933x_uart_rmw_set(up, AR933X_UART_CS_REG,
-			    AR933X_UART_CS_HOST_INT_EN);
+	ar934x_hs_uart_rmw_set(up, AR934X_HS_UART_CS_REG,
+			    AR934X_HS_UART_CS_HOST_INT_EN);
 
 	/* reenable the UART */
-	ar933x_uart_rmw(up, AR933X_UART_CS_REG,
-			AR933X_UART_CS_IF_MODE_M << AR933X_UART_CS_IF_MODE_S,
-			AR933X_UART_CS_IF_MODE_DCE << AR933X_UART_CS_IF_MODE_S);
+	ar934x_hs_uart_rmw(up, AR934X_HS_UART_CS_REG,
+			AR934X_HS_UART_CS_IF_MODE_M << AR934X_HS_UART_CS_IF_MODE_S,
+			AR934X_HS_UART_CS_IF_MODE_DCE << AR934X_HS_UART_CS_IF_MODE_S);
 
 	spin_unlock_irqrestore(&up->port.lock, flags);
 
@@ -314,7 +294,7 @@ static void ar933x_uart_set_termios(struct uart_port *port,
 		tty_termios_encode_baud_rate(new, baud, baud);
 }
 
-static void ar933x_uart_rx_chars(struct ar933x_uart_port *up)
+static void ar934x_hs_uart_rx_chars(struct ar934x_hs_uart_port *up)
 {
 	struct tty_port *port = &up->port.state->port;
 	int max_count = 256;
@@ -323,30 +303,28 @@ static void ar933x_uart_rx_chars(struct ar933x_uart_port *up)
 		unsigned int rdata;
 		unsigned char ch;
 
-		rdata = ar933x_uart_read(up, AR933X_UART_DATA_REG);
-		if ((rdata & AR933X_UART_DATA_RX_CSR) == 0)
+		rdata = ar934x_hs_uart_read(up, AR934X_HS_UART_DATA_REG);
+		if ((rdata & AR934X_HS_UART_DATA_RX_CSR) == 0)
 			break;
 
 		/* remove the character from the FIFO */
-		ar933x_uart_write(up, AR933X_UART_DATA_REG,
-				  AR933X_UART_DATA_RX_CSR);
+		ar934x_hs_uart_write(up, AR934X_HS_UART_DATA_REG,
+				  AR934X_HS_UART_DATA_RX_CSR);
 
 		up->port.icount.rx++;
-		ch = rdata & AR933X_UART_DATA_TX_RX_MASK;
+		ch = rdata & AR934X_HS_UART_DATA_TX_RX_MASK;
 
 		if (uart_handle_sysrq_char(&up->port, ch))
 			continue;
 
-		if ((up->port.ignore_status_mask & AR933X_DUMMY_STATUS_RD) == 0)
+		if ((up->port.ignore_status_mask & AR934X_HS_DUMMY_STATUS_RD) == 0)
 			tty_insert_flip_char(port, ch, TTY_NORMAL);
 	} while (max_count-- > 0);
 
-	spin_unlock(&up->port.lock);
 	tty_flip_buffer_push(port);
-	spin_lock(&up->port.lock);
 }
 
-static void ar933x_uart_tx_chars(struct ar933x_uart_port *up)
+static void ar934x_hs_uart_tx_chars(struct ar934x_hs_uart_port *up)
 {
 	struct circ_buf *xmit = &up->port.state->xmit;
 	int count;
@@ -358,12 +336,12 @@ static void ar933x_uart_tx_chars(struct ar933x_uart_port *up)
 	do {
 		unsigned int rdata;
 
-		rdata = ar933x_uart_read(up, AR933X_UART_DATA_REG);
-		if ((rdata & AR933X_UART_DATA_TX_CSR) == 0)
+		rdata = ar934x_hs_uart_read(up, AR934X_HS_UART_DATA_REG);
+		if ((rdata & AR934X_HS_UART_DATA_TX_CSR) == 0)
 			break;
 
 		if (up->port.x_char) {
-			ar933x_uart_putc(up, up->port.x_char);
+			ar934x_hs_uart_putc(up, up->port.x_char);
 			up->port.icount.tx++;
 			up->port.x_char = 0;
 			continue;
@@ -372,7 +350,7 @@ static void ar933x_uart_tx_chars(struct ar933x_uart_port *up)
 		if (uart_circ_empty(xmit))
 			break;
 
-		ar933x_uart_putc(up, xmit->buf[xmit->tail]);
+		ar934x_hs_uart_putc(up, xmit->buf[xmit->tail]);
 
 		xmit->tail = (xmit->tail + 1) & (UART_XMIT_SIZE - 1);
 		up->port.icount.tx++;
@@ -382,34 +360,34 @@ static void ar933x_uart_tx_chars(struct ar933x_uart_port *up)
 		uart_write_wakeup(&up->port);
 
 	if (!uart_circ_empty(xmit))
-		ar933x_uart_start_tx_interrupt(up);
+		ar934x_hs_uart_start_tx_interrupt(up);
 }
 
-static irqreturn_t ar933x_uart_interrupt(int irq, void *dev_id)
+static irqreturn_t ar934x_hs_uart_interrupt(int irq, void *dev_id)
 {
-	struct ar933x_uart_port *up = dev_id;
+	struct ar934x_hs_uart_port *up = dev_id;
 	unsigned int status;
 
-	status = ar933x_uart_read(up, AR933X_UART_CS_REG);
-	if ((status & AR933X_UART_CS_HOST_INT) == 0)
+	status = ar934x_hs_uart_read(up, AR934X_HS_UART_CS_REG);
+	if ((status & AR934X_HS_UART_CS_HOST_INT) == 0)
 		return IRQ_NONE;
 
 	spin_lock(&up->port.lock);
 
-	status = ar933x_uart_read(up, AR933X_UART_INT_REG);
-	status &= ar933x_uart_read(up, AR933X_UART_INT_EN_REG);
+	status = ar934x_hs_uart_read(up, AR934X_HS_UART_INT_REG);
+	status &= ar934x_hs_uart_read(up, AR934X_HS_UART_INT_EN_REG);
 
-	if (status & AR933X_UART_INT_RX_VALID) {
-		ar933x_uart_write(up, AR933X_UART_INT_REG,
-				  AR933X_UART_INT_RX_VALID);
-		ar933x_uart_rx_chars(up);
+	if (status & AR934X_HS_UART_INT_RX_VALID) {
+		ar934x_hs_uart_write(up, AR934X_HS_UART_INT_REG,
+				  AR934X_HS_UART_INT_RX_VALID);
+		ar934x_hs_uart_rx_chars(up);
 	}
 
-	if (status & AR933X_UART_INT_TX_EMPTY) {
-		ar933x_uart_write(up, AR933X_UART_INT_REG,
-				  AR933X_UART_INT_TX_EMPTY);
-		ar933x_uart_stop_tx_interrupt(up);
-		ar933x_uart_tx_chars(up);
+	if (status & AR934X_HS_UART_INT_TX_EMPTY) {
+		ar934x_hs_uart_write(up, AR934X_HS_UART_INT_REG,
+				  AR934X_HS_UART_INT_TX_EMPTY);
+		ar934x_hs_uart_stop_tx_interrupt(up);
+		ar934x_hs_uart_tx_chars(up);
 	}
 
 	spin_unlock(&up->port.lock);
@@ -417,13 +395,13 @@ static irqreturn_t ar933x_uart_interrupt(int irq, void *dev_id)
 	return IRQ_HANDLED;
 }
 
-static int ar933x_uart_startup(struct uart_port *port)
+static int ar934x_hs_uart_startup(struct uart_port *port)
 {
-	struct ar933x_uart_port *up = (struct ar933x_uart_port *) port;
+	struct ar934x_hs_uart_port *up = (struct ar934x_hs_uart_port *) port;
 	unsigned long flags;
 	int ret;
 
-	ret = request_irq(up->port.irq, ar933x_uart_interrupt,
+	ret = request_irq(up->port.irq, ar934x_hs_uart_interrupt,
 			  up->port.irqflags, dev_name(up->port.dev), up);
 	if (ret)
 		return ret;
@@ -431,59 +409,59 @@ static int ar933x_uart_startup(struct uart_port *port)
 	spin_lock_irqsave(&up->port.lock, flags);
 
 	/* Enable HOST interrupts */
-	ar933x_uart_rmw_set(up, AR933X_UART_CS_REG,
-			    AR933X_UART_CS_HOST_INT_EN);
+	ar934x_hs_uart_rmw_set(up, AR934X_HS_UART_CS_REG,
+			    AR934X_HS_UART_CS_HOST_INT_EN);
 
 	/* Enable RX interrupts */
-	up->ier = AR933X_UART_INT_RX_VALID;
-	ar933x_uart_write(up, AR933X_UART_INT_EN_REG, up->ier);
+	up->ier = AR934X_HS_UART_INT_RX_VALID;
+	ar934x_hs_uart_write(up, AR934X_HS_UART_INT_EN_REG, up->ier);
 
 	spin_unlock_irqrestore(&up->port.lock, flags);
 
 	return 0;
 }
 
-static void ar933x_uart_shutdown(struct uart_port *port)
+static void ar934x_hs_uart_shutdown(struct uart_port *port)
 {
-	struct ar933x_uart_port *up = (struct ar933x_uart_port *) port;
+	struct ar934x_hs_uart_port *up = (struct ar934x_hs_uart_port *) port;
 
 	/* Disable all interrupts */
 	up->ier = 0;
-	ar933x_uart_write(up, AR933X_UART_INT_EN_REG, up->ier);
+	ar934x_hs_uart_write(up, AR934X_HS_UART_INT_EN_REG, up->ier);
 
 	/* Disable break condition */
-	ar933x_uart_rmw_clear(up, AR933X_UART_CS_REG,
-			      AR933X_UART_CS_TX_BREAK);
+	ar934x_hs_uart_rmw_clear(up, AR934X_HS_UART_CS_REG,
+			      AR934X_HS_UART_CS_TX_BREAK);
 
 	free_irq(up->port.irq, up);
 }
 
-static const char *ar933x_uart_type(struct uart_port *port)
+static const char *ar934x_hs_uart_type(struct uart_port *port)
 {
-	return (port->type == PORT_AR933X) ? "AR933X UART" : NULL;
+	return (port->type == PORT_AR933X) ? "AR934X UART" : NULL;
 }
 
-static void ar933x_uart_release_port(struct uart_port *port)
+static void ar934x_hs_uart_release_port(struct uart_port *port)
 {
 	/* Nothing to release ... */
 }
 
-static int ar933x_uart_request_port(struct uart_port *port)
+static int ar934x_hs_uart_request_port(struct uart_port *port)
 {
 	/* UARTs always present */
 	return 0;
 }
 
-static void ar933x_uart_config_port(struct uart_port *port, int flags)
+static void ar934x_hs_uart_config_port(struct uart_port *port, int flags)
 {
 	if (flags & UART_CONFIG_TYPE)
 		port->type = PORT_AR933X;
 }
 
-static int ar933x_uart_verify_port(struct uart_port *port,
+static int ar934x_hs_uart_verify_port(struct uart_port *port,
 				   struct serial_struct *ser)
 {
-	struct ar933x_uart_port *up = (struct ar933x_uart_port *) port;
+	struct ar934x_hs_uart_port *up = (struct ar934x_hs_uart_port *) port;
 
 	if (ser->type != PORT_UNKNOWN &&
 	    ser->type != PORT_AR933X)
@@ -499,54 +477,56 @@ static int ar933x_uart_verify_port(struct uart_port *port,
 	return 0;
 }
 
-static struct uart_ops ar933x_uart_ops = {
-	.tx_empty	= ar933x_uart_tx_empty,
-	.set_mctrl	= ar933x_uart_set_mctrl,
-	.get_mctrl	= ar933x_uart_get_mctrl,
-	.stop_tx	= ar933x_uart_stop_tx,
-	.start_tx	= ar933x_uart_start_tx,
-	.stop_rx	= ar933x_uart_stop_rx,
-	.enable_ms	= ar933x_uart_enable_ms,
-	.break_ctl	= ar933x_uart_break_ctl,
-	.startup	= ar933x_uart_startup,
-	.shutdown	= ar933x_uart_shutdown,
-	.set_termios	= ar933x_uart_set_termios,
-	.type		= ar933x_uart_type,
-	.release_port	= ar933x_uart_release_port,
-	.request_port	= ar933x_uart_request_port,
-	.config_port	= ar933x_uart_config_port,
-	.verify_port	= ar933x_uart_verify_port,
+static struct uart_ops ar934x_hs_uart_ops = {
+	.tx_empty	= ar934x_hs_uart_tx_empty,
+	.set_mctrl	= ar934x_hs_uart_set_mctrl,
+	.get_mctrl	= ar934x_hs_uart_get_mctrl,
+	.stop_tx	= ar934x_hs_uart_stop_tx,
+	.start_tx	= ar934x_hs_uart_start_tx,
+	.stop_rx	= ar934x_hs_uart_stop_rx,
+	.enable_ms	= ar934x_hs_uart_enable_ms,
+	.break_ctl	= ar934x_hs_uart_break_ctl,
+	.startup	= ar934x_hs_uart_startup,
+	.shutdown	= ar934x_hs_uart_shutdown,
+	.set_termios	= ar934x_hs_uart_set_termios,
+	.type		= ar934x_hs_uart_type,
+	.release_port	= ar934x_hs_uart_release_port,
+	.request_port	= ar934x_hs_uart_request_port,
+	.config_port	= ar934x_hs_uart_config_port,
+	.verify_port	= ar934x_hs_uart_verify_port,
 };
 
-static struct ar933x_uart_port *
-ar933x_console_ports[CONFIG_SERIAL_AR933X_NR_UARTS];
+#ifdef CONFIG_SERIAL_AR934X_CONSOLE
 
-static void ar933x_uart_wait_xmitr(struct ar933x_uart_port *up)
+static struct ar934x_hs_uart_port *
+ar934x_hs_console_ports[CONFIG_SERIAL_AR934X_NR_UARTS];
+
+static void ar934x_hs_uart_wait_xmitr(struct ar934x_hs_uart_port *up)
 {
 	unsigned int status;
 	unsigned int timeout = 60000;
 
 	/* Wait up to 60ms for the character(s) to be sent. */
 	do {
-		status = ar933x_uart_read(up, AR933X_UART_DATA_REG);
+		status = ar934x_hs_uart_read(up, AR934X_HS_UART_DATA_REG);
 		if (--timeout == 0)
 			break;
 		udelay(1);
-	} while ((status & AR933X_UART_DATA_TX_CSR) == 0);
+	} while ((status & AR934X_HS_UART_DATA_TX_CSR) == 0);
 }
 
-static void ar933x_uart_console_putchar(struct uart_port *port, int ch)
+static void ar934x_hs_uart_console_putchar(struct uart_port *port, int ch)
 {
-	struct ar933x_uart_port *up = (struct ar933x_uart_port *) port;
+	struct ar934x_hs_uart_port *up = (struct ar934x_hs_uart_port *) port;
 
-	ar933x_uart_wait_xmitr(up);
-	ar933x_uart_putc(up, ch);
+	ar934x_hs_uart_wait_xmitr(up);
+	ar934x_hs_uart_putc(up, ch);
 }
 
-static void ar933x_uart_console_write(struct console *co, const char *s,
+static void ar934x_hs_uart_console_write(struct console *co, const char *s,
 				      unsigned int count)
 {
-	struct ar933x_uart_port *up = ar933x_console_ports[co->index];
+	struct ar934x_hs_uart_port *up = ar934x_hs_console_ports[co->index];
 	unsigned long flags;
 	unsigned int int_en;
 	int locked = 1;
@@ -563,19 +543,19 @@ static void ar933x_uart_console_write(struct console *co, const char *s,
 	/*
 	 * First save the IER then disable the interrupts
 	 */
-	int_en = ar933x_uart_read(up, AR933X_UART_INT_EN_REG);
-	ar933x_uart_write(up, AR933X_UART_INT_EN_REG, 0);
+	int_en = ar934x_hs_uart_read(up, AR934X_HS_UART_INT_EN_REG);
+	ar934x_hs_uart_write(up, AR934X_HS_UART_INT_EN_REG, 0);
 
-	uart_console_write(&up->port, s, count, ar933x_uart_console_putchar);
+	uart_console_write(&up->port, s, count, ar934x_hs_uart_console_putchar);
 
 	/*
 	 * Finally, wait for transmitter to become empty
 	 * and restore the IER
 	 */
-	ar933x_uart_wait_xmitr(up);
-	ar933x_uart_write(up, AR933X_UART_INT_EN_REG, int_en);
+	ar934x_hs_uart_wait_xmitr(up);
+	ar934x_hs_uart_write(up, AR934X_HS_UART_INT_EN_REG, int_en);
 
-	ar933x_uart_write(up, AR933X_UART_INT_REG, AR933X_UART_INT_ALLINTS);
+	ar934x_hs_uart_write(up, AR934X_HS_UART_INT_REG, AR934X_HS_UART_INT_ALLINTS);
 
 	if (locked)
 		spin_unlock(&up->port.lock);
@@ -583,18 +563,18 @@ static void ar933x_uart_console_write(struct console *co, const char *s,
 	local_irq_restore(flags);
 }
 
-static int ar933x_uart_console_setup(struct console *co, char *options)
+static int ar934x_hs_uart_console_setup(struct console *co, char *options)
 {
-	struct ar933x_uart_port *up;
+	struct ar934x_hs_uart_port *up;
 	int baud = 115200;
 	int bits = 8;
 	int parity = 'n';
 	int flow = 'n';
 
-	if (co->index < 0 || co->index >= CONFIG_SERIAL_AR933X_NR_UARTS)
+	if (co->index < 0 || co->index >= CONFIG_SERIAL_AR934X_NR_UARTS)
 		return -EINVAL;
 
-	up = ar933x_console_ports[co->index];
+	up = ar934x_hs_console_ports[co->index];
 	if (!up)
 		return -ENODEV;
 
@@ -604,59 +584,66 @@ static int ar933x_uart_console_setup(struct console *co, char *options)
 	return uart_set_options(&up->port, co, baud, parity, bits, flow);
 }
 
-static struct console ar933x_uart_console = {
+static struct console ar934x_hs_uart_console = {
 	.name		= "ttyATH",
-	.write		= ar933x_uart_console_write,
+	.write		= ar934x_hs_uart_console_write,
 	.device		= uart_console_device,
-	.setup		= ar933x_uart_console_setup,
+	.setup		= ar934x_hs_uart_console_setup,
 	.flags		= CON_PRINTBUFFER,
 	.index		= -1,
-	.data		= &ar933x_uart_driver,
+	.data		= &ar934x_hs_uart_driver,
 };
 
-static void ar933x_uart_add_console_port(struct ar933x_uart_port *up)
+static void ar934x_hs_uart_add_console_port(struct ar934x_hs_uart_port *up)
 {
-	if (!ar933x_uart_console_enabled())
-		return;
-
-	ar933x_console_ports[up->port.line] = up;
+	ar934x_hs_console_ports[up->port.line] = up;
 }
 
-static struct uart_driver ar933x_uart_driver = {
+#define AR934X_SERIAL_CONSOLE	(&934x_hs_uart_console)
+
+#else
+
+static inline void ar934x_hs_uart_add_console_port(struct ar934x_hs_uart_port *up) {}
+
+#define AR934X_SERIAL_CONSOLE	NULL
+
+#endif /* CONFIG_SERIAL_AR934X_CONSOLE */
+
+static struct uart_driver ar934x_hs_uart_driver = {
 	.owner		= THIS_MODULE,
 	.driver_name	= DRIVER_NAME,
 	.dev_name	= "ttyATH",
-	.nr		= CONFIG_SERIAL_AR933X_NR_UARTS,
-	.cons		= NULL, /* filled in runtime */
+	.nr		= CONFIG_SERIAL_AR934X_NR_UARTS,
+	.cons		= AR934X_SERIAL_CONSOLE,
 };
 
-static int ar933x_uart_probe(struct platform_device *pdev)
+static int ar934x_hs_uart_probe(struct platform_device *pdev)
 {
-	struct ar933x_uart_port *up;
+	struct ar934x_hs_uart_platform_data *pdata;
+	struct ar934x_hs_uart_port *up;
 	struct uart_port *port;
 	struct resource *mem_res;
 	struct resource *irq_res;
-	struct device_node *np;
 	unsigned int baud;
 	int id;
 	int ret;
 
-	np = pdev->dev.of_node;
-	if (config_enabled(CONFIG_OF) && np) {
-		id = of_alias_get_id(np, "serial");
-		if (id < 0) {
-			dev_err(&pdev->dev, "unable to get alias id, err=%d\n",
-				id);
-			return id;
-		}
-	} else {
-		id = pdev->id;
-		if (id == -1)
-			id = 0;
-	}
-
-	if (id > CONFIG_SERIAL_AR933X_NR_UARTS)
+	pdata = pdev->dev.platform_data;
+	if (!pdata)
 		return -EINVAL;
+
+	id = pdev->id;
+	if (id == -1)
+		id = 0;
+
+	if (id > CONFIG_SERIAL_AR934X_NR_UARTS)
+		return -EINVAL;
+
+	mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+	if (!mem_res) {
+		dev_err(&pdev->dev, "no MEM resource\n");
+		return -EINVAL;
+	}
 
 	irq_res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
 	if (!irq_res) {
@@ -664,151 +651,106 @@ static int ar933x_uart_probe(struct platform_device *pdev)
 		return -EINVAL;
 	}
 
-	up = devm_kzalloc(&pdev->dev, sizeof(struct ar933x_uart_port),
-			  GFP_KERNEL);
+	up = kzalloc(sizeof(struct ar934x_hs_uart_port), GFP_KERNEL);
 	if (!up)
 		return -ENOMEM;
 
-	up->clk = devm_clk_get(&pdev->dev, "uart");
-	if (IS_ERR(up->clk)) {
-		dev_err(&pdev->dev, "unable to get UART clock\n");
-		return PTR_ERR(up->clk);
-	}
-
 	port = &up->port;
+	port->mapbase = mem_res->start;
 
-	mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-	port->membase = devm_ioremap_resource(&pdev->dev, mem_res);
-	if (IS_ERR(port->membase))
-		return PTR_ERR(port->membase);
-
-	ret = clk_prepare_enable(up->clk);
-	if (ret)
-		return ret;
-
-	port->uartclk = clk_get_rate(up->clk);
-	if (!port->uartclk) {
-		ret = -EINVAL;
-		goto err_disable_clk;
+	port->membase = ioremap(mem_res->start, AR934X_UART_REGS_SIZE);
+	if (!port->membase) {
+		ret = -ENOMEM;
+		goto err_free_up;
 	}
 
-	port->mapbase = mem_res->start;
 	port->line = id;
 	port->irq = irq_res->start;
 	port->dev = &pdev->dev;
 	port->type = PORT_AR933X;
 	port->iotype = UPIO_MEM32;
+	port->uartclk = pdata->uartclk;
 
 	port->regshift = 2;
-	port->fifosize = AR934X_UART1_FIFO_SIZE;
-	port->ops = &ar933x_uart_ops;
+	port->fifosize = AR934X_HS_UART_FIFO_SIZE;
+	port->ops = &ar934x_hs_uart_ops;
 
-	baud = ar933x_uart_get_baud(port->uartclk, AR933X_UART_MAX_SCALE, 1);
-	up->min_baud = max_t(unsigned int, baud, AR933X_UART_MIN_BAUD);
+	baud = ar934x_hs_uart_get_baud(port->uartclk, AR934X_HS_UART_MAX_SCALE, 1);
+	up->min_baud = max_t(unsigned int, baud, AR934X_HS_UART_MIN_BAUD);
 
-	baud = ar933x_uart_get_baud(port->uartclk, 0, AR933X_UART_MAX_STEP);
-	up->max_baud = min_t(unsigned int, baud, AR933X_UART_MAX_BAUD);
+	baud = ar934x_hs_uart_get_baud(port->uartclk, 0, AR934X_HS_UART_MAX_STEP);
+	up->max_baud = min_t(unsigned int, baud, AR934X_HS_UART_MAX_BAUD);
 
-	ar933x_uart_add_console_port(up);
+	ar934x_hs_uart_add_console_port(up);
 
-	ret = uart_add_one_port(&ar933x_uart_driver, &up->port);
+	ret = uart_add_one_port(&ar934x_hs_uart_driver, &up->port);
 	if (ret)
-		goto err_disable_clk;
+		goto err_unmap;
 
 	platform_set_drvdata(pdev, up);
 	return 0;
 
-err_disable_clk:
-	clk_disable_unprepare(up->clk);
+err_unmap:
+	iounmap(up->port.membase);
+err_free_up:
+	kfree(up);
 	return ret;
 }
 
-static int ar933x_uart_remove(struct platform_device *pdev)
+static int ar934x_hs_uart_remove(struct platform_device *pdev)
 {
-	struct ar933x_uart_port *up;
+	struct ar934x_hs_uart_port *up;
 
 	up = platform_get_drvdata(pdev);
+	platform_set_drvdata(pdev, NULL);
 
 	if (up) {
-		uart_remove_one_port(&ar933x_uart_driver, &up->port);
-		clk_disable_unprepare(up->clk);
+		uart_remove_one_port(&ar934x_hs_uart_driver, &up->port);
+		iounmap(up->port.membase);
+		kfree(up);
 	}
 
 	return 0;
 }
 
-#ifdef CONFIG_OF
-static const struct of_device_id ar933x_uart_of_ids[] = {
-	{ .compatible = "qca,ar9330-uart" },
-	{},
-};
-MODULE_DEVICE_TABLE(of, ar933x_uart_of_ids);
-#endif
-
-static struct platform_driver ar933x_uart_platform_driver = {
-	.probe		= ar933x_uart_probe,
-	.remove		= ar933x_uart_remove,
+static struct platform_driver ar934x_hs_uart_platform_driver = {
+	.probe		= ar934x_hs_uart_probe,
+	.remove		= ar934x_hs_uart_remove,
 	.driver		= {
 		.name		= DRIVER_NAME,
 		.owner		= THIS_MODULE,
-		.of_match_table = of_match_ptr(ar933x_uart_of_ids),
 	},
 };
 
-static struct resource ar933x_uart_resources[] = {
-	{
-		.start  = AR934X_UART1_BASE,
-		.end    = AR934X_UART1_BASE + AR71XX_UART_SIZE - 1,
-		.flags  = IORESOURCE_MEM,
-	},
-	{
-		.start  = ATH79_MISC_IRQ(6),
-		.end    = ATH79_MISC_IRQ(6),
-		.flags  = IORESOURCE_IRQ,
-	},
-};
-
-static struct platform_device ar933x_uart_device = {
-	.name           = DRIVER_NAME,
-	.id             = -1,
-	.resource       = ar933x_uart_resources,
-	.num_resources  = ARRAY_SIZE(ar933x_uart_resources),
-};
-
-static int __init ar933x_uart_init(void)
+static int __init ar934x_hs_uart_init(void)
 {
 	int ret;
 
-	if (ar933x_uart_console_enabled())
-		ar933x_uart_driver.cons = &ar933x_uart_console;
-
-	ret = uart_register_driver(&ar933x_uart_driver);
+	934x_hs_uart_driver.nr = CONFIG_SERIAL_AR934X_NR_UARTS;
+	ret = uart_register_driver(&ar934x_hs_uart_driver);
 	if (ret)
 		goto err_out;
 
-	ret = platform_driver_register(&ar933x_uart_platform_driver);
+	ret = platform_driver_register(&ar934x_hs_uart_platform_driver);
 	if (ret)
 		goto err_unregister_uart_driver;
-
-	platform_device_register(&ar933x_uart_device);
 
 	return 0;
 
 err_unregister_uart_driver:
-	uart_unregister_driver(&ar933x_uart_driver);
+	uart_unregister_driver(&ar934x_hs_uart_driver);
 err_out:
 	return ret;
 }
 
-static void __exit ar933x_uart_exit(void)
+static void __exit ar934x_hs_uart_exit(void)
 {
-	platform_driver_unregister(&ar933x_uart_platform_driver);
-	uart_unregister_driver(&ar933x_uart_driver);
-	platform_device_unregister(&ar933x_uart_device);
+	platform_driver_unregister(&ar934x_hs_uart_platform_driver);
+	uart_unregister_driver(&ar934x_hs_uart_driver);
 }
 
-module_init(ar933x_uart_init);
-module_exit(ar933x_uart_exit);
+module_init(ar934x_hs_uart_init);
+module_exit(ar934x_hs_uart_exit);
 
 MODULE_DESCRIPTION("Atheros AR933X UART driver");
 MODULE_AUTHOR("Gabor Juhos <juhosg@openwrt.org>");
