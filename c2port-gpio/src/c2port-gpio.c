@@ -21,8 +21,8 @@
 
 #include <linux/c2port.h>
 
-#define GPIO_C2CK 0
-#define GPIO_C2D  1
+#define GPIO_C2CK 1
+#define GPIO_C2D  0
 
 
 /* --- C2 port operations --------------------------------------------------- */
