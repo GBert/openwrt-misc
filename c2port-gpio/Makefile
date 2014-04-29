@@ -47,9 +47,11 @@ define Build/Prepare
 endef
 
 define Build/Compile
-	$(MAKE) -C "$(LINUX_DIR)" \
-	$(MAKE_OPTS) \
-	modules
+	$(MAKE) -C "$(LINUX_DIR)" $(MAKE_OPTS) modules
+	$(MAKE) -C $(PKG_BUILD_DIR)    \
+	$(TARGET_CONFIGURE_OPTS)        \
+	CFLAGS="$(TARGET_CFLAGS) $(TARGET_CPPFLAGS)"    \
+	LIBS="$(TARGET_LDFLAGS)" hex2image
 endef
 
 $(eval $(call KernelPackage,c2port-gpio))
