@@ -6,7 +6,7 @@ https://www.silabs.com/Support%20Documents/TechnicalDocs/C2spec.pdf
 
 ## Status: loads but untested
 
-´´´
+```
 root@OpenWrt:~# insmod c2port-gpio
 
 root@OpenWrt:~# dmesg | grep c2port
@@ -33,5 +33,5 @@ root@OpenWrt:~# echo 1 > /sys/class/c2port/c2port0/access
 root@OpenWrt:~#  cat /sys/class/c2port/c2port0/dev_id
 cat: read error: Input/output error
 
-´´´
+```
 Please have a look at 'Documentation/misc-devices/c2port.txt' in the kernel tree
