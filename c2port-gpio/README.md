@@ -1,0 +1,37 @@
+# Silabs C2 programming interface
+
+This kernel module is able to emulate the Silicon Labs 2-Wire Interface through GPIO bitbanging:
+
+https://www.silabs.com/Support%20Documents/TechnicalDocs/C2spec.pdf
+
+## Status: loads but untested
+
+´´´
+root@OpenWrt:~# insmod c2port-gpio
+
+root@OpenWrt:~# dmesg | grep c2port
+[   81.680000] c2port c2port0: C2 port uc added
+[   81.680000] c2port c2port0: uc flash has 30 blocks x 512 bytes (15360 bytes total)
+
+root@OpenWrt:~# cat /sys/kernel/debug/gpio | grep c2port
+ gpio-0   (c2port clock        ) in  hi
+ gpio-1   (c2port data         ) in  lo
+
+root@OpenWrt:~# show-gpio  | grep JP2
+   JP2 pin 9 GPIO00 I h GPIO
+   JP2 pin 3 GPIO01 I l GPIO
+   JP2 pin 5 GPIO02 O l GPIO
+   JP2 pin 7 GPIO03 I l GPIO
+
+root@OpenWrt:~# ls /sys/class/c2port/c2port0/
+access            flash_block_size  flash_erase       reset             uevent
+dev_id            flash_blocks_num  flash_size        rev_id
+flash_access      flash_data        name              subsystem
+
+root@OpenWrt:~# echo 1 > /sys/class/c2port/c2port0/access
+
+root@OpenWrt:~#  cat /sys/class/c2port/c2port0/dev_id
+cat: read error: Input/output error
+
+Documentation/misc-devices/c2port.txt in the Kernel tree
+´´´
