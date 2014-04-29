@@ -33,5 +33,5 @@ root@OpenWrt:~# echo 1 > /sys/class/c2port/c2port0/access
 root@OpenWrt:~#  cat /sys/class/c2port/c2port0/dev_id
 cat: read error: Input/output error
 
-Documentation/misc-devices/c2port.txt in the Kernel tree
 ´´´
+Please have a look at 'Documentation/misc-devices/c2port.txt' in the kernel tree
