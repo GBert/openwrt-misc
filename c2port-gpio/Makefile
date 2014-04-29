@@ -17,8 +17,8 @@ define KernelPackage/c2port-gpio
   SUBMENU:=Other modules
   TITLE:=C2PORT GPIO
   DEPENDS:=@GPIO_SUPPORT
-  DEPENDS:=+kmod-c2port
-  FILES:=$(PKG_BUILD_DIR)/c2port-gpio.ko
+  DEPENDS:=
+  FILES:=$(PKG_BUILD_DIR)/{c2port-gpio.ko,c2port-core.ko}
   KCONFIG:=
 endef
 
@@ -27,7 +27,8 @@ define KernelPackage/c2port-gpio/description
 endef
 
 EXTRA_KCONFIG:= \
-    CONFIG_C2PORT_GPIO=m
+    CONFIG_C2PORT_GPIO=m \
+    CONFIG_C2PORT_CORE=m
 
 EXTRA_CFLAGS:= \
     $(patsubst CONFIG_%, -DCONFIG_%=1, $(patsubst %=m,%,$(filter %=m,$(EXTRA_KCONFIG)))) \
