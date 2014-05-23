@@ -151,7 +151,7 @@ int main(int argc, char **argv) {
     cpu_major = cpu_id & REV_ID_MAJOR_MASK;
 
     switch (cpu_major) {
-    case REV_ID_MAJOR_AR9344:
+    case REV_ID_MAJOR_AR9341:
 	cpu_rev = cpu_id & AR934X_REV_ID_REVISION_MASK;
 	printf("  seems to be a WR841N v8 AR9344 Revision %d\n",cpu_rev); 
 	break;
@@ -160,7 +160,7 @@ int main(int argc, char **argv) {
 	printf("  seems to be a WR841N v9 QCA9533 Revision %d\n",cpu_rev); 
 	break;
     default:
-	printf("Unknown CPU ID : 0x%X8L\n");
+	printf("Unknown CPU ID : 0x%8X\n");
 	return -1;
     }
 
