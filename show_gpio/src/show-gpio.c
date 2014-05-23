@@ -10,6 +10,28 @@
 #define XSTR(s)	STR(s)
 #define STR(s)	#s
 
+#define AR71XX_APB_BASE         0x18000000
+#define AR71XX_GPIO_BASE        (AR71XX_APB_BASE + 0x00040000)
+#define AR71XX_RESET_BASE       (AR71XX_APB_BASE + 0x00060000)
+#define AR71XX_RESET_REG_REV_ID	0x90
+
+#define REV_ID_MAJOR_MASK	0xfff0
+#define REV_ID_MAJOR_AR71XX	0x00a0
+#define REV_ID_MAJOR_AR913X	0x00b0
+#define REV_ID_MAJOR_AR7240	0x00c0
+#define REV_ID_MAJOR_AR7241	0x0100
+#define REV_ID_MAJOR_AR7242	0x1100
+#define REV_ID_MAJOR_AR9330	0x0110
+#define REV_ID_MAJOR_AR9331	0x1110
+#define REV_ID_MAJOR_AR9341	0x0120
+#define REV_ID_MAJOR_AR9342	0x1120
+#define REV_ID_MAJOR_AR9344	0x2120
+#define REV_ID_MAJOR_QCA9533	0x0140
+#define REV_ID_MAJOR_QCA9556	0x0130
+
+#define AR934X_REV_ID_REVISION_MASK 0xf
+#define QCA953X_REV_ID_REVISION_MASK 0xf
+
 #define	GPIO_OE			0x0000
 #define GPIO_IN			0x0004
 #define GPIO_OUT		0x0008
@@ -111,15 +133,39 @@
 int main(int argc, char **argv) {
     uint32_t gpio, gpio_output_function, gpio_output_function_reg;
     uint32_t index, gpio_input_function_reg, gpio_input_pin;
+    uint32_t cpu_id, cpu_major, cpu_rev;
     uint32_t gpio_data[32];
     struct mmio io;
     char gpio_direction;
     char gpio_state;
     char *gpio_input[GPIO_MAX];
 
+
     bzero(gpio_input, sizeof(gpio_input));
-    if (mmio_map(&io, 0x18040000, 0x74))
-        die_errno("mmio_map() failed");
+
+    if (mmio_map(&io, AR71XX_RESET_BASE + AR71XX_RESET_REG_REV_ID, 0x4))
+        die_errno("mmio_map() failed for AR71XX_RESET_BASE");
+    cpu_id=mmio_readl(&io, 0);
+    mmio_unmap(&io);
+
+    cpu_major = cpu_id & REV_ID_MAJOR_MASK;
+
+    switch (cpu_major) {
+    case REV_ID_MAJOR_AR9344:
+	cpu_rev = cpu_id & AR934X_REV_ID_REVISION_MASK;
+	printf("  seems to be a WR841N v8 AR9344 Revision %d\n",cpu_rev); 
+	break;
+    case REV_ID_MAJOR_QCA9533:
+	cpu_rev = cpu_id & QCA953X_REV_ID_REVISION_MASK;
+	printf("  seems to be a WR841N v9 QCA9533 Revision %d\n",cpu_rev); 
+	break;
+    default:
+	printf("Unknown CPU ID : 0x%X8L\n");
+	return -1;
+    }
+
+    if (mmio_map(&io, AR71XX_GPIO_BASE, 0x74))
+        die_errno("mmio_map() failed AR71XX_GPIO_BASE");
 
     for (index=0; index<3; index++) {
         gpio_data[index]=mmio_readl(&io, index<<2);
