@@ -13,9 +13,9 @@
 #define	GPIO_OE			0x0000
 #define GPIO_IN			0x0004
 #define GPIO_OUT		0x0008
-#define GPIO_SET		0x000C
-#define GPIO_CLEAR		0x0010
-#define GPIO_INT GPIO		0x0014
+#define GPIO_SET		0x000C /* ? not existing on qca953x */
+#define GPIO_CLEAR		0x0010 /* ? not existing on qca953x */
+#define GPIO_INT_GPIO		0x0014
 #define GPIO_INT_TYPE		0x0018 
 #define GPIO_INT_POLARITY	0x001C
 #define GPIO_INT_PENDING	0x0020
@@ -118,10 +118,14 @@ int main(int argc, char **argv) {
     char *gpio_input[GPIO_MAX];
 
     bzero(gpio_input, sizeof(gpio_input));
-    if (mmio_map(&io, 0x18040000, 0x80))
+    if (mmio_map(&io, 0x18040000, 0x74))
         die_errno("mmio_map() failed");
 
-    for (index=0; index<0x20; index++) {
+    for (index=0; index<3; index++) {
+        gpio_data[index]=mmio_readl(&io, index<<2);
+    }
+    /* GPIO_SET and GPIO_CLEAR are blocked on qca9533 - we don't need them anyway */
+    for (index=5; index<18; index++) {
         gpio_data[index]=mmio_readl(&io, index<<2);
     }
     mmio_unmap(&io);
