@@ -153,7 +153,7 @@ int main(int argc, char **argv) {
     switch (cpu_major) {
     case REV_ID_MAJOR_AR9341:
 	cpu_rev = cpu_id & AR934X_REV_ID_REVISION_MASK;
-	printf("  seems to be a WR841N v8 AR9344 Revision %d\n",cpu_rev); 
+	printf("  seems to be a WR841N v8 AR9341 Revision %d\n",cpu_rev); 
 	break;
     case REV_ID_MAJOR_QCA9533:
 	cpu_rev = cpu_id & QCA953X_REV_ID_REVISION_MASK;
