@@ -146,3 +146,30 @@ const char * wr_841n_v8[] = {
     "",
     ""
 };
+
+const char * wr_841n_v9[] = {
+    "",
+    "",
+    "",
+    "QSS LED",
+    "WAN LED",
+    "",
+    "",
+    "",
+    "",
+    "JP1 pin 2",
+    "JP1 pin 1",
+    "LAN4 LED",
+    "Reset but",
+    "WLAN LED",
+    "LAN3 LED",
+    "LAN2 LED",
+    "LAN1 LED",
+    "WIFI but",
+    "",
+    "",
+    "",
+    "",
+    "",
+    ""
+};
