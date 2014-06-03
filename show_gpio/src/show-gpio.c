@@ -172,7 +172,7 @@ int main(int argc, char **argv) {
         gpio_data[index]=mmio_readl(&io, index<<2);
     }
     /* GPIO_SET and GPIO_CLEAR are blocked on qca9533 - we don't need them anyway */
-    for (index=5; index<18; index++) {
+    for (index=5; index<29; index++) {
         gpio_data[index]=mmio_readl(&io, index<<2);
     }
     mmio_unmap(&io);
