@@ -39,7 +39,9 @@
 #define DRIVER_NAME "ar934x-hs-uart"
 
 #define AR934X_HS_UART_MAX_SCALE	0xff
-#define AR934X_HS_UART_MAX_STEP		0xffff
+/* #define AR934X_HS_UART_MAX_STEP		0xffff */
+/* timing with 0x3333 should be more accurate */
+#define AR934X_HS_UART_MAX_STEP		0x3333
 
 #define AR934X_HS_UART_MIN_BAUD		300
 #define AR934X_HS_UART_MAX_BAUD		30000000
