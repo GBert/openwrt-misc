@@ -26,8 +26,9 @@ define KernelPackage/fbtft/description
 endef
 
 EXTRA_KCONFIG:= \
-    CONFIG_FB_TFT=m
-    CONFIG_FB_TFT_ILI9341=m
+    CONFIG_FB_TFT=m \
+    CONFIG_FB_TFT_ILI9341=m \
+    CONFIG_FB_DEFERRED_IO=y
 
 EXTRA_CFLAGS:= \
     $(patsubst CONFIG_%, -DCONFIG_%=1, $(patsubst %=m,%,$(filter %=m,$(EXTRA_KCONFIG)))) \
