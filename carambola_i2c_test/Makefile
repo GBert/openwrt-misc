@@ -23,7 +23,7 @@ define KernelPackage/i2c-ralink-test
 endef
 
 define KernelPackage/i2c-ralink-test/description
- Kernel module I2C Test
+ Kernel module Ralink I2C testing
 endef
 
 EXTRA_KCONFIG:= \
@@ -47,10 +47,6 @@ endef
 
 define Build/Compile
 	$(MAKE) -C "$(LINUX_DIR)" $(MAKE_OPTS) modules
-	$(MAKE) -C $(PKG_BUILD_DIR)    \
-	$(TARGET_CONFIGURE_OPTS)        \
-	CFLAGS="$(TARGET_CFLAGS) $(TARGET_CPPFLAGS)"    \
-	LIBS="$(TARGET_LDFLAGS)"
 endef
 
 $(eval $(call KernelPackage,i2c-ralink-test))
