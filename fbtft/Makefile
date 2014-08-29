@@ -16,7 +16,7 @@ include $(INCLUDE_DIR)/package.mk
 define KernelPackage/fbtft
   SUBMENU:=Video Support
   TITLE:=Linux Framebuffer driver
-  DEPENDS:=@GPIO_SUPPORT
+  DEPENDS:=@GPIO_SUPPORT +kmod-fb
   FILES:=$(PKG_BUILD_DIR)/fbtft.ko
   KCONFIG:=
 endef
@@ -26,6 +26,11 @@ define KernelPackage/fbtft/description
 endef
 
 EXTRA_KCONFIG:= \
+    CONFIG_FB_SYS_FILLRECT=y \
+    CONFIG_FB_SYS_COPYAREA=y \
+    CONFIG_FB_SYS_IMAGEBLIT=y \
+    CONFIG_FB_SYS_FOPS=y \
+    CONFIG_FB_DEFERRED_IO=y \
     CONFIG_FB_TFT=m \
     CONFIG_FB_TFT_ILI9341=m \
     CONFIG_FB_DEFERRED_IO=y
