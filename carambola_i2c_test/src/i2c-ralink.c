@@ -54,8 +54,16 @@
 
 #define I2C_RETRY		0x400
 
-#define CLKDIV_VALUE		160 // clock rate is 40M, 40M / (200*2) = 100k (standard i2c bus rate).
-//#define CLKDIV_VALUE		50 // clock rate is 40M, 40M / (50*2) = 400k (fast i2c bus rate).
+/* I2C clock calculation
+ * Palm Bus Clock = SYS_CLK / 3
+ *  SCLK = PB_Clock / ((2x CLKDIV)+5)
+ *   -> CLKDIV = (PB_Clock / SCLK -5)/2
+ * Carambola : 320MHz system clock -> Palm Bus = 320MHz / 3
+ * TODO: should be calculated on the fly
+ */
+
+#define CLKDIV_VALUE		131 // CLKDIV for 400KHz I2C clock
+//#define CLKDIV_VALUE		531 // CLKDIV for 100KHz
 
 #define READ_CMD		0x01
 #define WRITE_CMD		0x00
