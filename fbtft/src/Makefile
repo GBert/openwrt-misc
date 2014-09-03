@@ -5,8 +5,10 @@ ifneq ($(KERNELRELEASE),)
 -include $(src)/.config
 
 # Core module
+obj-$(CONFIG_FB_TFT)		 += fb.o fb_defio.o
+fb-y				 += fbmem.o fbmon.o fbcmap.o fbsysfs.o modedb.o fbcvt.o
 obj-$(CONFIG_FB_TFT)             += fbtft.o
-fbtft-y                          += fbtft-core.o fbtft-sysfs.o fbtft-bus.o fbtft-io.o
+fbtft-y                          += syscopyarea.o sysfillrect.o sysimgblt.o fb_sys_fops.o fbtft-core.o fbtft-sysfs.o fbtft-bus.o fbtft-io.o
 
 # drivers
 obj-$(CONFIG_FB_TFT_BD663474)    += fb_bd663474.o

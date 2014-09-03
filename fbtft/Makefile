@@ -17,7 +17,7 @@ define KernelPackage/fbtft
   SUBMENU:=Video Support
   TITLE:=Linux Framebuffer driver
   DEPENDS:=@GPIO_SUPPORT
-  FILES:=$(PKG_BUILD_DIR)/{fbtft.ko,fb_ili9341.ko,fb.ko}
+  FILES:=$(PKG_BUILD_DIR)/{fbtft.ko,fb_ili9341.ko,fb.ko,fb_sys_fops.ko,syscopyarea.ko,sysfillrect.ko,sysimgblt.ko,fb_defio.ko,fbtft_device.ko}
   KCONFIG:=
 endef
 
@@ -27,10 +27,10 @@ endef
 
 EXTRA_KCONFIG:= \
     CONFIG_FB_DEFERRED_IO=y \
-    CONFIG_FB_SYS_FILLRECT=y \
-    CONFIG_FB_SYS_COPYAREA=y \
-    CONFIG_FB_SYS_IMAGEBLIT=y \
-    CONFIG_FB_SYS_FOPS=y \
+    CONFIG_FB_SYS_FILLRECT=m \
+    CONFIG_FB_SYS_COPYAREA=m \
+    CONFIG_FB_SYS_IMAGEBLIT=m \
+    CONFIG_FB_SYS_FOPS=m \
     CONFIG_FB_TFT_FBTFT_DEVICE=m \
     CONFIG_FB_TFT=m \
     CONFIG_FB_TFT_ILI9341=m
@@ -43,7 +43,6 @@ MAKE_OPTS1:= \
     ARCH="$(LINUX_KARCH)" \
     CROSS_COMPILE="$(TARGET_CROSS)" \
     SUBDIRS="$(LINUX_DIR)/drivers/video" \
-    EXTRA_CFLAGS="$(EXTRA_CFLAGS)" \
     $(EXTRA_KCONFIG)
 
 MAKE_OPTS2:= \
