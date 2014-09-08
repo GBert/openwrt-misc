@@ -1,9 +1,9 @@
 /*
- *  Silicon Labs C2 port Linux support for WR1100
+ *  Silicon Labs C2 port Linux support for GPIO
  *
  *  Copyright (c) 2007 Rodolfo Giometti <giometti@linux.it>
  *  Copyright (c) 2007 Eurotech S.p.A. <info@eurotech.it>
- *  Copyright (c) 2014 Gerhard Bertelsmann <info@gerhardbertelsmann.de>
+ *  Copyright (c) 2014 Gerhard Bertelsmann <info@gerhard-bertelsmann.de>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as published by
