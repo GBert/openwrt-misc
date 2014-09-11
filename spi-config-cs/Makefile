@@ -8,25 +8,25 @@
 include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/kernel.mk
 
-PKG_NAME:=spi-config
+PKG_NAME:=spi-config-cs
 PKG_RELEASE:=1
 
 include $(INCLUDE_DIR)/package.mk
 
-define KernelPackage/spi-config
+define KernelPackage/spi-config-cs
   SUBMENU:=SPI Support
   TITLE:=SPI Config
   DEPENDS:=
-  FILES:=$(PKG_BUILD_DIR)/spi-config.ko
+  FILES:=$(PKG_BUILD_DIR)/spi-config-cs.ko
   KCONFIG:=
 endef
 
-define KernelPackage/spi-config/description
+define KernelPackage/spi-config-cs/description
  SPI Config module
 endef
 
 EXTRA_KCONFIG:= \
-    CONFIG_SPI_CONFIG=m
+    CONFIG_SPI_CONFIG_CS=m
 
 EXTRA_CFLAGS:= \
     $(patsubst CONFIG_%, -DCONFIG_%=1, $(patsubst %=m,%,$(filter %=m,$(EXTRA_KCONFIG)))) \
@@ -50,4 +50,4 @@ define Build/Compile
 	modules
 endef
 
-$(eval $(call KernelPackage,spi-config))
+$(eval $(call KernelPackage,spi-config-cs))

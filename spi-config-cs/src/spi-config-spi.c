@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#define DRV_NAME        "spi_config"
+#define DRV_NAME        "spi_config_cs"
 #define DEFAULT_SPEED  500000
 #define MAX_DEVICES 16
 
