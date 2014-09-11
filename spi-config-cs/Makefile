@@ -45,9 +45,7 @@ define Build/Prepare
 endef
 
 define Build/Compile
-	$(MAKE) -C "$(LINUX_DIR)" \
-	$(MAKE_OPTS) \
-	modules
+	$(MAKE) -C "$(LINUX_DIR)" $(MAKE_OPTS) modules
 endef
 
 $(eval $(call KernelPackage,spi-config-cs))
