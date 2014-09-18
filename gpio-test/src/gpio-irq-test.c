@@ -48,6 +48,7 @@ static int __init mymodule_init(void) {
 IRQ_REQUEST_ERR:
 
 GPIO_IRQ_ERR:
+   printk (KERN_INFO "freeing GPIO %d\n", gpio);
     gpio_free(gpio);
 
     return(err);
