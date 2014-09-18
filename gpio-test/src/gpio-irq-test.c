@@ -30,7 +30,10 @@ static int __init mymodule_init(void) {
         printk(KERN_ERR "can't map GPIO %d to IRQ\n",irq_number);
         err = irq_number;
 	goto GPIO_IRQ_ERR;
+    } else {
+        printk(KERN_INFO "got IRQ %d for GPIO %d\n", irq_number, gpio);
     }
+
     
     if ( request_irq(irq_number, gpio_reset_interrupt, IRQF_TRIGGER_FALLING|IRQF_ONESHOT, "gpio_irq_reset", NULL) ) {
          printk(KERN_ERR "GPIO IRQ Test: trouble requesting IRQ %d\n",irq_number);
