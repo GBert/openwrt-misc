@@ -6,7 +6,7 @@
 
 #define DRV_NAME "GPIO Test"
 
-static unsigned int irq_number;
+static int irq_number;
 static unsigned int gpio = 0;
 module_param(gpio, uint, 0);
 MODULE_PARM_DESC(gpio, "GPIO");
