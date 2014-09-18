@@ -26,7 +26,8 @@ static int __init mymodule_init(void) {
         printk (KERN_INFO "requested GPIO %d\n", gpio);
     }
 
-    if ((irq_number=gpio_to_irq(gpio))<0) {
+    irq_number=gpio_to_irq(gpio);
+    if (irq_number<0) {
         printk(KERN_ERR "can't map GPIO %d to IRQ\n",irq_number);
         err = irq_number;
 	goto GPIO_IRQ_ERR;
