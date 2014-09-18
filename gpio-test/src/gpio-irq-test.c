@@ -7,26 +7,26 @@
 #define DRV_NAME "GPIO Test"
 
 static unsigned int irq_number;
-static unsigned int gpio_number = 0;
-module_param(gpio_number, uint, 0);
-MODULE_PARM_DESC(gpio_number, "GPIO");
+static unsigned int gpio = 0;
+module_param(gpio, uint, 0);
+MODULE_PARM_DESC(gpio, "GPIO");
 
 static irqreturn_t gpio_reset_interrupt(int irq, void* dev_id) {
-        printk(KERN_INFO "IRQ %d event (GPIO %d)\n", irq_number, gpio_number);
+        printk(KERN_INFO "IRQ %d event (GPIO %d)\n", irq_number, gpio);
         return(IRQ_HANDLED);
 }
 
 static int __init mymodule_init(void) {
     int err;
 
-    if (gpio_request(gpio_number, "GPIO IRQ TEST")) {
-        printk (KERN_ERR "can't get GPIO %d\n", gpio_number);
+    if (gpio_request(gpio, "GPIO IRQ TEST")) {
+        printk (KERN_ERR "can't get GPIO %d\n", gpio);
         return -1;
     } else {
-        printk (KERN_INFO "requested GPIO %d\n", gpio_number);
+        printk (KERN_INFO "requested GPIO %d\n", gpio);
     }
 
-    if ((irq_number=gpio_to_irq(gpio_number))<0) {
+    if ((irq_number=gpio_to_irq(gpio))<0) {
         printk(KERN_ERR "can't map GPIO %d to IRQ\n",irq_number);
         err = irq_number;
 	goto GPIO_IRQ_ERR;
@@ -37,22 +37,22 @@ static int __init mymodule_init(void) {
          err = -1;
          goto IRQ_REQUEST_ERR;
     } else {
-         printk(KERN_INFO "GPIO IRQ Test: requested IRQ %d for GPIO %d-> fine\n", gpio_number, irq_number);
+         printk(KERN_INFO "GPIO IRQ Test: requested IRQ %d for GPIO %d-> fine\n", gpio, irq_number);
     }
     return 0;
 
 IRQ_REQUEST_ERR:
 
 GPIO_IRQ_ERR:
-    gpio_free(gpio_number);
+    gpio_free(gpio);
 
     return(err);
 
 }
 
 static void __exit mymodule_exit(void) {
-   printk (KERN_INFO "freeing GPIO %d IRQ %d\n", gpio_number, irq_number);
-   gpio_free(gpio_number);
+   printk (KERN_INFO "freeing GPIO %d IRQ %d\n", gpio, irq_number);
+   gpio_free(gpio);
    free_irq(irq_number, NULL );
    return;
 }
