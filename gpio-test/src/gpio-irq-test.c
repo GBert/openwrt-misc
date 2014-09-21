@@ -35,10 +35,9 @@ static int __init mymodule_init(void) {
         printk(KERN_INFO "got IRQ %d for GPIO %d\n", irq_number, gpio);
     }
 
-    
-    if ( request_irq(irq_number, gpio_reset_interrupt, IRQF_TRIGGER_FALLING|IRQF_ONESHOT, "gpio_irq_reset", NULL) ) {
-         printk(KERN_ERR "GPIO IRQ Test: trouble requesting IRQ %d\n",irq_number);
-         err = -1;
+    err = request_irq(irq_number, gpio_reset_interrupt, IRQF_TRIGGER_FALLING, "gpio_irq_reset", NULL);
+    if ( err ) {
+         printk(KERN_ERR "GPIO IRQ Test: trouble requesting IRQ %d error %d\n",irq_number, err);
          goto IRQ_REQUEST_ERR;
     } else {
          printk(KERN_INFO "GPIO IRQ Test: requested IRQ %d for GPIO %d-> fine\n", irq_number, gpio);
@@ -48,7 +47,7 @@ static int __init mymodule_init(void) {
 IRQ_REQUEST_ERR:
 
 GPIO_IRQ_ERR:
-   printk (KERN_INFO "freeing GPIO %d\n", gpio);
+    printk (KERN_INFO "freeing GPIO %d\n", gpio);
     gpio_free(gpio);
 
     return(err);
