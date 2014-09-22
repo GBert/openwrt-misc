@@ -36,7 +36,7 @@
  static void __ath79_gpio_set_value(unsigned gpio, int value)
  {
  	void __iomem *base = ath79_gpio_base;
-@@ -208,6 +220,137 @@ void __init ath79_gpio_output_select(uns
+@@ -208,6 +220,151 @@ void __init ath79_gpio_output_select(uns
  	spin_unlock_irqrestore(&ath79_gpio_lock, flags);
  }
  
@@ -125,14 +125,30 @@
 +		     base + AR71XX_GPIO_REG_INT_ENABLE);
 +}
 +
++static void ath79_gpio_irq_mask(struct irq_data *d)
++{
++	unsigned int irq = d->irq - ATH79_GPIO_IRQ_BASE;
++	void __iomem *base = ath79_gpio_base;
++	u32 t;
++
++	t = __raw_readl(base + AR71XX_GPIO_REG_INT_ENABLE);
++	__raw_writel(t & ~(1 << irq), base + AR71XX_GPIO_REG_INT_ENABLE);
++
++	/* flush write */
++	(void) __raw_readl(base + AR71XX_GPIO_REG_INT_ENABLE);
++}
++
 +static struct irq_chip ath79_gpio_irqchip = {
 +	.name = "GPIO",
++	.irq_mask = ath79_gpio_irq_mask,
++	.irq_mask_ack = ath79_gpio_irq_mask,
++	.irq_unmask = ath79_gpio_irq_disable,
 +	.irq_enable = ath79_gpio_irq_enable,
-+	.irq_disable = ath79_gpio_irq_disable,
++	.irq_disable = ath79_gpio_irq_mask,
 +	.irq_set_type = ath79_gpio_irq_type,
 +};
 +
-+static irqreturn_t ath79_gpio_irq(int irq, void *dev)
++static void ath79_gpio_irq(unsigned int irq, struct irq_desc *desc)
 +{
 +	void __iomem *base = ath79_gpio_base;
 +	unsigned int stat = __raw_readl(base + AR71XX_GPIO_REG_INT_PENDING);
@@ -148,11 +164,9 @@
 +				base + AR71XX_GPIO_REG_INT_POLARITY);
 +		}
 +
-+		handle_nested_irq(irq_base + bit_num);
++		generic_handle_irq(irq_base + bit_num);
 +		stat &= ~bit;
 +	}
-+
-+	return IRQ_HANDLED;
 +}
 +
 +static int __init ath79_gpio_irq_init(struct gpio_chip *chip)
@@ -163,9 +177,9 @@
 +	for (irq = irq_base; irq < irq_base + chip->ngpio; irq++) {
 +		irq_set_chip_data(irq, chip);
 +		irq_set_chip_and_handler(irq, &ath79_gpio_irqchip, handle_simple_irq);
-+		irq_set_nested_thread(irq, 1);
++/*		irq_set_nested_thread(irq, 1);
 +		irq_set_noprobe(irq);
-+	}
++*/	}
 +
 +	return 0;
 +}
@@ -174,7 +188,7 @@
  void __init ath79_gpio_init(void)
  {
  	int err;
-@@ -237,10 +380,17 @@ void __init ath79_gpio_init(void)
+@@ -237,10 +394,17 @@ void __init ath79_gpio_init(void)
  		ath79_gpio_chip.direction_input = ar934x_gpio_direction_input;
  		ath79_gpio_chip.direction_output = ar934x_gpio_direction_output;
  	}
@@ -188,11 +202,11 @@
 +
 +	ath79_gpio_irq_init(&ath79_gpio_chip);
 +
-+	request_threaded_irq(ATH79_MISC_IRQ(2), NULL, ath79_gpio_irq, IRQF_ONESHOT, "ath79-gpio", NULL);
++	irq_set_chained_handler(ATH79_MISC_IRQ(2), ath79_gpio_irq);
  }
  
  int gpio_get_value(unsigned gpio)
-@@ -263,14 +413,22 @@ EXPORT_SYMBOL(gpio_set_value);
+@@ -263,14 +427,22 @@ EXPORT_SYMBOL(gpio_set_value);
  
  int gpio_to_irq(unsigned gpio)
  {
