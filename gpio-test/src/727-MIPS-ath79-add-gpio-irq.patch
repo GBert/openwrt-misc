@@ -1,11 +1,20 @@
 --- a/arch/mips/ath79/gpio.c
 +++ b/arch/mips/ath79/gpio.c
-@@ -20,9 +20,12 @@
+@@ -1,6 +1,7 @@
+ /*
+  *  Atheros AR71XX/AR724X/AR913X GPIO API support
+  *
++ *  Copyright (c) 2013 The Linux Foundation. All rights reserved.
+  *  Copyright (C) 2010-2011 Jaiganesh Narayanan <jnarayanan@atheros.com>
+  *  Copyright (C) 2008-2011 Gabor Juhos <juhosg@openwrt.org>
+  *  Copyright (C) 2008 Imre Kaloz <kaloz@openwrt.org>
+@@ -20,9 +21,13 @@
  #include <linux/io.h>
  #include <linux/ioport.h>
  #include <linux/gpio.h>
 +#include <linux/irq.h>
 +#include <linux/interrupt.h>
++#include <linux/of.h>
  
  #include <asm/mach-ath79/ar71xx_regs.h>
  #include <asm/mach-ath79/ath79.h>
@@ -13,7 +22,7 @@
  #include "common.h"
  
  void __iomem *ath79_gpio_base;
-@@ -31,6 +34,13 @@ EXPORT_SYMBOL_GPL(ath79_gpio_base);
+@@ -31,6 +36,13 @@ EXPORT_SYMBOL_GPL(ath79_gpio_base);
  static unsigned long ath79_gpio_count;
  static DEFINE_SPINLOCK(ath79_gpio_lock);
  
@@ -27,7 +36,7 @@
  static void __ath79_gpio_set_value(unsigned gpio, int value)
  {
  	void __iomem *base = ath79_gpio_base;
-@@ -208,6 +218,137 @@ void __init ath79_gpio_output_select(uns
+@@ -208,6 +220,137 @@ void __init ath79_gpio_output_select(uns
  	spin_unlock_irqrestore(&ath79_gpio_lock, flags);
  }
  
@@ -165,12 +174,14 @@
  void __init ath79_gpio_init(void)
  {
  	int err;
-@@ -238,9 +379,15 @@ void __init ath79_gpio_init(void)
+@@ -237,10 +380,17 @@ void __init ath79_gpio_init(void)
+ 		ath79_gpio_chip.direction_input = ar934x_gpio_direction_input;
  		ath79_gpio_chip.direction_output = ar934x_gpio_direction_output;
  	}
++#ifdef CONFIG_OF_GPIO
++	ath79_gpio_chip.of_node = of_find_node_by_path("/ath79-gpio");
++#endif
  
-+/*	ath79_gpio_chip.of_node = of_find_node_by_path("/ath79-gpio"); */
-+
  	err = gpiochip_add(&ath79_gpio_chip);
  	if (err)
  		panic("cannot add AR71xx GPIO chip, error=%d", err);
@@ -181,7 +192,7 @@
  }
  
  int gpio_get_value(unsigned gpio)
-@@ -263,14 +410,22 @@ EXPORT_SYMBOL(gpio_set_value);
+@@ -263,14 +413,22 @@ EXPORT_SYMBOL(gpio_set_value);
  
  int gpio_to_irq(unsigned gpio)
  {
