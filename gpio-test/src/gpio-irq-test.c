@@ -35,7 +35,7 @@ static int __init mymodule_init(void) {
         printk(KERN_INFO "got IRQ %d for GPIO %d\n", irq_number, gpio);
     }
 
-    err = request_irq(irq_number, gpio_reset_interrupt, IRQF_TRIGGER_FALLING, "gpio_irq_reset", NULL);
+    err = request_irq(irq_number, gpio_reset_interrupt, IRQ_TYPE_EDGE_RISING, "gpio_irq_reset", NULL);
     if ( err ) {
          printk(KERN_ERR "GPIO IRQ Test: trouble requesting IRQ %d error %d\n",irq_number, err);
          goto IRQ_REQUEST_ERR;
