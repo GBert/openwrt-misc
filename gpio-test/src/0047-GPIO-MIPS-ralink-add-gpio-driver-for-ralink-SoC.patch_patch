@@ -1,0 +1,33 @@
+--- a/target/linux/ramips/patches-3.14/0047-GPIO-MIPS-ralink-add-gpio-driver-for-ralink-SoC.patch
++++ b/target/linux/ramips/patches-3.14/0047-GPIO-MIPS-ralink-add-gpio-driver-for-ralink-SoC.patch
+@@ -72,7 +72,7 @@ Cc: linux-gpio@vger.kernel.org
+  obj-$(CONFIG_GPIO_RCAR)		+= gpio-rcar.o
+ --- /dev/null
+ +++ b/drivers/gpio/gpio-ralink.c
+-@@ -0,0 +1,345 @@
++@@ -0,0 +1,353 @@
+ +/*
+ + * This program is free software; you can redistribute it and/or modify it
+ + * under the terms of the GNU General Public License version 2 as published
+@@ -333,6 +333,13 @@ Cc: linux-gpio@vger.kernel.org
+ +	return pinctrl_request_gpio(gpio);
+ +}
+ +
+++static void ralink_gpio_free(struct gpio_chip *chip, unsigned offset)
+++{
+++	int gpio = chip->base + offset;
+++
+++	pinctrl_free_gpio(gpio);
+++}
+++
+ +static int ralink_gpio_probe(struct platform_device *pdev)
+ +{
+ +	struct device_node *np = pdev->dev.of_node;
+@@ -385,6 +392,7 @@ Cc: linux-gpio@vger.kernel.org
+ +	rg->chip.get = ralink_gpio_get;
+ +	rg->chip.set = ralink_gpio_set;
+ +	rg->chip.request = ralink_gpio_request;
+++	rg->chip.free = ralink_gpio_free;
+ +	rg->chip.to_irq = ralink_gpio_to_irq;
+ +
+ +	/* set polarity to low for all lines */
