@@ -36,7 +36,7 @@
  static void __ath79_gpio_set_value(unsigned gpio, int value)
  {
  	void __iomem *base = ath79_gpio_base;
-@@ -208,6 +220,148 @@ void __init ath79_gpio_output_select(uns
+@@ -208,6 +220,133 @@ void __init ath79_gpio_output_select(uns
  	spin_unlock_irqrestore(&ath79_gpio_lock, flags);
  }
  
@@ -107,7 +107,7 @@
 +	return 0;
 +}
 +
-+static void ath79_gpio_irq_enable(struct irq_data *d)
++static void ath79_gpio_irq_mask(struct irq_data *d)
 +{
 +	int offset = d->irq - ATH79_GPIO_IRQ_BASE;
 +	void __iomem *base = ath79_gpio_base;
@@ -116,7 +116,7 @@
 +		     base + AR71XX_GPIO_REG_INT_ENABLE);
 +}
 +
-+static void ath79_gpio_irq_disable(struct irq_data *d)
++static void ath79_gpio_irq_unmask(struct irq_data *d)
 +{
 +	int offset = d->irq - ATH79_GPIO_IRQ_BASE;
 +	void __iomem *base = ath79_gpio_base;
@@ -125,26 +125,11 @@
 +		     base + AR71XX_GPIO_REG_INT_ENABLE);
 +}
 +
-+static void ath79_gpio_irq_mask(struct irq_data *d)
-+{
-+	unsigned int irq = d->irq - ATH79_GPIO_IRQ_BASE;
-+	void __iomem *base = ath79_gpio_base;
-+	u32 t;
-+
-+	t = __raw_readl(base + AR71XX_GPIO_REG_INT_ENABLE);
-+	__raw_writel(t & ~(1 << irq), base + AR71XX_GPIO_REG_INT_ENABLE);
-+
-+	/* flush write */
-+	(void) __raw_readl(base + AR71XX_GPIO_REG_INT_ENABLE);
-+}
-+
 +static struct irq_chip ath79_gpio_irqchip = {
 +	.name = "GPIO",
 +	.irq_mask = ath79_gpio_irq_mask,
 +	.irq_mask_ack = ath79_gpio_irq_mask,
-+	.irq_unmask = ath79_gpio_irq_disable,
-+	.irq_enable = ath79_gpio_irq_enable,
-+	.irq_disable = ath79_gpio_irq_mask,
++	.irq_unmask = ath79_gpio_irq_unmask,
 +	.irq_set_type = ath79_gpio_irq_type,
 +};
 +
@@ -185,7 +170,7 @@
  void __init ath79_gpio_init(void)
  {
  	int err;
-@@ -237,10 +391,15 @@ void __init ath79_gpio_init(void)
+@@ -237,10 +376,15 @@ void __init ath79_gpio_init(void)
  		ath79_gpio_chip.direction_input = ar934x_gpio_direction_input;
  		ath79_gpio_chip.direction_output = ar934x_gpio_direction_output;
  	}
@@ -201,7 +186,7 @@
  }
  
  int gpio_get_value(unsigned gpio)
-@@ -263,14 +422,22 @@ EXPORT_SYMBOL(gpio_set_value);
+@@ -263,14 +407,22 @@ EXPORT_SYMBOL(gpio_set_value);
  
  int gpio_to_irq(unsigned gpio)
  {
