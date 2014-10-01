@@ -13,7 +13,6 @@ simple GPIO IRQ kernel module testing 0047-GPIO-MIPS-ralink-add-gpio-driver-for-
 gpio-toggle-test.c
 ------------------
 simple GPIO toggling test (AR933x only)
-
 <pre><code>
   void \_\_iomem \*set\_reg = ath79\_gpio\_base + AR71XX\_GPIO\_REG\_SET;
   void \_\_iomem \*clear\_reg = ath79\_gpio\_base + AR71XX\_GPIO\_REG\_CLEAR;
@@ -22,7 +21,7 @@ simple GPIO toggling test (AR933x only)
   {
     \_\_raw\_writel(mask, set\_reg);
     \_\_raw\_writel(mask, clear\_reg);
-}
+  }
 </pre></code>
 AR9331@400MHz -> 7.69 MHz
 
