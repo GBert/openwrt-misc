@@ -17,7 +17,7 @@ define KernelPackage/gpio-test
   SUBMENU:=Other modules
   TITLE:=Simple GPIO Test
   DEPENDS:=
-  FILES:=$(PKG_BUILD_DIR)/{gpio-test.ko,gpio-irq-test.ko}
+  FILES:=$(PKG_BUILD_DIR)/{gpio-test.ko,gpio-irq-test.ko,gpio-toggle-test.ko}
   KCONFIG:=
 endef
 
