@@ -22,12 +22,12 @@ static int __init mymodule_init(void) {
 
     /* requesting port to be sure the port is free */
 
-    if (soc_is_ar724x()) {
+/*    if (soc_is_ar724x()) {
         printk (KERN_INFO "right architecture ->fine\n");
     } else {
         printk (KERN_ERR "wrong architecture - must be AR933x\n");
         return -1;
-    }
+    } */
     if (gpio_request(gpio, "GPIO toggle speed test")) {
         printk (KERN_ERR "can't get GPIO %d\n", gpio);
         return -1;
@@ -38,7 +38,7 @@ static int __init mymodule_init(void) {
     mask = 1 << gpio;
 
     printk (KERN_INFO "start toggling GPIO %d\n", gpio);
-    for(repeat=0;repeat<500000;repeat++)
+    for(repeat=0;repeat<10000000;repeat++)
     {
         __raw_writel(mask, set_reg);
         __raw_writel(mask, clear_reg);
