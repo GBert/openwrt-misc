@@ -15,7 +15,7 @@ gpio-toggle-test.c
 simple GPIO toggling test (RT3052 & AR933x only)
 ```
  void __iomem *gpio_addr = NULL;
- void __iomem *gpio\_setdataout_addr = NULL;
+ void __iomem *gpio_setdataout_addr = NULL;
  void __iomem *gpio_cleardataout_addr = NULL;
 
 gpio_addr = ioremap(GPIO_START_ADDR, GPIO_SIZE);
@@ -29,8 +29,8 @@ gpio_addr = ioremap(GPIO_START_ADDR, GPIO_SIZE);
         __raw_writel(mask, gpio_cleardataout_addr);
     }
 ```
-AR9331@400MHz -> 7.69 MHz
 
+AR9331@400MHz -> 7.69 MHz
 RT3052@320MHz -> 6.67 MHz
 
 
