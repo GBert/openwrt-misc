@@ -12,18 +12,25 @@ simple GPIO IRQ kernel module testing 0047-GPIO-MIPS-ralink-add-gpio-driver-for-
 
 gpio-toggle-test.c
 ------------------
-simple GPIO toggling test (AR933x only)
+simple GPIO toggling test (RT3052 & AR933x only)
 <pre><code>
-  void \_\_iomem \*set\_reg = ath79\_gpio\_base + AR71XX\_GPIO\_REG\_SET;
-  void \_\_iomem \*clear\_reg = ath79\_gpio\_base + AR71XX\_GPIO\_REG\_CLEAR;
-  uint32\_t mask, repeat;
-  for(repeat=0;repeat\<10000000;repeat++)
-  {
-    \_\_raw\_writel(mask, set\_reg);
-    \_\_raw\_writel(mask, clear\_reg);
-  }
+    void __iomem *gpio_addr = NULL;
+    void __iomem *gpio_setdataout_addr = NULL;
+    void __iomem *gpio_cleardataout_addr = NULL;
+
+    gpio_addr = ioremap(GPIO_START_ADDR, GPIO_SIZE);
+
+    gpio_setdataout_addr   = gpio_addr + GPIO_OFFS_SET;
+    gpio_cleardataout_addr = gpio_addr + GPIO_OFFS_CLEAR;
+    mask = 1 << gpio;
+
+    for(repeat=0;repeat<NR_REPEAT;repeat++) {
+        __raw_writel(mask, gpio_setdataout_addr);
+        __raw_writel(mask, gpio_cleardataout_addr);
+    }
 </pre></code>
 AR9331@400MHz -> 7.69 MHz
+RT3052@320MHz -> 6.67 MHz
 
 
 0047-GPIO-MIPS-ralink-add-gpio-driver-for-ralink-SoC.patch\_patch
