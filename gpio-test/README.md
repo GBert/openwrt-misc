@@ -30,8 +30,10 @@ gpio_addr = ioremap(GPIO_START_ADDR, GPIO_SIZE);
     }
 ```
 
-AR9331@400MHz -> 7.69 MHz
-RT3052@320MHz -> 6.67 MHz
+CPU           | toggle speed
+----------------------------
+RT3052@320MHz | 6.67 MHz
+AR9331@400MHz | 7.69 MHz
 
 
 0047-GPIO-MIPS-ralink-add-gpio-driver-for-ralink-SoC.patch\_patch
