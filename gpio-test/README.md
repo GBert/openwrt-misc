@@ -31,7 +31,7 @@ gpio_addr = ioremap(GPIO_START_ADDR, GPIO_SIZE);
 ```
 
 CPU           | toggle speed
-----------------------------
+--------------|-------------
 RT3052@320MHz | 6.67 MHz
 AR9331@400MHz | 7.69 MHz
 
