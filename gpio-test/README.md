@@ -13,12 +13,12 @@ simple GPIO IRQ kernel module testing 0047-GPIO-MIPS-ralink-add-gpio-driver-for-
 gpio-toggle-test.c
 ------------------
 simple GPIO toggling test (RT3052 & AR933x only)
-<pre><code>
-    void __iomem *gpio_addr = NULL;
-    void __iomem *gpio_setdataout_addr = NULL;
-    void __iomem *gpio_cleardataout_addr = NULL;
+```
+ void __iomem *gpio_addr = NULL;
+ void __iomem *gpio\_setdataout_addr = NULL;
+ void __iomem *gpio_cleardataout_addr = NULL;
 
-    gpio_addr = ioremap(GPIO_START_ADDR, GPIO_SIZE);
+gpio_addr = ioremap(GPIO_START_ADDR, GPIO_SIZE);
 
     gpio_setdataout_addr   = gpio_addr + GPIO_OFFS_SET;
     gpio_cleardataout_addr = gpio_addr + GPIO_OFFS_CLEAR;
@@ -28,8 +28,9 @@ simple GPIO toggling test (RT3052 & AR933x only)
         __raw_writel(mask, gpio_setdataout_addr);
         __raw_writel(mask, gpio_cleardataout_addr);
     }
-</pre></code>
+```
 AR9331@400MHz -> 7.69 MHz
+
 RT3052@320MHz -> 6.67 MHz
 
 
