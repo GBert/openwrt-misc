@@ -18,16 +18,16 @@ simple GPIO toggling test (RT3052 & AR933x only)
  void __iomem *gpio_setdataout_addr = NULL;
  void __iomem *gpio_cleardataout_addr = NULL;
 
-gpio_addr = ioremap(GPIO_START_ADDR, GPIO_SIZE);
+ gpio_addr = ioremap(GPIO_START_ADDR, GPIO_SIZE);
 
-    gpio_setdataout_addr   = gpio_addr + GPIO_OFFS_SET;
-    gpio_cleardataout_addr = gpio_addr + GPIO_OFFS_CLEAR;
-    mask = 1 << gpio;
+ gpio_setdataout_addr   = gpio_addr + GPIO_OFFS_SET;
+ gpio_cleardataout_addr = gpio_addr + GPIO_OFFS_CLEAR;
+ mask = 1 << gpio;
 
-    for(repeat=0;repeat<NR_REPEAT;repeat++) {
-        __raw_writel(mask, gpio_setdataout_addr);
-        __raw_writel(mask, gpio_cleardataout_addr);
-    }
+ for(repeat=0;repeat<NR_REPEAT;repeat++) {
+     __raw_writel(mask, gpio_setdataout_addr);
+     __raw_writel(mask, gpio_cleardataout_addr);
+ }
 ```
 
 CPU           | toggle speed
