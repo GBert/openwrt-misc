@@ -36,11 +36,6 @@ RT3052@320MHz | 6.67 MHz
 AR9331@400MHz | 7.69 MHz
 
 
-0047-GPIO-MIPS-ralink-add-gpio-driver-for-ralink-SoC.patch\_patch
------------------------------------------------------------------
-adds Ralink pinctrl glue code to free GPIO. See: https://dev.openwrt.org/ticket/14309
-
-
 728-MIPS-ath79-add-gpio-irq.patch
 ---------------------------------
 adds GPIO IRQ stuff for ATH79 based SoCs like AR933x, AR934x, QCA9533 ...
