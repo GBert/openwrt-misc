@@ -18,7 +18,7 @@ define KernelPackage/c2port-gpio
   TITLE:=C2PORT GPIO
   DEPENDS:=@GPIO_SUPPORT
   DEPENDS:=
-  FILES:=$(PKG_BUILD_DIR)/{c2port-gpio.ko,c2port-core.ko}
+  FILES:=$(PKG_BUILD_DIR)/{c2port-core.ko,c2port-gpio.ko}
   KCONFIG:=
 endef
 
@@ -43,6 +43,7 @@ MAKE_OPTS:= \
 
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)
+	$(CP) $(LINUX_DIR)/drivers/misc/c2port/core.c $(PKG_BUILD_DIR)/c2port-core.c
 	$(CP) ./src/* $(PKG_BUILD_DIR)/
 endef
 
