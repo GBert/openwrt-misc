@@ -1,0 +1,43 @@
+diff --git a/package/kernel/linux/modules/can.mk b/package/kernel/linux/modules/can.mk
+index 9245490..17ad969 100644
+--- a/package/kernel/linux/modules/can.mk
++++ b/package/kernel/linux/modules/can.mk
+@@ -17,7 +17,6 @@ define KernelPackage/can
+ 	CONFIG_CAN_LEDS=y \
+ 	CONFIG_CAN_AT91=n \
+ 	CONFIG_CAN_TI_HECC=n \
+-	CONFIG_CAN_MCP251X=n \
+ 	CONFIG_CAN_BFIN=n \
+ 	CONFIG_CAN_JANZ_ICAN3=n \
+ 	CONFIG_PCH_CAN=n \
+@@ -27,7 +26,7 @@ define KernelPackage/can
+ 	CONFIG_CAN_SJA1000=n \
+ 	CONFIG_CAN_SOFTING=n \
+ 	CONFIG_NET_EMATCH_CANID=n \
+-	CONFIG_CAN_DEBUG_DEVICES=n
++	CONFIG_CAN_DEBUG_DEVICES=y
+   FILES:=$(LINUX_DIR)/drivers/net/can/can-dev.ko \
+ 	 $(LINUX_DIR)/net/can/can.ko
+   AUTOLOAD:=$(call AutoProbe,can can-dev)
+@@ -127,6 +126,21 @@ endef
+ $(eval $(call KernelPackage,can-slcan))
+ 
+ 
++define KernelPackage/can-mcp251x
++  TITLE:=Microchip MCP251x CAN controllers
++  KCONFIG:=CONFIG_CAN_MCP251X
++  FILES:=$(LINUX_DIR)/drivers/net/can/mcp251x.ko
++  AUTOLOAD:=$(call AutoProbe,mcp251x)
++  $(call AddDepends/can)
++endef
++
++define KernelPackage/can-mcp251x/description
++  CAN driver for Microchip MCP251x SPI CAN controllers
++endef
++
++$(eval $(call KernelPackage,can-mcp251x))
++
++
+ define KernelPackage/can-flexcan
+   TITLE:=Support for Freescale FLEXCAN based chips
+   KCONFIG:=CONFIG_CAN_FLEXCAN
