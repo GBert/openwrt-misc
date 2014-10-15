@@ -34,7 +34,7 @@
 #include "ar934x_hs_uart.h"
 
 #undef CONFIG_SERIAL_AR934X_HS_CONSOLE
-#define CONFIG_SERIAL_AR933X_NR_UARTS	1
+#define CONFIG_SERIAL_AR934X_NR_UARTS	1
 
 #define DRIVER_NAME "ar934x-hs-uart"
 
@@ -247,7 +247,7 @@ static void ar934x_hs_uart_get_scale_step(unsigned int clk,
 		
 		}
 	}
-	dprintk("%s() clk:%d scale:0x%04X step:0x%04X baud:%d min_diff:%d\n", __func__, clk, *scale, *step, baud, min_diff);
+	dprintk("%s() clk:%d scale:0x%04X step:0x%04X baud:%d min_diff:%ld\n", __func__, clk, *scale, *step, baud, min_diff);
 }
 
 static void ar934x_hs_uart_set_termios(struct uart_port *port,
