@@ -59,7 +59,7 @@
 +static void __init spi_mcp251x_init(void)
 +{
 +	if (gpio_request(MCP2515_CAN_INT_GPIO_PIN, "MCP2515 /INT")) {
-+		printk (KERN_ERR "%s: can't get GPIO %d\n", __func__,  gpio);
++		printk (KERN_ERR "%s: can't get GPIO %d\n", __func__, MCP2515_CAN_INT_GPIO_PIN);
 +        };
 +	gpio_direction_input(MCP2515_CAN_INT_GPIO_PIN);
 +
