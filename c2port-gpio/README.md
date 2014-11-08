@@ -31,9 +31,10 @@ dev_id            flash_blocks_num  flash_size        rev_id
 flash_access      flash_data        name              subsystem
 
 root@OpenWrt:~# echo 1 > /sys/class/c2port/c2port0/access
-
-root@OpenWrt:~#  cat /sys/class/c2port/c2port0/dev_id
-cat: read error: Input/output error
-
+root@OpenWrt:~# # Silabs C8051F502 connected
+root@OpenWrt:~# cat /sys/class/c2port/c2port0/dev_id
+28
+root@OpenWrt:~# cat /sys/class/c2port/c2port0/rev_id
+1
 ```
 Please have a look at 'Documentation/misc-devices/c2port.txt' in the kernel tree
