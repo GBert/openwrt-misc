@@ -4,7 +4,7 @@ This kernel module is able to emulate the Silicon Labs 2-Wire Interface through 
 
 https://www.silabs.com/Support%20Documents/TechnicalDocs/C2spec.pdf
 
-## Status: loads but untested
+## Status: loads and seems to work
 
 ```
 root@OpenWrt:~# insmod c2port-core
