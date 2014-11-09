@@ -1,0 +1,31 @@
+# echo 1 > /sys/class/c2port/c2port0/access
+# cat /sys/class/c2port/c2port0/dev_id
+28
+
+[13695.710000] c2port_write_ar addr 0x0
+[13695.710000] c2port_read_dr data 0x1c
+
+# cat /sys/class/c2port/c2port0/rev_id
+1
+[13774.400000] c2port_write_ar addr 0x1
+[13774.410000] c2port_read_dr data 0x1
+
+################
+
+# echo 1 > /sys/class/c2port/c2port0/flash_access
+
+[13915.570000] c2port_write_ar addr 0x2
+[13915.570000] c2port_write_dr data 0x2
+[13915.570000] c2port_write_dr data 0x1
+
+
+# cat /sys/class/c2port/c2port0/flash_data
+cat: read error: Device or resource busy
+
+[13984.950000] c2port_write_ar addr 0xb4
+[13984.950000] c2port_write_dr data 0x6
+[13984.960000] c2port_read_ar addr 0x1
+[13984.960000] c2port_read_ar addr 0x1
+[13984.970000] c2port_read_dr data 0x1
+[13984.970000] c2port c2port0: cannot read uc flash
+
