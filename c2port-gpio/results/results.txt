@@ -29,3 +29,14 @@ cat: read error: Device or resource busy
 [13984.970000] c2port_read_dr data 0x1
 [13984.970000] c2port c2port0: cannot read uc flash
 
+malfunction more detailed:
+[103036.230000] c2port_write_ar addr 0xb4
+[103036.230000] c2port_write_dr data 0x6
+[103036.230000] c2port_read_ar addr 0x1
+[103036.240000]  c2port_poll_in_busy addr 0x1
+[103036.240000] c2port_read_ar addr 0x1
+[103036.250000]  c2port_poll_out_ready addr 0x1
+[103036.250000] c2port_read_dr data 0x1
+[103036.250000] __c2port_read_flash_data status 0x1
+[103036.260000] c2port c2port0: cannot read uc flash
+
