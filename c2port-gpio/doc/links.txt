@@ -1,0 +1,16 @@
+C8051F50x
+https://www.silabs.com/Support%20Documents/TechnicalDocs/C8051F50x-51x.pdf
+
+Sharing C2 Port
+https://www.silabs.com/Support%20Documents/TechnicalDocs/an124.pdf
+
+C2 Flash Programming
+http://www.silabs.com/Support%20Documents/TechnicalDocs/an127.pdf 
+
+Modular Bootloader
+http://www.silabs.com/support%20documents/technicaldocs/AN533.pdf
+
+CAN Bootloader Application Note
+http://www.silabs.com/Support%20Documents/TechnicalDocs/AN534.pdf
+
+
