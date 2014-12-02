@@ -1,6 +1,8 @@
-
+#include <getopt.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <sysexits.h>
+#include <unistd.h>
  
 #define u64 uint64_t
 #define u32 uint32_t
@@ -19,7 +21,7 @@
  
 static unsigned long ar933x_uart_get_baud(unsigned int clk, unsigned int scale, unsigned int step) {
         u64 t;
-        u32 div;
+        u64 div;
  
         div = (2 << 16) * (scale + 1);
         t = clk;
@@ -58,25 +60,44 @@ static void ar933x_uart_get_scale_step(unsigned int clk, unsigned int baud, unsi
         }
 }
  
-int main(void) {
-	const uint64_t UARTCLOCK = 25000000;
+int main(int argc, char *argv[]) {
+	uint64_t UARTCLOCK = 25000000;
 		
-	unsigned int baud = 2000000;
+	unsigned int baud = 500000;
  
 	unsigned int scale;
 	unsigned int step;
+	int opt;
+
+	while ((opt = getopt(argc, argv, "b:c:")) != -1) {
+		switch(opt) {
+			case 'c':
+				UARTCLOCK =  strtol(optarg, NULL, 0);
+				break;
+			case 'b':
+				baud =  strtol(optarg, NULL, 0);
+				break;
+			default:
+				/* usage("Unknown option", EX_USAGE); */
+				printf("Unknown option\n");
+		}
+	}
  
 	ar933x_uart_get_scale_step(UARTCLOCK, baud, &scale, &step);
-	
-	printf("Uart Clock: %15d\n"
-		   "Uart Baud:  %15d\n"
-		   "----------------------------\n"
-		   "Uart Scale: %15d\n"
-		   "Uart Step:  %15d\n", UARTCLOCK, baud, scale, step);
-	
-	unsigned long baud_real = ar933x_uart_get_baud(UARTCLOCK, scale, step);
- 
-	printf( "----------------------------\n"
-		"Uart Baud:  %15lu\n", baud);
+
+	printf("Uart Clock      :  %15ld\n"
+		   "Uart Baud       :  %15d\n"
+		   "-----------------------------------\n"
+		   "Uart Scale      :  %15d\n"
+		   "Uart Step       :  %15d\n", UARTCLOCK, baud, scale, step);
+
+	int baud_real = ar933x_uart_get_baud(UARTCLOCK, scale, step);
+	int baud1 = ar933x_uart_get_baud(UARTCLOCK, scale, step+1);
+	int baud2 = ar933x_uart_get_baud(UARTCLOCK, scale, step-1);
+
+	printf( "-----------------------------------\n"
+		"Uart step-1 Baud:  %15d %5d\n"
+		"Uart real   Baud:  %15d %5d\n"
+		"Uart step+1 Baud:  %15d %5d\n", baud1, baud1 - baud, baud_real, baud_real - baud,  baud2, baud2 - baud);
 	return 0;
 }
