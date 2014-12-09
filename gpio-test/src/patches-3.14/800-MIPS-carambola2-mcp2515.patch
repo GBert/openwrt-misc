@@ -1,0 +1,74 @@
+--- a/arch/mips/ath79/mach-carambola2.c
++++ b/arch/mips/ath79/mach-carambola2.c
+@@ -20,6 +20,14 @@
+ #include "dev-wmac.h"
+ #include "machtypes.h"
+ 
++#include <linux/can/platform/mcp251x.h>
++#include <linux/gpio.h>
++#include <linux/interrupt.h>
++#include <linux/irq.h>
++
++#define MCP2515_CAN_INT_GPIO_PIN		20
++#define GPIO_SPI_CS1_MCP2515			22
++
+ #define CARAMBOLA2_GPIO_LED_WLAN		0
+ #define CARAMBOLA2_GPIO_LED_ETH0		14
+ #define CARAMBOLA2_GPIO_LED_ETH1		13
+@@ -61,6 +69,46 @@ static struct gpio_keys_button carambola
+ 	},
+ };
+ 
++static struct mcp251x_platform_data mcp251x_info = {
++	.oscillator_frequency   = 16000000,
++/*	.board_specific_setup   = NULL,
++	.irq_flags              = IRQF_TRIGGER_FALLING|IRQF_ONESHOT,
++	.power_enable           = NULL,
++	.transceiver_enable     = NULL,
++*/};
++
++static struct ath79_spi_controller_data ath79_spi1_cdata = {
++	.cs_type = ATH79_SPI_CS_TYPE_GPIO,
++	.cs_line = GPIO_SPI_CS1_MCP2515,
++};
++
++static struct spi_board_info ath79_spi_device[] = {
++	{
++		.modalias = "mcp2515",
++		.max_speed_hz = 10000000,
++		.platform_data = &mcp251x_info,
++		/* .irq = unknown , defined later thru spi_mcp251x_init */
++		.bus_num = 0,
++		.chip_select = 2,
++		.mode = SPI_MODE_0,
++		.controller_data = &ath79_spi1_cdata,
++	}
++};
++
++static void __init spi_mcp251x_init(void)
++{
++	if (gpio_request(MCP2515_CAN_INT_GPIO_PIN, "MCP2515 /INT")) {
++		printk (KERN_ERR "%s: can't get GPIO %d\n", __func__, MCP2515_CAN_INT_GPIO_PIN);
++        };
++	gpio_direction_input(MCP2515_CAN_INT_GPIO_PIN);
++
++	ath79_spi_device[0].irq = gpio_to_irq(MCP2515_CAN_INT_GPIO_PIN);
++	printk(KERN_INFO "%s: got IRQ %d for MCP2515\n", __func__, ath79_spi_device[0].irq);
++	spi_register_board_info(ath79_spi_device,
++		ARRAY_SIZE(ath79_spi_device));
++	return;
++};
++
+ static void __init carambola2_common_setup(void)
+ {
+ 	u8 *art = (u8 *) KSEG1ADDR(0x1fff0000);
+@@ -81,6 +129,9 @@ static void __init carambola2_common_set
+ 
+ 	/* WAN port */
+ 	ath79_register_eth(0);
++
++	/* init SPI MCP2515 */
++	spi_mcp251x_init();
+ }
+ 
+ static void __init carambola2_setup(void)

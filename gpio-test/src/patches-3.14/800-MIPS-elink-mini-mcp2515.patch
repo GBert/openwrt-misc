@@ -1,0 +1,84 @@
+--- a/arch/mips/ath79/mach-el-mini.c
++++ b/arch/mips/ath79/mach-el-mini.c
+@@ -17,10 +17,20 @@
+ #include "dev-gpio-buttons.h"
+ #include "dev-leds-gpio.h"
+ #include "dev-m25p80.h"
++#include "dev-spi.h"
+ #include "dev-usb.h"
+ #include "dev-wmac.h"
+ #include "machtypes.h"
+ 
++#include <linux/can/platform/mcp251x.h>
++#include <linux/gpio.h>
++#include <linux/interrupt.h>
++#include <linux/irq.h>
++
++#define MCP2515_CAN_INT_GPIO_PIN	19
++#define GPIO_SPI_CS1_MCP2515		20
++
++
+ #define MINI_GPIO_LED_SYSTEM	27
+ #define MINI_GPIO_BTN_RESET	11
+ 
+@@ -42,7 +52,7 @@ static struct gpio_led mini_leds_gpio[]
+ 	{
+ 		.name		= "ELINK:green:system",
+ 		.gpio		= MINI_GPIO_LED_SYSTEM,
+-		.active_low	= 1,
++		.active_low	= 0,
+ 	},
+ };
+ 
+@@ -57,6 +67,41 @@ static struct gpio_keys_button mini_gpio
+ 	}
+ };
+ 
++static struct mcp251x_platform_data mcp251x_info = {
++	.oscillator_frequency   = 16000000,
++/*	.board_specific_setup   = NULL,
++	.irq_flags              = IRQF_TRIGGER_FALLING|IRQF_ONESHOT,
++	.power_enable           = NULL,
++	.transceiver_enable     = NULL,
++*/};
++
++static struct ath79_spi_controller_data ath79_spi1_cdata = {
++       .cs_type = ATH79_SPI_CS_TYPE_GPIO,
++       .cs_line = GPIO_SPI_CS1_MCP2515,
++};
++
++static struct spi_board_info ath79_spi_device[] = {
++	{
++		.modalias = "mcp2515",
++		.max_speed_hz = 10000000,
++		.platform_data = &mcp251x_info,
++		/* .irq = unknown , defined later thru spi_mcp251x_init */
++		.bus_num = 0,
++		.chip_select = 2,
++		.mode = SPI_MODE_0,
++		.controller_data = &ath79_spi1_cdata,
++	}
++};
++
++static void __init spi_mcp251x_init(void)
++{
++	ath79_spi_device[0].irq = gpio_to_irq(MCP2515_CAN_INT_GPIO_PIN);
++	printk(KERN_INFO "%s: got IRQ %d for MCP2515\n", __func__, ath79_spi_device[0].irq);
++	spi_register_board_info(ath79_spi_device,
++	ARRAY_SIZE(ath79_spi_device));
++	return;
++};
++
+ static void __init el_mini_setup(void)
+ {
+ 	u8 *mac = (u8 *) KSEG1ADDR(0x1f01fc00);
+@@ -80,6 +125,9 @@ static void __init el_mini_setup(void)
+ 	ath79_register_eth(0);
+ 
+ 	ath79_register_wmac(ee, mac);
++
++	/* init SPI MCP2515 */
++	spi_mcp251x_init();
+ }
+ 
+ MIPS_MACHINE(ATH79_MACH_EL_MINI, "EL-MINI", "EasyLink EL-MINI",
