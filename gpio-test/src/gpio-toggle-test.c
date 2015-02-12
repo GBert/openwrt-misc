@@ -9,16 +9,19 @@
 
 #define NR_REPEAT	1*1000*1000UL
 
+
 #ifdef ATH79_SOC
-#define GPIO_START_ADDR	0x18040000
-#define GPIO_SIZE	0x20
-#define GPIO_OFFS_SET	0x0C
-#define GPIO_OFFS_CLEAR	0x10
+#define AR71XX_RESET_BASE	0x18060000
+#define AR71XX_RESET_REG_REV_ID	0x90
+#define GPIO_START_ADDR		0x18040000
+#define GPIO_SIZE		0x20
+#define GPIO_OFFS_SET		0x0C
+#define GPIO_OFFS_CLEAR		0x10
 #else
-#define GPIO_START_ADDR	0x10000600
-#define GPIO_SIZE	0x40
-#define GPIO_OFFS_SET	0x2C
-#define GPIO_OFFS_CLEAR	0x30
+#define GPIO_START_ADDR		0x10000600
+#define GPIO_SIZE		0x40
+#define GPIO_OFFS_SET		0x2C
+#define GPIO_OFFS_CLEAR		0x30
 #endif
 
 #define DRV_NAME "GPIO toggle speed test"
@@ -35,6 +38,11 @@ static int __init mymodule_init(void) {
     void __iomem *gpio_addr = NULL;
     void __iomem *gpio_setdataout_addr = NULL;
     void __iomem *gpio_cleardataout_addr = NULL;
+
+#ifdef ATH79_SOC
+    void __iomem *cpu_id = NULL;
+    cpu_id = ioremap(AR71XX_RESET_BASE + AR71XX_RESET_REG_REV_ID, 0x4);
+#endif
 
     gpio_addr = ioremap(GPIO_START_ADDR, GPIO_SIZE);
     /* requesting port to be sure the port is free */

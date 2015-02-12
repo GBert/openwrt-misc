@@ -10,6 +10,7 @@ include $(INCLUDE_DIR)/kernel.mk
 
 PKG_NAME:=gpio-test
 PKG_RELEASE:=1
+PKG_USE_MIPS16:=0
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -17,7 +18,7 @@ define KernelPackage/gpio-test
   SUBMENU:=Other modules
   TITLE:=Simple GPIO Test
   DEPENDS:=
-  FILES:=$(PKG_BUILD_DIR)/{gpio-test.ko,gpio-irq-test.ko,gpio-toggle-test.ko}
+  FILES:=$(PKG_BUILD_DIR)/{gpio-test.ko,gpio-irq-test.ko,gpio-toggle-test.ko,gpio-irq-latency-test.ko}
   KCONFIG:=
 endef
 
