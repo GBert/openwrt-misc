@@ -19,6 +19,7 @@ define KernelPackage/ath-hs-uart
   DEPENDS:=
   FILES:=$(PKG_BUILD_DIR)/ar934x_hs_uart.ko
   KCONFIG:=
+  AUTOLOAD:=$(call AutoProbe,ar934x_hs_uart)
 endef
 
 define KernelPackage/ath-hs-uart/description
