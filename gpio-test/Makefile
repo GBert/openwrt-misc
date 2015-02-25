@@ -23,7 +23,7 @@ define KernelPackage/gpio-test
 endef
 
 define KernelPackage/gpio-test/description
- Simple GPIO test
+ Simple GPIO test suite including 'toggle speed test' and 'GPIO IRQ latency test'
 endef
 
 EXTRA_KCONFIG:= \

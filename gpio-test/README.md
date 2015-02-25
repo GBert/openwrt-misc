@@ -36,6 +36,9 @@ RT3052@320MHz | 6.67 MHz
 AR9331@400MHz | 7.69 MHz
 AR9341@533MHz | 7.69 MHz
 
+gpio-irq-latency-test.c
+-----------------------
+simple GPIO IRQ latency test
 
 728-MIPS-ath79-add-gpio-irq.patch
 ---------------------------------
