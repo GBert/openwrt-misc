@@ -40,3 +40,55 @@ malfunction more detailed:
 [103036.250000] __c2port_read_flash_data status 0x1
 [103036.260000] c2port c2port0: cannot read uc flash
 
+############ new test 14.03.2015 ##################
+
+[   11.290000] c2port c2port0: C2 port C8051F502 added
+[   11.290000] c2port c2port0: C8051F502 flash has 126 blocks x 512 bytes (64512 bytes total)
+
+root@EasyLink-Mini:~# cat /sys/class/c2port/c2port0/dev_id
+28
+
+[   56.910000] c2port_write_ar : addr 0x00
+[   56.910000] c2port_read_dr : data 0x1C
+
+root@EasyLink-Mini:~# cat /sys/class/c2port/c2port0/rev_id
+1
+
+[   87.510000] c2port_write_ar : addr 0x00
+[   87.510000] c2port_read_dr : data 0x01
+
+root@EasyLink-Mini:~# echo 1 > /sys/class/c2port/c2port0/flash_access
+
+[  115.460000] c2port_write_ar : addr 0x00
+[  115.460000] c2port_write_dr : data 0x00
+[  115.460000] c2port_write_dr : data 0x00
+
+root@EasyLink-Mini:~# echo 1 > /sys/class/c2port/c2port0/flash_erase
+ash: write error: Input/output error
+
+[  142.010000] c2port_write_ar : addr 0x00
+[  142.010000] c2port_write_dr : data 0x00
+[  142.010000] c2port_read_ar : addr 0x01
+[  142.010000] c2port_read_ar : addr 0x01
+[  142.010000] c2port_read_dr : data 0x0D
+[  142.010000] c2port_write_dr : data 0x00
+[  142.010000] c2port_read_ar : addr 0x00
+[  142.010000] c2port_write_dr : data 0x00
+[  142.010000] c2port_read_ar : addr 0x00
+[  142.010000] c2port_write_dr : data 0x00
+
+[  142.020000] c2port_read_ar : addr 0x00
+[  142.020000] c2port_read_ar : addr 0x00
+[  142.020000] c2port_read_ar : addr 0x00
+[  142.020000] c2port_read_ar : addr 0x00
+[  142.020000] c2port_read_ar : addr 0x00
+[  142.020000] c2port_read_ar : addr 0x00
+[  142.020000] c2port_read_ar : addr 0x00
+[  142.020000] c2port_read_ar : addr 0x00
+
+...
+
+[  142.870000] c2port_read_ar : addr 0x00
+[  142.880000] c2port_read_ar : addr 0x00
+[  142.880000] c2port c2port0: cannot erase C8051F502 flash
+

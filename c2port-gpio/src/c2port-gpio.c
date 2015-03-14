@@ -67,7 +67,7 @@ static void gpio_c2port_c2ck_set(struct c2port_device *dev, int status)
 
 static struct c2port_ops gpio_c2port_ops = {
 	block_size	:512,		/* bytes */
-	blocks_num	:30,		/* total flash size: 15360 bytes */
+	blocks_num	:126,		/* total flash size: 15360 bytes */
 	access		:gpio_c2port_access,
 	c2d_dir		:gpio_c2port_c2d_dir,
 	c2d_get		:gpio_c2port_c2d_get,
@@ -93,7 +93,7 @@ static int __init gpio_c2port_init(void)
 		goto free_gpio;
 	gpio_direction_input(c2d);
 
-	gpio_c2port_dev = c2port_device_register("uc", &gpio_c2port_ops, NULL);
+	gpio_c2port_dev = c2port_device_register("C8051F502", &gpio_c2port_ops, NULL);
 	if (!gpio_c2port_dev)
 		return -ENODEV;
 

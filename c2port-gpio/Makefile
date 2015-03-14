@@ -43,7 +43,7 @@ MAKE_OPTS:= \
 
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)
-	$(CP) $(LINUX_DIR)/drivers/misc/c2port/core.c $(PKG_BUILD_DIR)/c2port-core.c
+#	$(CP) $(LINUX_DIR)/drivers/misc/c2port/core.c $(PKG_BUILD_DIR)/c2port-core.c
 	$(CP) ./src/* $(PKG_BUILD_DIR)/
 endef
 
