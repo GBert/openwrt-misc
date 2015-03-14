@@ -92,3 +92,67 @@ ash: write error: Input/output error
 [  142.880000] c2port_read_ar : addr 0x00
 [  142.880000] c2port c2port0: cannot erase C8051F502 flash
 
+root@EasyLink-Mini:~#  dd if=/sys/class/c2port/c2port0/flash_data bs=1 count=4 > /dev/null
+4+0 records in
+4+0 records out
+[  736.640000] c2port_write_ar : addr 0x00
+[  736.640000] c2port_write_dr : data 0x00
+[  736.640000] c2port_read_ar : addr 0x01
+[  736.640000] c2port_read_ar : addr 0x01
+[  736.640000] c2port_read_dr : data 0x0D
+[  736.650000] c2port_write_dr : data 0x00
+[  736.650000] c2port_read_ar : addr 0x00
+[  736.650000] c2port_write_dr : data 0x00
+[  736.650000] c2port_read_ar : addr 0x00
+[  736.650000] c2port_write_dr : data 0x00
+[  736.650000] c2port_read_ar : addr 0x01
+[  736.650000] c2port_read_ar : addr 0x01
+[  736.650000] c2port_read_dr : data 0x0D
+[  736.650000] c2port_read_ar : addr 0x01
+[  736.650000] c2port_read_dr : data 0xFF
+[  736.650000] c2port_write_ar : addr 0x00
+[  736.660000] c2port_write_dr : data 0x00
+[  736.660000] c2port_read_ar : addr 0x01
+[  736.660000] c2port_read_ar : addr 0x01
+[  736.660000] c2port_read_dr : data 0x0D
+[  736.660000] c2port_write_dr : data 0x00
+[  736.660000] c2port_read_ar : addr 0x00
+[  736.660000] c2port_write_dr : data 0x00
+[  736.660000] c2port_read_ar : addr 0x00
+[  736.660000] c2port_write_dr : data 0x00
+[  736.660000] c2port_read_ar : addr 0x01
+[  736.660000] c2port_read_ar : addr 0x01
+[  736.660000] c2port_read_dr : data 0x0D
+[  736.670000] c2port_read_ar : addr 0x01
+[  736.670000] c2port_read_dr : data 0xFF
+[  736.670000] c2port_write_ar : addr 0x00
+[  736.670000] c2port_write_dr : data 0x00
+[  736.670000] c2port_read_ar : addr 0x01
+[  736.670000] c2port_read_ar : addr 0x01
+[  736.670000] c2port_read_dr : data 0x0D
+[  736.670000] c2port_write_dr : data 0x00
+[  736.670000] c2port_read_ar : addr 0x00
+[  736.670000] c2port_write_dr : data 0x00
+[  736.670000] c2port_read_ar : addr 0x00
+[  736.680000] c2port_write_dr : data 0x00
+[  736.680000] c2port_read_ar : addr 0x01
+[  736.680000] c2port_read_ar : addr 0x01
+[  736.680000] c2port_read_dr : data 0x0D
+[  736.680000] c2port_read_ar : addr 0x01
+[  736.680000] c2port_read_dr : data 0xFF
+[  736.680000] c2port_write_ar : addr 0x00
+[  736.680000] c2port_write_dr : data 0x00
+[  736.680000] c2port_read_ar : addr 0x01
+[  736.680000] c2port_read_ar : addr 0x01
+[  736.690000] c2port_read_dr : data 0x0D
+[  736.690000] c2port_write_dr : data 0x00
+[  736.690000] c2port_read_ar : addr 0x00
+[  736.690000] c2port_write_dr : data 0x00
+[  736.690000] c2port_read_ar : addr 0x00
+[  736.690000] c2port_write_dr : data 0x00
+[  736.690000] c2port_read_ar : addr 0x01
+[  736.690000] c2port_read_ar : addr 0x01
+[  736.690000] c2port_read_dr : data 0x0D
+[  736.690000] c2port_read_ar : addr 0x01
+[  736.690000] c2port_read_dr : data 0xFF
+
