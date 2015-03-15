@@ -74,33 +74,42 @@
  */
 static void c2d_set(struct c2interface *c2if, int state)
 {
-	if (state)
-		pwrite(c2if->gpio_c2d, "1", 1, 0);
-	else
-		pwrite(c2if->gpio_c2d, "0", 1, 0);
+	if (state) {
+		if (pwrite(c2if->gpio_c2d, "1", 1, 0) < 0)
+			fprintf(stderr, "%s: pwrite error\n", __func__);
+	} else {
+		if (pwrite(c2if->gpio_c2d, "0", 1, 0) < 0)
+			fprintf(stderr, "%s: pwrite error\n", __func__);
+	}
 }
 
 static int c2d_get(struct c2interface *c2if)
 {
 	char buf;
 
-	pread(c2if->gpio_c2d, &buf, 1, 0);
+	if (pread(c2if->gpio_c2d, &buf, 1, 0) <0)
+		fprintf(stderr, "%s: pread error\n", __func__);
 
 	return buf == '1';
 }
 
 static void c2ck_set(struct c2interface *c2if, int state)
 {
-	if (state)
-		pwrite(c2if->gpio_c2ck, "1", 1, 0);
-	else
-		pwrite(c2if->gpio_c2ck, "0", 1, 0);
+	if (state) {
+		if (pwrite(c2if->gpio_c2ck, "1", 1, 0) < 0)
+			fprintf(stderr, "%s: pwrite error\n", __func__);
+	} else {
+		if (pwrite(c2if->gpio_c2ck, "0", 1, 0) < 0)
+			fprintf(stderr, "%s: pwrite error\n", __func__);
+	}
 }
 
 static void c2ck_strobe(struct c2interface *c2if)
 {
-	pwrite(c2if->gpio_c2ckstb, "0", 1, 0);
-	pwrite(c2if->gpio_c2ckstb, "1", 1, 0);
+	if (pwrite(c2if->gpio_c2ckstb, "0", 1, 0) < 0)
+		fprintf(stderr, "%s: pwrite error\n", __func__);
+	if (pwrite(c2if->gpio_c2ckstb, "1", 1, 0) < 0)
+		fprintf(stderr, "%s: pwrite error\n", __func__);
 }
 
 /*
@@ -651,7 +660,7 @@ int c2_flash_erase_device(struct c2tool_state *state)
 int flash_chunk(struct c2tool_state *state, unsigned int addr, unsigned int length,
 		       unsigned char *src)
 {
-	struct c2interface *c2if = &state->c2if;
+	/* struct c2interface *c2if = &state->c2if; */
 	struct c2family *family = state->family;
 	unsigned int page_size = family->page_size;
 	unsigned int page = addr / page_size;

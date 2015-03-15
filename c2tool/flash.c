@@ -17,6 +17,8 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <errno.h>
 
 #define PACKAGE
@@ -32,7 +34,7 @@ struct flash_section_data {
 static void flash_section(bfd * ibfd, sec_ptr isection, void *arg)
 {
 	bfd_size_type size = bfd_section_size(ibfd, isection);
-	bfd_vma vma = bfd_section_vma(ibfd, isection);
+	/* bfd_vma vma = bfd_section_vma(ibfd, isection); */
 	bfd_vma lma = bfd_section_lma(ibfd, isection);
 	const char *section_name = bfd_section_name(ibfd, isection);
 	bfd_byte *data = 0;
@@ -42,7 +44,7 @@ static void flash_section(bfd * ibfd, sec_ptr isection, void *arg)
 	unsigned int flash_addr = lma + offset;
 
 	printf("section %s: lma %016" BFD_VMA_FMT "x, size %d -> flash %08x\n",
-	       section_name, lma, size, flash_addr);
+	       section_name, lma, (int)size, flash_addr);
 
 	if (!bfd_get_full_section_contents (ibfd,isection, &data)) {
 		fprintf(stderr, "Reading section failed\n");
@@ -86,7 +88,7 @@ static int c2_flash_file(struct c2tool_state *state, const char *filename, const
 
 int handle_flash(struct c2tool_state *state, int argc, char **argv)
 {
-	unsigned char buf[256];
+	/* unsigned char buf[256]; */
 	unsigned int offset = 0;
 	char *end;
 	char *target = NULL;

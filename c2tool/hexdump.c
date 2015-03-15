@@ -16,9 +16,11 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include <ctype.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <unistd.h>
 
 #include "hexdump.h"
 
@@ -244,7 +246,7 @@ void print_hex_dump(const char *prefix_str, int prefix_type, unsigned int addr,
 		remaining -= rowsize;
 
 		hex_dump_to_buffer(ptr + i, linelen, rowsize, groupsize,
-				   linebuf, sizeof(linebuf), ascii);
+				   (char *)linebuf, sizeof(linebuf), ascii);
 
 		switch (prefix_type) {
 		case DUMP_PREFIX_ADDRESS:
