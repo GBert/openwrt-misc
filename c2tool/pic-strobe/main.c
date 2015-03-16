@@ -32,12 +32,12 @@ void main() {
 
   /* generates symetric 0.5 MHZ signal */
   while(1) {
-    while(LATA5) {}
+    while(RA5) {}
     TRISA2 = 0; // set ouuput 
     LATA2 = 0;
     LATA2 = 0;
     LATA2 = 1;
     TRISA2 = 1; // high z
-    while(!LATA5) {}
+    while(!RA5) {}
   }
 }
