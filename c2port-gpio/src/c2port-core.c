@@ -126,7 +126,7 @@ static void c2port_write_ar(struct c2port_device *dev, u8 addr)
 	/* STOP field */
 	ops->c2d_dir(dev, 1);
 	c2port_strobe_ck(dev);
-	printk (KERN_INFO "%s : addr 0x%02X\n", __func__, addr);
+	/* printk (KERN_INFO "%s : addr 0x%02X\n", __func__, addr);*/
 }
 
 static int c2port_read_ar(struct c2port_device *dev, u8 *addr)
@@ -157,7 +157,7 @@ static int c2port_read_ar(struct c2port_device *dev, u8 *addr)
 
 	/* STOP field */
 	c2port_strobe_ck(dev);
-	printk (KERN_INFO "%s : addr 0x%02X\n", __func__, *addr);
+	/* printk (KERN_INFO "%s : addr 0x%02X\n", __func__, *addr); */
 
 	return 0;
 }
@@ -206,7 +206,7 @@ static int c2port_write_dr(struct c2port_device *dev, u8 data)
 
 	/* STOP field */
 	c2port_strobe_ck(dev);
-	printk (KERN_INFO "%s : data 0x%02X\n", __func__, data);
+	/* printk (KERN_INFO "%s : data 0x%02X\n", __func__, data); */
 
 	return 0;
 }
@@ -257,7 +257,7 @@ static int c2port_read_dr(struct c2port_device *dev, u8 *data)
 
 	/* STOP field */
 	c2port_strobe_ck(dev);
-	printk (KERN_INFO "%s : data 0x%02X\n", __func__, (unsigned int) *data);
+	/* printk (KERN_INFO "%s : data 0x%02X\n", __func__, (unsigned int) *data);*/
 
 	return 0;
 }
