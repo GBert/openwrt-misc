@@ -80,6 +80,7 @@ static void c2port_strobe_ck(void)
 static void c2port_write_ar(u8 addr)
 {
 	int i;
+	int addr_s= addr;
 
 	/* START field */
 	c2port_strobe_ck();
@@ -102,7 +103,7 @@ static void c2port_write_ar(u8 addr)
 	/* STOP field */
 	c2port_c2d_dir(1);
 	c2port_strobe_ck();
-	printk(KERN_INFO "%s : addr 0x%02X\n", __func__, addr);
+	printk(KERN_INFO "%s : addr 0x%02X\n", __func__, addr_S);
 }
 
 static int c2port_read_ar(u8 * addr)
@@ -140,6 +141,7 @@ static int c2port_read_ar(u8 * addr)
 static int c2port_write_dr(u8 data)
 {
 	int timeout, i;
+	int data_s = data;
 
 	/* START field */
 	c2port_strobe_ck();
@@ -180,7 +182,7 @@ static int c2port_write_dr(u8 data)
 
 	/* STOP field */
 	c2port_strobe_ck();
-	printk(KERN_INFO "%s : data 0x%02X\n", __func__, data);
+	printk(KERN_INFO "%s : data 0x%02X timeout %d", __func__, data_s, timeout);
 
 	return 0;
 }
