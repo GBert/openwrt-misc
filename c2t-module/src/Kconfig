@@ -1,0 +1,6 @@
+config C2TOOL_GPIO
+    tristate "C2PORT GPIO"
+    depends on GENERIC_GPIO
+    select C2TOOL_GPIO
+    help
+      C2TOOL GPIO driver
