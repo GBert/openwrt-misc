@@ -537,19 +537,22 @@ int main(int argc, char **argv)
 
 	c2if->c2port_fd = open("/dev/c2port-gpio", O_RDWR);
 	if (c2if->c2port_fd < 0) {
-		fprintf(stderr, "%s: warning: open failed [%s]\n", __func__, strerror(errno));
+		fprintf(stderr, "%s: error: open failed [%s]\n", __func__, strerror(errno));
 		exit(-1);
 	}
 
 	c2_halt(c2if);
+	c2_reset(c2if);
 
 	/* Select REVID register for C2 data register accesses */
 	c2_write_ar(c2if, C2_REVID);
 
 	/* Read and return the revision ID register */
 	ret = c2_read_dr(c2if, &data);
-	if (ret < 0)
+	if (ret < 0) {
+		fprintf(stderr, "%s: can't read REV_ID [%s]\n", __func__, strerror(errno));
 		return 1;
+	}
 
 	printf("REVID 0x%02x\n", data);
 
