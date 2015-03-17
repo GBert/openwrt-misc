@@ -56,9 +56,10 @@ static void c2port_reset(void)
 	 * 20us.
 	 */
 	local_irq_disable();
-	gpio_set_value(c2ck, 0);
+	gpio_direction_output(c2ck, 0);
 	udelay(25);
 	gpio_set_value(c2ck, 1);
+	gpio_direction_input(c2ck);
 	local_irq_enable();
 
 	udelay(1);
@@ -69,9 +70,10 @@ static void c2port_strobe_ck(void)
 {
 	/* hi-low-hi transition must be below 5us */
 	local_irq_disable();
-	gpio_set_value(c2ck, 0);
+	gpio_direction_output(c2ck, 0);
 	udelay(1);		/* TODO : probably w don't need it */
 	gpio_set_value(c2ck, 1);
+	gpio_direction_input(c2ck);
 	local_irq_enable();
 
 	udelay(1);
@@ -103,7 +105,7 @@ static void c2port_write_ar(u8 addr)
 	/* STOP field */
 	c2port_c2d_dir(1);
 	c2port_strobe_ck();
-	printk(KERN_INFO "%s : addr 0x%02X\n", __func__, addr_s);
+	/* printk(KERN_INFO "%s : addr 0x%02X\n", __func__, addr_s); */
 }
 
 static int c2port_read_ar(u8 * addr)
@@ -133,7 +135,7 @@ static int c2port_read_ar(u8 * addr)
 
 	/* STOP field */
 	c2port_strobe_ck();
-	printk(KERN_INFO "%s : addr 0x%02X\n", __func__, *addr);
+	/* printk(KERN_INFO "%s : addr 0x%02X\n", __func__, *addr); */
 
 	return 0;
 }
@@ -182,7 +184,7 @@ static int c2port_write_dr(u8 data)
 
 	/* STOP field */
 	c2port_strobe_ck();
-	printk(KERN_INFO "%s : data 0x%02X timeout %d", __func__, data_s, timeout);
+	/* printk(KERN_INFO "%s : data 0x%02X timeout %d", __func__, data_s, timeout); */
 
 	return 0;
 }
@@ -232,7 +234,7 @@ static int c2port_read_dr(u8 * data)
 
 	/* STOP field */
 	c2port_strobe_ck();
-	printk(KERN_INFO "%s : data 0x%02X\n", __func__, (unsigned int)*data);
+	/* printk(KERN_INFO "%s : data 0x%02X\n", __func__, (unsigned int)*data); */
 
 	return 0;
 }
@@ -258,55 +260,55 @@ static long c2port_gpio_ioctl(struct file *file, unsigned int cmd, unsigned long
 	switch (cmd) {
 	case C2PORT_RESET:
 		c2port_reset();
-		printk(KERN_INFO "%s : C2PORT_RESET\n", __func__);
+		/* printk(KERN_INFO "%s : C2PORT_RESET\n", __func__); */
 		break;
 
 	case C2PORT_ACCESS:
 		if (copy_from_user(&c2data, (struct c2port_command *)arg, sizeof(c2data)) != 0)
 			return -EFAULT;
 		c2port_access(c2data.access);
-		printk(KERN_INFO "%s : C2PORT_ACCESS\n", __func__);
+		/* printk(KERN_INFO "%s : C2PORT_ACCESS\n", __func__); */
 		break;
 
 	case C2PORT_WRITE_AR:
 		if (copy_from_user(&c2data, (struct c2port_command *)arg, sizeof(c2data)) != 0)
 			return -EFAULT;
-		printk(KERN_INFO "%s : C2PORT_WRITE_AR  addr 0x%02X\n", __func__, (unsigned int)c2data.ar);
+		/* printk(KERN_INFO "%s : C2PORT_WRITE_AR  addr 0x%02X\n", __func__, (unsigned int)c2data.ar); */
 		c2port_write_ar(c2data.ar);
 		break;
 
 	case C2PORT_READ_AR:
 		if (copy_from_user(&c2data, (struct c2port_command *)arg, sizeof(c2data)) != 0)
 			return -EFAULT;
-		printk(KERN_INFO "%s : C2PORT_READ_AR ...\n", __func__);
+		/* printk(KERN_INFO "%s : C2PORT_READ_AR ...\n", __func__); */
 		err = c2port_read_ar(&c2data.ar);
 		if (err)
 			return err;
 		if (copy_to_user((struct c2port_command *)arg, &c2data, sizeof(c2data)) != 0)
 			return -EFAULT;
-		printk(KERN_INFO "%s : C2PORT_READ_AR done  addr 0x%02X\n", __func__, (unsigned int)c2data.ar);
+		/* printk(KERN_INFO "%s : C2PORT_READ_AR done  addr 0x%02X\n", __func__, (unsigned int)c2data.ar); */
 		break;
 
 	case C2PORT_WRITE_DR:
 		if (copy_from_user(&c2data, (struct c2port_command *)arg, sizeof(c2data)) != 0)
 			return -EFAULT;
-		printk(KERN_INFO "%s : C2PORT_WRITE_DR ...\n", __func__);
+		/* printk(KERN_INFO "%s : C2PORT_WRITE_DR ...\n", __func__); */
 		err = c2port_write_dr(c2data.dr);
 		if (err)
 			return err;
-		printk(KERN_INFO "%s : C2PORT_WRITE_DR done data 0x%02X\n", __func__, (unsigned int)c2data.dr);
+		/* printk(KERN_INFO "%s : C2PORT_WRITE_DR done data 0x%02X\n", __func__, (unsigned int)c2data.dr); */
 		break;
 
 	case C2PORT_READ_DR:
 		if (copy_from_user(&c2data, (struct c2port_command *)arg, sizeof(c2data)) != 0)
 			return -EFAULT;
 		err = c2port_read_dr(&c2data.dr);
-		printk(KERN_INFO "%s : C2PORT_READ_DR ...\n", __func__);
+		/* printk(KERN_INFO "%s : C2PORT_READ_DR ...\n", __func__); */
 		if (err)
 			return err;
 		if (copy_to_user((struct c2port_command *)arg, &c2data, sizeof(c2data)) != 0)
 			return -EFAULT;
-		printk(KERN_INFO "%s : C2PORT_READ_DR done data 0x%02X\n", __func__, (unsigned int)c2data.dr);
+		/* printk(KERN_INFO "%s : C2PORT_READ_DR done data 0x%02X\n", __func__, (unsigned int)c2data.dr); */
 		break;
 	}
 	return 0;

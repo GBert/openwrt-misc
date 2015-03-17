@@ -38,7 +38,7 @@ endef
 
 define Package/c2t-new/install
 	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/c2interface $(1)/usr/bin/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/c2tool $(1)/usr/bin/
 endef
 
 $(eval $(call BuildPackage,c2t-new))

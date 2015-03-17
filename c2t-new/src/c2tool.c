@@ -104,7 +104,7 @@ static void usage(int argc, char **argv)
 	if (argc > 0)
 		cmd_filt = argv[0];
 
-	printf("Usage:\t%s [options] <gpio c2d> <gpio c2ck> <gpio c2ckstb> command\n", argv0);
+	printf("Usage:\t%s [options] command\n", argv0);
 	printf("\t--version\tshow version (%s)\n", c2tool_version);
 	printf("Commands:\n");
 	for_each_cmd(cmd) {
@@ -172,27 +172,6 @@ int handle_cmd(struct c2tool_state *state, int argc, char **argv)
 	return __handle_cmd(state, argc, argv, NULL);
 }
 
-static int init_gpio(const char* arg)
-{
-	int gpio;
-	int fd;
-	char b[256];
-	char *end;
-
-	gpio = strtol(arg, &end, 10);
-	if (*end)
-		return -1;
-
-	snprintf(b, sizeof(b), "%s%d/value", GPIO_BASE_FILE, gpio);
-	fd = open(b, O_RDWR);
-	if (fd < 0) {
-		fprintf(stderr, "Open %s: %s\n", b, strerror(errno));
-		return -1;
-	}
-
-	return fd;
-}
-
 HIDDEN(dummy1, NULL, NULL);
 HIDDEN(dummy2, NULL, NULL);
 
@@ -214,34 +193,16 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
-	if (argc < 4) {
-		usage(0, NULL);
-		return 1;
-	}
+        state.c2if.c2port_fd = open("/dev/c2port-gpio", O_RDWR);
+        if (state.c2if.c2port_fd < 0) {
+                fprintf(stderr, "%s: error: open failed [%s]\n", __func__, strerror(errno));
+                return(-1);
+        }
 
-	state.c2if.gpio_c2d = init_gpio(*argv);
-	if (state.c2if.gpio_c2d < 0) {
+	if (argc < 1) {
 		usage(0, NULL);
 		return 1;
 	}
-	argc--;
-	argv++;
-
-	state.c2if.gpio_c2ck = init_gpio(*argv);
-	if (state.c2if.gpio_c2ck < 0) {
-		usage(0, NULL);
-		return 1;
-	}
-	argc--;
-	argv++;
-
-	state.c2if.gpio_c2ckstb = init_gpio(*argv);
-	if (state.c2if.gpio_c2ckstb < 0) {
-		usage(0, NULL);
-		return 1;
-	}
-	argc--;
-	argv++;
 
 	if (c2_halt(&state.c2if) < 0)
 		return 1;
