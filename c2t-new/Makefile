@@ -20,7 +20,7 @@ define Package/c2t-new
   MAINTAINER:=Gerhard Bertelsmann
 endef
 
-define Package/c2tool/description
+define Package/c2t-new/description
   Programms Silabs C8051 family with C2 interface via 2 GPIOs
 endef
 
@@ -38,7 +38,7 @@ endef
 
 define Package/c2t-new/install
 	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/c2tool $(1)/usr/bin/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/c2interface $(1)/usr/bin/
 endef
 
-$(eval $(call BuildPackage,c2tool))
+$(eval $(call BuildPackage,c2t-new))
