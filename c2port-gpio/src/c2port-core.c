@@ -520,16 +520,6 @@ static ssize_t __c2port_store_flash_access(struct c2port_device *dev,
 	if (dev->flash_access == 0)
 		return 0;
 
-	/* test for C8051F50x */
-	printk(KERN_INFO "%s: setup VDD monitor and enable oscillator for C8051F50x\n", __func__);
-	c2port_write_sfr(dev, 0xef, 0x00);	/* disable VDD monitor as a reset source */
-	c2port_write_sfr(dev, 0xff, 0xa0);	/* set VDD monitor to high threshold */
-	udelay(100);				/* wait 100 us for VDD monitor to stabilize */
-	c2port_write_sfr(dev, 0xef, 0x02);	/* enable VDD monitor as a reset source */
-	c2port_write_sfr(dev, 0xa7, 0x0f);	/* set SFRPAGE to 0x0f */
-	c2port_write_sfr(dev, 0xa1, 0xc7);	/* set OSCICN to 24 MHz */
-	c2port_write_sfr(dev, 0x8f, 0x00);	/* set CLKSEL to intosc */
-	c2port_write_sfr(dev, 0xa7, 0x00);	/* set SFRPAGE to 0x00 */
 
 	/* Target the C2 flash programming control register for C2 data
 	 * register access */
@@ -549,6 +539,16 @@ static ssize_t __c2port_store_flash_access(struct c2port_device *dev,
 	 * C2 flash programming */
 	mdelay(25);
 
+	/* test for C8051F50x */
+	printk(KERN_INFO "%s: setup VDD monitor and enable oscillator for C8051F50x\n", __func__);
+	/* c2port_write_sfr(dev, 0xef, 0x00);	* disable VDD monitor as a reset source */
+	c2port_write_sfr(dev, 0xff, 0xa0);	/* set VDD monitor to high threshold */
+	udelay(100);				/* wait 100 us for VDD monitor to stabilize */
+	c2port_write_sfr(dev, 0xef, 0x02);	/* enable VDD monitor as a reset source */
+	/* c2port_write_sfr(dev, 0xa7, 0x0f);	* set SFRPAGE to 0x0f */
+	/* c2port_write_sfr(dev, 0xa1, 0xc7);	* set OSCICN to 24 MHz */
+	/* c2port_write_sfr(dev, 0x8f, 0x00);	* set CLKSEL to intosc */
+	/* c2port_write_sfr(dev, 0xa7, 0x00);	* set SFRPAGE to 0x00 */
 	return 0;
 }
 

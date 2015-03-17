@@ -153,6 +153,7 @@ static void c2_write_ar(struct c2interface *c2if, unsigned char addr)
 	/* STOP field */
 	c2d_set(c2if, 1);
 	c2ck_strobe(c2if);
+	printf("%s: 0x%02X\n", __func__, addr);
 }
 
 static int c2_read_ar(struct c2interface *c2if, unsigned char *addr)
@@ -182,6 +183,7 @@ static int c2_read_ar(struct c2interface *c2if, unsigned char *addr)
 
 	/* STOP field */
 	c2ck_strobe(c2if);
+	printf("%s: 0x%02X\n", __func__, *addr);
 
 	return 0;
 }
@@ -229,6 +231,7 @@ static int c2_write_dr(struct c2interface *c2if, unsigned char data)
 
 	/* STOP field */
 	c2ck_strobe(c2if);
+	printf("%s: 0x%02X\n", __func__, data);
 
 	return 0;
 }
@@ -278,6 +281,7 @@ static int c2_read_dr(struct c2interface *c2if, unsigned char *data)
 
 	/* STOP field */
 	c2ck_strobe(c2if);
+	printf("%s: 0x%02X\n", __func__, *data);
 
 	return 0;
 }
