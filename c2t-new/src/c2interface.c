@@ -105,7 +105,7 @@ static int c2_write_dr(struct c2interface *c2if, unsigned char data)
 	int ret;
 	struct c2port_command *c2pc = malloc(sizeof(struct c2port_command));
 	c2pc->dr = data;
-	ret = ioctl(c2if->c2port_fd, C2PORT_READ_DR, c2pc);
+	ret = ioctl(c2if->c2port_fd, C2PORT_WRITE_DR, c2pc);
 	printf("%s: 0x%02X\n", __func__, data);
 
 	return ret;
