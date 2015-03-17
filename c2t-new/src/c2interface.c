@@ -542,7 +542,6 @@ int main(int argc, char **argv)
 	}
 
 	c2_halt(c2if);
-	c2_reset(c2if);
 
 	/* Select REVID register for C2 data register accesses */
 	c2_write_ar(c2if, C2_REVID);
