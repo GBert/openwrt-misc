@@ -18,6 +18,7 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
@@ -30,6 +31,7 @@
 #include "c2family.h"
 #include "c2interface.h"
 #include "c2tool.h"
+#include "c2tool-gpio.h"
 #include "hexdump.h"
 /*
  * C2 registers & commands defines
@@ -66,224 +68,58 @@
 #define C2_FPCTL_RESET		0x02
 #define C2_FPCTL_CORE_RESET	0x04
 
-#define GPIO_BASE_FILE "/sys/class/gpio/gpio"
-
-/*
- * state 0: drive low
- *       1: high-z
- */
-static void c2d_set(struct c2interface *c2if, int state)
-{
-	if (state) {
-		if (pwrite(c2if->gpio_c2d, "1", 1, 0) < 0)
-			fprintf(stderr, "%s: pwrite error\n", __func__);
-	} else {
-		if (pwrite(c2if->gpio_c2d, "0", 1, 0) < 0)
-			fprintf(stderr, "%s: pwrite error\n", __func__);
-	}
-}
-
-static int c2d_get(struct c2interface *c2if)
-{
-	char buf;
-
-	if (pread(c2if->gpio_c2d, &buf, 1, 0) <0)
-		fprintf(stderr, "%s: pread error\n", __func__);
-
-	return buf == '1';
-}
-
-static void c2ck_set(struct c2interface *c2if, int state)
-{
-	if (state) {
-		if (pwrite(c2if->gpio_c2ck, "1", 1, 0) < 0)
-			fprintf(stderr, "%s: pwrite error\n", __func__);
-	} else {
-		if (pwrite(c2if->gpio_c2ck, "0", 1, 0) < 0)
-			fprintf(stderr, "%s: pwrite error\n", __func__);
-	}
-}
-
-static void c2ck_strobe(struct c2interface *c2if)
-{
-	if (pwrite(c2if->gpio_c2ckstb, "0", 1, 0) < 0)
-		fprintf(stderr, "%s: pwrite error\n", __func__);
-	if (pwrite(c2if->gpio_c2ckstb, "1", 1, 0) < 0)
-		fprintf(stderr, "%s: pwrite error\n", __func__);
-}
-
-/*
- * C2 primitives
- */
-
 void c2_reset(struct c2interface *c2if)
 {
 	/* To reset the device we have to keep clock line low for at least
 	 * 20us.
 	 */
-	c2ck_set(c2if, 0);
-	usleep(25);
-	c2ck_set(c2if, 1);
+	ioctl(c2if->c2port_fd, C2PORT_RESET);
 
 	usleep(1);
 }
 
 static void c2_write_ar(struct c2interface *c2if, unsigned char addr)
 {
-	int i;
+	struct c2port_command *c2pc = malloc(sizeof(struct c2port_command));
+	c2pc->ar = addr;
+	ioctl(c2if->c2port_fd, C2PORT_WRITE_AR, c2pc);
+	free(c2pc);
 
-	/* START field */
-	c2d_set(c2if, 1);
-	c2ck_strobe(c2if);
-
-	/* INS field (11b, LSB first) */
-	c2d_set(c2if, 1);
-	c2ck_strobe(c2if);
-	c2d_set(c2if, 1);
-	c2ck_strobe(c2if);
-
-	/* ADDRESS field */
-	for (i = 0; i < 8; i++) {
-		c2d_set(c2if, addr & 0x01);
-		c2ck_strobe(c2if);
-
-		addr >>= 1;
-	}
-
-	/* STOP field */
-	c2d_set(c2if, 1);
-	c2ck_strobe(c2if);
 	printf("%s: 0x%02X\n", __func__, addr);
 }
 
 static int c2_read_ar(struct c2interface *c2if, unsigned char *addr)
 {
-	int i;
-
-	/* START field */
-	c2d_set(c2if, 1);
-	c2ck_strobe(c2if);
-
-	/* INS field (10b, LSB first) */
-	c2d_set(c2if, 0);
-	c2ck_strobe(c2if);
-	c2d_set(c2if, 1);
-	c2ck_strobe(c2if);
-
-	/* ADDRESS field */
-	c2d_set(c2if, 1);
-	*addr = 0;
-	for (i = 0; i < 8; i++) {
-		*addr >>= 1;	/* shift in 8-bit ADDRESS field LSB first */
-
-		c2ck_strobe(c2if);
-		if (c2d_get(c2if))
-			*addr |= 0x80;
-	}
-
-	/* STOP field */
-	c2ck_strobe(c2if);
+	int ret;
+	struct c2port_command *c2pc = malloc(sizeof(struct c2port_command));
+	ret = ioctl(c2if->c2port_fd, C2PORT_READ_AR, c2pc);
+	*addr = c2pc->ar;
 	printf("%s: 0x%02X\n", __func__, *addr);
+	free(c2pc);
 
-	return 0;
+	return ret;
 }
 
 static int c2_write_dr(struct c2interface *c2if, unsigned char data)
 {
-	int timeout, i;
-
-	/* START field */
-	c2d_set(c2if, 1);
-	c2ck_strobe(c2if);
-
-	/* INS field (01b, LSB first) */
-	c2d_set(c2if, 1);
-	c2ck_strobe(c2if);
-	c2d_set(c2if, 0);
-	c2ck_strobe(c2if);
-
-	/* LENGTH field (00b, LSB first -> 1 byte) */
-	c2d_set(c2if, 0);
-	c2ck_strobe(c2if);
-	c2d_set(c2if, 0);
-	c2ck_strobe(c2if);
-
-	/* DATA field */
-	for (i = 0; i < 8; i++) {
-		c2d_set(c2if, data & 0x01);
-		c2ck_strobe(c2if);
-
-		data >>= 1;
-	}
-
-	/* WAIT field */
-	c2d_set(c2if, 1);
-	timeout = 20;
-	do {
-		c2ck_strobe(c2if);
-		if (c2d_get(c2if))
-			break;
-
-		usleep(1);
-	} while (--timeout > 0);
-	if (timeout == 0)
-		return -EIO;
-
-	/* STOP field */
-	c2ck_strobe(c2if);
+	int ret;
+	struct c2port_command *c2pc = malloc(sizeof(struct c2port_command));
+	c2pc->dr = data;
+	ret = ioctl(c2if->c2port_fd, C2PORT_READ_DR, c2pc);
 	printf("%s: 0x%02X\n", __func__, data);
 
-	return 0;
+	return ret;
 }
 
 static int c2_read_dr(struct c2interface *c2if, unsigned char *data)
 {
-	int timeout, i;
-
-	/* START field */
-	c2d_set(c2if, 1);
-	c2ck_strobe(c2if);
-
-	/* INS field (00b, LSB first) */
-	c2d_set(c2if, 0);
-	c2ck_strobe(c2if);
-	c2d_set(c2if, 0);
-	c2ck_strobe(c2if);
-
-	/* LENGTH field (00b, LSB first -> 1 byte) */
-	c2d_set(c2if, 0);
-	c2ck_strobe(c2if);
-	c2d_set(c2if, 0);
-	c2ck_strobe(c2if);
-
-	/* WAIT field */
-	c2d_set(c2if, 1);
-	timeout = 20;
-	do {
-		c2ck_strobe(c2if);
-		if (c2d_get(c2if))
-			break;
-
-		usleep(1);
-	} while (--timeout > 0);
-	if (timeout == 0)
-		return -EIO;
-
-	/* DATA field */
-	*data = 0;
-	for (i = 0; i < 8; i++) {
-		*data >>= 1;	/* shift in 8-bit DATA field LSB first */
-
-		c2ck_strobe(c2if);
-		if (c2d_get(c2if))
-			*data |= 0x80;
-	}
-
-	/* STOP field */
-	c2ck_strobe(c2if);
+	int ret;
+	struct c2port_command *c2pc = malloc(sizeof(struct c2port_command));
+	ret = ioctl(c2if->c2port_fd, C2PORT_READ_DR, c2pc);
+	*data = c2pc->dr;
 	printf("%s: 0x%02X\n", __func__, *data);
 
-	return 0;
+	return ret;
 }
 
 static int c2_poll_in_busy(struct c2interface *c2if)
@@ -691,53 +527,57 @@ int flash_chunk(struct c2tool_state *state, unsigned int addr, unsigned int leng
 	return chunk_len;
 }
 
-#if 0
+#if 1
 int main(int argc, char **argv)
 {
 	unsigned char data;
 	int ret;
 
-	unsigned char buf[256];
+	struct c2interface *c2if = malloc(sizeof(struct c2interface));
 
-	if (init_gpio(168 + 13, 168 + 12, 168 + 7))
-		return 1;
+	c2if->c2port_fd = open("/dev/c2port-gpio", O_RDWR);
+	if (c2if->c2port_fd < 0) {
+		fprintf(stderr, "%s: warning: open failed [%s]\n", __func__, strerror(errno));
+		exit(-1);
+	}
 
-	c2_halt();
+	c2_halt(c2if);
 
 	/* Select REVID register for C2 data register accesses */
-	c2_write_ar(C2_REVID);
+	c2_write_ar(c2if, C2_REVID);
 
 	/* Read and return the revision ID register */
-	ret = c2_read_dr(&data);
+	ret = c2_read_dr(c2if, &data);
 	if (ret < 0)
 		return 1;
 
 	printf("REVID 0x%02x\n", data);
 
 	/* Select DEVID register for C2 data register accesses */
-	c2_write_ar(C2_DEVICEID);
+	c2_write_ar(c2if, C2_DEVICEID);
 
 	/* Read and return the device ID register */
-	ret = c2_read_dr(&data);
+	ret = c2_read_dr(c2if, &data);
 	if (ret < 0)
 		return 1;
 
 	printf("DEVID 0x%02x\n", data);
 
 	/* Select FPDAT register for C2 data register accesses */
-	c2_write_ar(0xad);
+	c2_write_ar(c2if, 0xad);
 
-	ret = c2_pi_command(C2_FPDAT_GET_DERIVATIVE, 1, &data);
+	ret = c2_pi_command(c2if, C2_FPDAT_GET_DERIVATIVE, 1, &data);
 	if (ret < 0)
 		return 1;
 
 	printf("derivative %02x\n", data);
 
-	ret = c2_pi_command(C2_FPDAT_GET_VERSION, 1, &data);
+	ret = c2_pi_command(c2if, C2_FPDAT_GET_VERSION, 1, &data);
 	if (ret < 0)
 		return 1;
 
 	printf("version %02x\n", data);
+/*
 
 	c2_flash_read(0, 256, buf);
 	print_hex_dump("", DUMP_PREFIX_ADDRESS, 0, 16, 1, buf, 256, 1);
@@ -752,7 +592,8 @@ int main(int argc, char **argv)
 
 	c2_flash_read(0, 256, buf);
 	print_hex_dump("", DUMP_PREFIX_ADDRESS, 0, 16, 1, buf, 256, 1);
-
+*/
+	close(c2if->c2port_fd);
 	return 0;
 }
 #endif

@@ -7,10 +7,9 @@ RM  = rm -f
 .SUFFIXES:
 .SUFFIXES: .c .o
 
-EXE = c2tool
+EXE = c2interface
 
-OBJ = c2tool.o c2interface.o c2family.o hexdump.o version.o
-OBJ += info.o dump.o flash.o erase.o verify.o reset.o
+OBJ = flash.o c2interface.o
 
 CFLAGS    += -Wall
 
