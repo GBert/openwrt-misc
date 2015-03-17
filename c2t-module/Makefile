@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2014 OpenWrt.org
+# Copyright (C) 2015 OpenWrt.org
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
@@ -17,7 +17,6 @@ define KernelPackage/c2tool-gpio
   SUBMENU:=Other modules
   TITLE:=c2tool GPIO kernel module
   DEPENDS:=@GPIO_SUPPORT
-  DEPENDS:=
   FILES:=$(PKG_BUILD_DIR)/c2tool-gpio.ko
   KCONFIG:=
 endef
@@ -47,10 +46,6 @@ endef
 
 define Build/Compile
 	$(MAKE) -C "$(LINUX_DIR)" $(MAKE_OPTS) modules
-	$(MAKE) -C $(PKG_BUILD_DIR)    \
-	$(TARGET_CONFIGURE_OPTS)        \
-	CFLAGS="$(TARGET_CFLAGS) $(TARGET_CPPFLAGS)"    \
-	LIBS="$(TARGET_LDFLAGS)"
 endef
 
 $(eval $(call KernelPackage,c2tool-gpio))

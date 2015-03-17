@@ -58,10 +58,6 @@ static int __init gpio_c2port_init(void)
 		goto free_gpio;
 	gpio_direction_input(c2d);
 
-	gpio_c2port_dev = c2port_device_register("C8051F502", &gpio_c2port_ops, NULL);
-	if (!gpio_c2port_dev)
-		return -ENODEV;
-
 	return 0;
 
 free_gpio:
