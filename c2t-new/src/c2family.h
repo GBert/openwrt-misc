@@ -3,14 +3,14 @@
 
 enum {
 	C2_MEM_TYPE_FLASH,
-	C2_MEM_TYPE_OTP,
+	C2_MEM_TYPE_OTP
 };
 
 enum {
 	C2_SECURITY_JTAG,
 	C2_SECURITY_C2_1,
 	C2_SECURITY_C2_2,
-	C2_SECURITY_C2_3,
+	C2_SECURITY_C2_3
 };
 
 struct c2_setupcmd {

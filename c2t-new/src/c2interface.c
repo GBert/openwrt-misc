@@ -80,10 +80,9 @@ void c2_reset(struct c2interface *c2if)
 
 static void c2_write_ar(struct c2interface *c2if, unsigned char addr)
 {
-	struct c2port_command *c2pc = malloc(sizeof(struct c2port_command));
-	c2pc->ar = addr;
-	ioctl(c2if->c2port_fd, C2PORT_WRITE_AR, c2pc);
-	free(c2pc);
+	struct c2port_command c2pc;
+	c2pc.ar = addr;
+	ioctl(c2if->c2port_fd, C2PORT_WRITE_AR, &c2pc);
 
 	printf("%s: 0x%02X\n", __func__, addr);
 }
@@ -91,11 +90,10 @@ static void c2_write_ar(struct c2interface *c2if, unsigned char addr)
 static int c2_read_ar(struct c2interface *c2if, unsigned char *addr)
 {
 	int ret;
-	struct c2port_command *c2pc = malloc(sizeof(struct c2port_command));
-	ret = ioctl(c2if->c2port_fd, C2PORT_READ_AR, c2pc);
-	*addr = c2pc->ar;
+	struct c2port_command c2pc;
+	ret = ioctl(c2if->c2port_fd, C2PORT_READ_AR, &c2pc);
+	*addr = c2pc.ar;
 	printf("%s: 0x%02X\n", __func__, *addr);
-	free(c2pc);
 
 	return ret;
 }
@@ -103,9 +101,9 @@ static int c2_read_ar(struct c2interface *c2if, unsigned char *addr)
 static int c2_write_dr(struct c2interface *c2if, unsigned char data)
 {
 	int ret;
-	struct c2port_command *c2pc = malloc(sizeof(struct c2port_command));
-	c2pc->dr = data;
-	ret = ioctl(c2if->c2port_fd, C2PORT_WRITE_DR, c2pc);
+	struct c2port_command c2pc;
+	c2pc.dr = data;
+	ret = ioctl(c2if->c2port_fd, C2PORT_WRITE_DR, &c2pc);
 	printf("%s: 0x%02X\n", __func__, data);
 
 	return ret;
@@ -114,9 +112,9 @@ static int c2_write_dr(struct c2interface *c2if, unsigned char data)
 static int c2_read_dr(struct c2interface *c2if, unsigned char *data)
 {
 	int ret;
-	struct c2port_command *c2pc = malloc(sizeof(struct c2port_command));
-	ret = ioctl(c2if->c2port_fd, C2PORT_READ_DR, c2pc);
-	*data = c2pc->dr;
+	struct c2port_command c2pc;
+	ret = ioctl(c2if->c2port_fd, C2PORT_READ_DR, &c2pc);
+	*data = c2pc.dr;
 	printf("%s: 0x%02X\n", __func__, *data);
 
 	return ret;
