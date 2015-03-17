@@ -1,5 +1,6 @@
-#c2tool (by Guntermann-Drunck)
+#c2tool
 
+by Dirk Eibach
 **c2tool** is a linux userspace application meant to enable in-system
 programming on low pin-count Silicon Labs devices using the Silicon Labs
 2-Wire Interface (C2).
@@ -11,7 +12,7 @@ There is a linux kernel driver (drivers/misc/c2port) for this, **but**
 * hardware support is quite limited
 * sysfs interface is not very intuitive
 * `local_irq_disable()` affects real time performance
-* GPIOs can be easily accessed from userspace
+~~ * GPIOs can be easily accessed from userspace~~ but hurt performance
 
 ##Challenge
 
@@ -20,9 +21,12 @@ target device. Any clock pulse taking longer than 20us is interpreted as a reset
 signal. The kernel driver is driving the clock line with `local_irq_disable()`
 pulled to make sure the timing is valid. But this degrades system performance.
 
-**c2tool** depends on hardware support for generating clock pulses that are in
+~~**c2tool** depends on hardware support for generating clock pulses that are in
 the range from 20ns to 5000ns. In our reference application there is an FPGA but
-a discrete monoflop should also do.
+a discrete monoflop should also do.~~
+
+A small module is created to avoid using another GPIO and other things:
+c2t-module.
 
 ## Install
 
