@@ -1,6 +1,7 @@
 #c2tool
 
 by Dirk Eibach
+
 **c2tool** is a linux userspace application meant to enable in-system
 programming on low pin-count Silicon Labs devices using the Silicon Labs
 2-Wire Interface (C2).
@@ -12,7 +13,8 @@ There is a linux kernel driver (drivers/misc/c2port) for this, **but**
 * hardware support is quite limited
 * sysfs interface is not very intuitive
 * `local_irq_disable()` affects real time performance
-~~ * GPIOs can be easily accessed from userspace~~ but hurt performance
+
+~~ GPIOs can be easily accessed from userspace~~ * but hurt performance
 
 ##Challenge
 
