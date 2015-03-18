@@ -17,6 +17,7 @@ define Package/c2t-new
   CATEGORY:=Utilities
   DEPENDS:=+libbfd
   TITLE:= Silabs C2 tool / modded
+  DEPENDS:=+kmod-c2tool-gpio
   MAINTAINER:=Gerhard Bertelsmann
 endef
 
