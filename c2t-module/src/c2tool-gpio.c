@@ -84,7 +84,7 @@ static void c2port_strobe_ck(void)
 static void c2port_write_ar(u8 addr)
 {
 	int i;
-	int addr_s = addr;
+	/* int addr_s = addr; */
 
 	/* START field */
 	c2port_strobe_ck();
@@ -145,7 +145,7 @@ static int c2port_read_ar(u8 * addr)
 static int c2port_write_dr(u8 data)
 {
 	int timeout, i;
-	int data_s = data;
+	/* int data_s = data; */
 
 	/* START field */
 	c2port_strobe_ck();
