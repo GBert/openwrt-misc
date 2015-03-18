@@ -32,9 +32,9 @@ c2t-module.
 
 ##Using the module
 
-<pre><code>insmod c2tool-gpio c2ck=19 c2d=20 # using GPIO 19&20
+`insmod c2tool-gpio c2ck=19 c2d=20 # using GPIO 19&20
 mknod /dev/c2tool-gpio c 180 0
-chmod 666 /dev/c2tool-gpio</code>
+chmod 666 /dev/c2tool-gpio`
 
 ## Install
 
