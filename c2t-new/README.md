@@ -59,7 +59,7 @@ All gpios must be configured as outputs and set to value 1.
 ## Usage
 
 ```
-Usage:  c2tool [options] <gpio c2d> <gpio c2ck> <gpio c2ckstb> command
+Usage:  c2tool [options] command
         --version       show version (0.01)
 Commands:
         info
