@@ -2,6 +2,7 @@
  *  Silicon Labs C2 port Linux support for c2tool 
  *
  *  Copyright (c) 2015 Gerhard Bertelsmann <info@gerhard-bertelsmann.de>
+ *     module is inspired by gpio-bb from Darron Broad
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as published by
@@ -332,6 +333,7 @@ static int __init c2port_init(void)
 	if (ret)
 		goto free_gpio;
 	gpio_direction_input(c2d);
+	printk(KERN_INFO "c2tool-gpio using GPIO%02d (c2k) and GPIO%02d (c2d)\n", c2ck, c2d);
 
 	cdev_init(&cdev, &c2port_gpio_fops);
 	cdev.owner = THIS_MODULE;
