@@ -31,12 +31,11 @@ A small module is created to avoid using another GPIO and other things:
 c2t-module.
 
 ##Using the module
-
-`insmod c2tool-gpio c2ck=19 c2d=20 # using GPIO 19&20`
-
-`mknod /dev/c2tool-gpio c 180 0`
-
-`chmod 666 /dev/c2tool-gpio`
+```
+insmod c2tool-gpio c2ck=19 c2d=20 # using GPIO 19&20
+mknod /dev/c2tool-gpio c 180 0
+chmod 666 /dev/c2tool-gpio
+```
 
 ## Install
 
@@ -60,7 +59,7 @@ All gpios must be configured as outputs and set to value 1.
 ## Usage
 
 ```
-Usage:  c2tool [options] <gpio c2d> <gpio c2ck> <gpio c2ckstb> command
+Usage:  c2tool [options] command
         --version       show version (0.01)
 Commands:
         info
