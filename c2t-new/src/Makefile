@@ -28,7 +28,7 @@ version.c: version.sh $(patsubst %.o,%.c,$(VERSION_OBJS)) c2tool.h Makefile \
 
 .PHONY: clean
 clean:
-	${RM} *~ *\# *.o
+	${RM} *~ *\# *.o ${EXE}
 
 .PHONY: distclean
 distclean: clean
