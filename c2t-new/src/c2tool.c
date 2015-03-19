@@ -193,7 +193,7 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
-        state.c2if.c2port_fd = open("/dev/c2port-gpio", O_RDWR);
+        state.c2if.c2port_fd = open("/dev/c2tool-gpio", O_RDWR);
         if (state.c2if.c2port_fd < 0) {
                 fprintf(stderr, "%s: error: open failed [%s]\n", __func__, strerror(errno));
                 return(-1);
