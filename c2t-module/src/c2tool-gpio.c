@@ -334,7 +334,7 @@ static int __init c2port_init(void)
 	if (ret)
 		goto free_gpio;
 	gpio_direction_input(c2d);
-	printk(KERN_INFO "c2tool-gpio using GPIO%02d (c2k) and GPIO%02d (c2d)\n", c2ck, c2d);
+	printk(KERN_INFO "c2tool-gpio using GPIO%02d (c2ck) and GPIO%02d (c2d)\n", c2ck, c2d);
 
 	cdev_init(&cdev, &c2port_gpio_fops);
 	cdev.owner = THIS_MODULE;
