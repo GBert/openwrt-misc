@@ -46,16 +46,6 @@ Dependencies:
 
 A simple "make" should be sufficient. More Makefile magic is welcome :)
 
-##Prerequisites
-
-~~~Three gpios exported in `/sys/class/gpio` have to be supplied to **c2tool**:
-
-* c2d: Read/write access to the C2 Data pin
-* c2ck: Write access to the  C2 Clock pin
-* c2stb: A falling edge triggers a defined pulse on C2 Clock pin
-
-All gpios must be configured as outputs and set to value 1.~~~
-
 ## Usage
 
 ```
