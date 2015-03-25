@@ -62,7 +62,6 @@ static void c2port_reset(void)
 	 */
 	local_irq_disable();
 	gpio_direction_output(c2ck, 0);
-	gpio_set_value(c2ck, 0);
 	udelay(25);
 	gpio_set_value(c2ck, 1);
 	local_irq_enable();
@@ -76,7 +75,6 @@ static void c2port_strobe_ck(void)
 	/* hi-low-hi transition must be below 5us */
 	local_irq_disable();
 	gpio_direction_output(c2ck, 0);
-	gpio_set_value(c2ck, 0);
 	udelay(delay);		/* TODO : probably we don't need any delay because pulse need to be 20ns */
 	gpio_set_value(c2ck, 1);
 	local_irq_enable();
