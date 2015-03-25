@@ -25,11 +25,14 @@
 static struct cdev cdev;
 static int c2ck = 19;
 static int c2d = 20;
+static int delay = 1;
 
 module_param(c2ck, int, S_IRUSR);
 MODULE_PARM_DESC(c2ck, "C2CK pin");
 module_param(c2d, int, S_IRUSR);
 MODULE_PARM_DESC(c2d, "C2D pin");
+module_param(delay, int, S_IRUSR);
+MODULE_PARM_DESC(c2d, "delay [us]");
 
 static void c2port_access(int status)
 {
@@ -59,9 +62,9 @@ static void c2port_reset(void)
 	 */
 	local_irq_disable();
 	gpio_direction_output(c2ck, 0);
+	gpio_set_value(c2ck, 0);
 	udelay(25);
 	gpio_set_value(c2ck, 1);
-	gpio_direction_input(c2ck);
 	local_irq_enable();
 
 	udelay(1);
@@ -73,12 +76,12 @@ static void c2port_strobe_ck(void)
 	/* hi-low-hi transition must be below 5us */
 	local_irq_disable();
 	gpio_direction_output(c2ck, 0);
-	udelay(1);		/* TODO : probably w don't need it */
+	gpio_set_value(c2ck, 0);
+	udelay(delay);		/* TODO : probably we don't need any delay because pulse need to be 20ns */
 	gpio_set_value(c2ck, 1);
-	gpio_direction_input(c2ck);
 	local_irq_enable();
 
-	udelay(1);
+	udelay(delay);
 }
 
 static void c2port_write_ar(u8 addr)
@@ -334,7 +337,7 @@ static int __init c2port_init(void)
 	if (ret)
 		goto free_gpio;
 	gpio_direction_input(c2d);
-	printk(KERN_INFO "c2tool-gpio using GPIO%02d (c2ck) and GPIO%02d (c2d)\n", c2ck, c2d);
+	printk(KERN_INFO "c2tool-gpio using GPIO%02d (c2ck) and GPIO%02d (c2d) delay %d us\n", c2ck, c2d, delay);
 
 	cdev_init(&cdev, &c2port_gpio_fops);
 	cdev.owner = THIS_MODULE;
