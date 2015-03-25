@@ -34,19 +34,6 @@ MODULE_PARM_DESC(c2d, "C2D pin");
 module_param(delay, int, S_IRUSR);
 MODULE_PARM_DESC(c2d, "delay [us]");
 
-static void c2port_access(int status)
-{
-	if (status) {
-		gpio_direction_output(c2ck, 1);
-		gpio_direction_output(c2d, 1);
-	} else {
-		/* When access is "off" is important that both lines are set
-		 * as inputs or hi-impedence */
-		gpio_direction_input(c2ck);
-		gpio_direction_input(c2d);
-	}
-}
-
 static void c2port_c2d_dir(int dir)
 {
 	if (dir)
@@ -61,7 +48,7 @@ static void c2port_reset(void)
 	 * 20us.
 	 */
 	local_irq_disable();
-	gpio_direction_output(c2ck, 0);
+	gpio_set_value(c2ck, 0);
 	udelay(25);
 	gpio_set_value(c2ck, 1);
 	local_irq_enable();
@@ -74,7 +61,7 @@ static void c2port_strobe_ck(void)
 {
 	/* hi-low-hi transition must be below 5us */
 	local_irq_disable();
-	gpio_direction_output(c2ck, 0);
+	gpio_set_value(c2ck, 0);
 	udelay(delay);		/* TODO : probably we don't need any delay because pulse need to be 20ns */
 	gpio_set_value(c2ck, 1);
 	local_irq_enable();
@@ -266,13 +253,6 @@ static long c2port_gpio_ioctl(struct file *file, unsigned int cmd, unsigned long
 		/* printk(KERN_INFO "%s : C2PORT_RESET\n", __func__); */
 		break;
 
-	case C2PORT_ACCESS:
-		if (copy_from_user(&c2data, (struct c2port_command *)arg, sizeof(c2data)) != 0)
-			return -EFAULT;
-		c2port_access(c2data.access);
-		/* printk(KERN_INFO "%s : C2PORT_ACCESS\n", __func__); */
-		break;
-
 	case C2PORT_WRITE_AR:
 		if (copy_from_user(&c2data, (struct c2port_command *)arg, sizeof(c2data)) != 0)
 			return -EFAULT;
@@ -329,7 +309,7 @@ static int __init c2port_init(void)
 	ret = gpio_request(c2ck, "c2port clock");
 	if (ret)
 		goto exit;
-	gpio_direction_input(c2ck);
+	gpio_direction_output(c2ck,1);
 
 	ret = gpio_request(c2d, "c2port data");
 	if (ret)

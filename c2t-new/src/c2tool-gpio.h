@@ -19,12 +19,11 @@ struct c2port_command {
 };
 
 #define C2PORT_GPIO_MAJOR (180)
-#define C2PORT_ACCESS		 _IOW(C2PORT_GPIO_MAJOR, 100, struct c2port_command *)
-#define C2PORT_RESET		  _IO(C2PORT_GPIO_MAJOR, 101)
-#define C2PORT_WRITE_AR		 _IOW(C2PORT_GPIO_MAJOR, 102, struct c2port_command *)
-#define C2PORT_READ_AR		_IOWR(C2PORT_GPIO_MAJOR, 103, struct c2port_command *)
-#define C2PORT_WRITE_DR		 _IOW(C2PORT_GPIO_MAJOR, 104, struct c2port_command *)
-#define C2PORT_READ_DR		_IOWR(C2PORT_GPIO_MAJOR, 105, struct c2port_command *)
+#define C2PORT_RESET		  _IO(C2PORT_GPIO_MAJOR, 100)
+#define C2PORT_WRITE_AR		 _IOW(C2PORT_GPIO_MAJOR, 101, struct c2port_command *)
+#define C2PORT_READ_AR		_IOWR(C2PORT_GPIO_MAJOR, 102, struct c2port_command *)
+#define C2PORT_WRITE_DR		 _IOW(C2PORT_GPIO_MAJOR, 103, struct c2port_command *)
+#define C2PORT_READ_DR		_IOWR(C2PORT_GPIO_MAJOR, 104, struct c2port_command *)
 
 #ifndef __KERNEL__
 
