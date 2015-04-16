@@ -209,7 +209,6 @@ static const struct can_bittiming_const mcp251x_bittiming_const = {
 };
 
 enum mcp251x_model {
-	CAN_MCP251X_MCP2510	= 0x2510,
 	CAN_MCP251X_MCP2515	= 0x2515,
 };
 
@@ -250,7 +249,6 @@ static inline int mcp251x_is_##_model(struct spi_device *spi) \
 	return priv->model == CAN_MCP251X_MCP##_model; \
 }
 
-MCP251X_IS(2510);
 MCP251X_IS(2515);
 
 static void mcp251x_clean(struct net_device *net)
@@ -359,16 +357,8 @@ static void mcp251x_hw_tx_frame(struct spi_device *spi, u8 *buf,
 {
 	struct mcp251x_priv *priv = spi_get_drvdata(spi);
 
-	if (mcp251x_is_2510(spi)) {
-		int i;
-
-		for (i = 1; i < TXBDAT_OFF + len; i++)
-			mcp251x_write_reg(spi, TXBCTRL(tx_buf_idx) + i,
-					  buf[i]);
-	} else {
-		memcpy(priv->spi_tx_buf, buf, TXBDAT_OFF + len);
-		mcp251x_spi_trans(spi, TXBDAT_OFF + len);
-	}
+	memcpy(priv->spi_tx_buf, buf, TXBDAT_OFF + len);
+	mcp251x_spi_trans(spi, TXBDAT_OFF + len);
 }
 
 static void mcp251x_hw_tx(struct spi_device *spi, struct can_frame *frame,
@@ -407,20 +397,9 @@ static void mcp251x_hw_rx_frame(struct spi_device *spi, u8 *buf,
 {
 	struct mcp251x_priv *priv = spi_get_drvdata(spi);
 
-	if (mcp251x_is_2510(spi)) {
-		int i, len;
-
-		for (i = 1; i < RXBDAT_OFF; i++)
-			buf[i] = mcp251x_read_reg(spi, RXBCTRL(buf_idx) + i);
-
-		len = get_can_dlc(buf[RXBDLC_OFF] & RXBDLC_LEN_MASK);
-		for (; i < (RXBDAT_OFF + len); i++)
-			buf[i] = mcp251x_read_reg(spi, RXBCTRL(buf_idx) + i);
-	} else {
-		priv->spi_tx_buf[RXBCTRL_OFF] = INSTRUCTION_READ_RXB(buf_idx);
-		mcp251x_spi_trans(spi, SPI_TRANSFER_BUF_LEN);
-		memcpy(buf, priv->spi_rx_buf, SPI_TRANSFER_BUF_LEN);
-	}
+	priv->spi_tx_buf[RXBCTRL_OFF] = INSTRUCTION_READ_RXB(buf_idx);
+	mcp251x_spi_trans(spi, SPI_TRANSFER_BUF_LEN);
+	memcpy(buf, priv->spi_rx_buf, SPI_TRANSFER_BUF_LEN);
 }
 
 static void mcp251x_hw_rx(struct spi_device *spi, int buf_idx)
@@ -790,16 +769,12 @@ static irqreturn_t mcp251x_can_ist(int irq, void *dev_id)
 			 * Free one buffer ASAP
 			 * (The MCP2515 does this automatically.)
 			 */
-			if (mcp251x_is_2510(spi))
-				mcp251x_write_bits(spi, CANINTF, CANINTF_RX0IF, 0x00);
 		}
 
 		/* receive buffer 1 */
 		if (intf & CANINTF_RX1IF) {
 			mcp251x_hw_rx(spi, 1);
 			/* the MCP2515 does this automatically */
-			if (mcp251x_is_2510(spi))
-				clear_intf |= CANINTF_RX1IF;
 		}
 
 		/* any error or tx interrupt we need to clear? */
@@ -963,10 +938,6 @@ static const struct net_device_ops mcp251x_netdev_ops = {
 
 static const struct of_device_id mcp251x_of_match[] = {
 	{
-		.compatible	= "microchip,mcp2510",
-		.data		= (void *)CAN_MCP251X_MCP2510,
-	},
-	{
 		.compatible	= "microchip,mcp2515",
 		.data		= (void *)CAN_MCP251X_MCP2515,
 	},
@@ -975,10 +946,6 @@ static const struct of_device_id mcp251x_of_match[] = {
 MODULE_DEVICE_TABLE(of, mcp251x_of_match);
 
 static const struct spi_device_id mcp251x_id_table[] = {
-	{
-		.name		= "mcp2510",
-		.driver_data	= (kernel_ulong_t)CAN_MCP251X_MCP2510,
-	},
 	{
 		.name		= "mcp2515",
 		.driver_data	= (kernel_ulong_t)CAN_MCP251X_MCP2515,
@@ -1042,10 +1009,7 @@ static int mcp251x_can_probe(struct spi_device *spi)
 
 	/* Configure the SPI bus */
 	spi->bits_per_word = 8;
-	if (mcp251x_is_2510(spi))
-		spi->max_speed_hz = spi->max_speed_hz ? : 5 * 1000 * 1000;
-	else
-		spi->max_speed_hz = spi->max_speed_hz ? : 10 * 1000 * 1000;
+	spi->max_speed_hz = spi->max_speed_hz ? : 10 * 1000 * 1000;
 	ret = spi_setup(spi);
 	if (ret)
 		goto out_clk;
