@@ -51,6 +51,7 @@
 #include <linux/of_device.h>
 #include <linux/platform_device.h>
 #include <linux/slab.h>
+#include <linux/gpio.h>
 #include <linux/spi/spi.h>
 #include <linux/uaccess.h>
 #include <linux/regulator/consumer.h>
@@ -234,6 +235,7 @@ struct mcp251x_priv {
 
 	u8 *spi_tx_buf;
 	u8 *spi_rx_buf;
+	int irq;
 
 	struct sk_buff *tx_skb;
 	int tx_len;
@@ -295,6 +297,8 @@ static void mcp251x_clean(struct net_device *net)
 static int mcp251x_spi_trans(int len) {
 	int ret;
 	ret = 0;
+	uint8_t data_in, data_out;
+	int i, j;
 /*	struct mcp251x_priv *priv = spi_get_drvdata(spi);
 	struct spi_transfer t = {
 		.tx_buf = priv->spi_tx_buf,
@@ -312,19 +316,34 @@ static int mcp251x_spi_trans(int len) {
 	if (ret)
 		dev_err(&spi->dev, "spi transfer failed: ret = %d\n", ret);
 */
-	/* TODO - faked data */
-	memset(priv->spi_tx_buf, 0, len);
-	memset(priv->spi_rx_buf, 0, len);
+	for (i = 0; i < len; i++) {
+		data_out = priv->spi_tx_buf[i];
+		data_in = 0;
+		for (j = 0; j < 8; j++) {
+			gpio_set_value(GPIO_CLK, 0);
+			gpio_set_value(GPIO_MOSI, data_out & 0x01);
+			gpio_set_value(GPIO_CLK, 1);
+			if (gpio_get_value(GPIO_MISO))
+				data_in |= 0x01;
+			data_in <<= 1;
+		}
+		priv->spi_rx_buf[i] = data_in;
+	}
 	return ret;
 }
 
 static u8 mcp251x_read_reg(uint8_t reg) {
 	u8 val = 0;
 
+
 	priv->spi_tx_buf[0] = INSTRUCTION_READ;
 	priv->spi_tx_buf[1] = reg;
 
+	gpio_set_value(GPIO_CS, 0);
 	mcp251x_spi_trans(3);
+	udelay(1);
+	gpio_set_value(GPIO_CS, 1);
+
 	val = priv->spi_rx_buf[2];
 
 	return val;
@@ -335,7 +354,10 @@ static void mcp251x_read_2regs(uint8_t reg, uint8_t *v1, uint8_t *v2) {
 	priv->spi_tx_buf[0] = INSTRUCTION_READ;
 	priv->spi_tx_buf[1] = reg;
 
+	gpio_set_value(GPIO_CS, 0);
 	mcp251x_spi_trans(4);
+	udelay(1);
+	gpio_set_value(GPIO_CS, 1);
 
 	*v1 = priv->spi_rx_buf[2];
 	*v2 = priv->spi_rx_buf[3];
@@ -347,7 +369,10 @@ static void mcp251x_write_reg(u8 reg, uint8_t val) {
 	priv->spi_tx_buf[1] = reg;
 	priv->spi_tx_buf[2] = val;
 
+	gpio_set_value(GPIO_CS, 0);
 	mcp251x_spi_trans(3);
+	udelay(1);
+	gpio_set_value(GPIO_CS, 1);
 }
 
 static void mcp251x_write_bits(u8 reg, u8 mask, uint8_t val) {
@@ -357,7 +382,10 @@ static void mcp251x_write_bits(u8 reg, u8 mask, uint8_t val) {
 	priv->spi_tx_buf[2] = mask;
 	priv->spi_tx_buf[3] = val;
 
+	gpio_set_value(GPIO_CS, 0);
 	mcp251x_spi_trans(4);
+	udelay(1);
+	gpio_set_value(GPIO_CS, 1);
 }
 
 static void mcp251x_hw_tx_frame(u8 *buf, int len, int tx_buf_idx) {
@@ -960,9 +988,41 @@ static int mcp251x_can_probe(void)
 
 	ret = mcp251x_power_enable(priv->power, 1);
 	if (ret)
-		goto out_clk;
+		goto out_clock;
 
 	mutex_init(&priv->mcp_lock);
+
+	/* GPIO stuff */
+	ret = gpio_request_one(gpios[GPIO_MISO], GPIOF_IN, "MCP2515 MISO");
+        if (ret) {
+		printk(KERN_ERR "can't get MISO pin GPIO%d\n", GPIO_MISO);
+                goto out_clock;
+	}
+
+	ret = gpio_request_one(gpios[GPIO_MOSI], GPIOF_OUT_INIT_HIGH, "MCP2515 MOSI");
+        if (ret) {
+		printk(KERN_ERR "can't get MOSI pin GPIO%d\n", GPIO_MOSI);
+                goto out_mosi;
+	}
+
+	ret = gpio_request_one(gpios[GPIO_CLK], GPIOF_OUT_INIT_HIGH, "MCP2515 CLK");
+        if (ret) {
+		printk(KERN_ERR "can't get CLK pin GPIO%d\n", GPIO_CLK);
+                goto out_clk;
+	}
+
+	ret = gpio_request_one(gpios[GPIO_CS], GPIOF_OUT_INIT_HIGH, "MCP2515 CS");
+        if (ret) {
+		printk(KERN_ERR "can't get CS pin GPIO%d\n", GPIO_CS);
+                goto out_cs;
+	}
+
+	ret = gpio_request_one(gpios[GPIO_INT], GPIOF_IN, "MCP2515 INT");
+        if (ret) {
+		printk(KERN_ERR "can't get INT pin GPIO%d\n", GPIO_INT);
+                goto out_int;
+	}
+
 
 	/* SET_NETDEV_DEV(net, &spi->dev); */
 
@@ -979,10 +1039,22 @@ static int mcp251x_can_probe(void)
 
 	return 0;
 
+out_int:
+	gpio_free(GPIO_CS);
+
+out_cs:
+	gpio_free(GPIO_CLK);
+
+out_clk:
+	gpio_free(GPIO_MOSI);
+
+out_mosi:
+	gpio_free(GPIO_MISO);
+
 error_probe:
 	mcp251x_power_enable(priv->power, 0);
 
-out_clk:
+out_clock:
 	free_candev(net);
 
 	return ret;
