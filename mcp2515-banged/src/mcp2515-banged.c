@@ -31,27 +31,6 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  *
  *
- *
- * Your platform definition file should specify something like:
- *
- * static struct mcp251x_platform_data mcp251x_info = {
- *         .oscillator_frequency = 8000000,
- * };
- *
- * static struct spi_board_info spi_board_info[] = {
- *         {
- *                 .modalias = "mcp2510",
- *			// or "mcp2515" depending on your controller
- *                 .platform_data = &mcp251x_info,
- *                 .irq = IRQ_EINT13,
- *                 .max_speed_hz = 2*1000*1000,
- *                 .chip_select = 2,
- *         },
- * };
- *
- * Please see mcp251x.h for a description of the fields in
- * struct mcp251x_platform_data.
- *
  */
 
 #include <linux/can/core.h>
@@ -62,7 +41,6 @@
 #include <linux/completion.h>
 #include <linux/delay.h>
 #include <linux/device.h>
-#include <linux/dma-mapping.h>
 #include <linux/freezer.h>
 #include <linux/interrupt.h>
 #include <linux/io.h>
@@ -218,10 +196,6 @@
 
 #define DEVICE_NAME "mcp251x"
 
-static int mcp251x_enable_dma; /* Enable SPI DMA. Default: 0 (Off) */
-module_param(mcp251x_enable_dma, int, S_IRUGO);
-MODULE_PARM_DESC(mcp251x_enable_dma, "Enable SPI DMA. Default: 0 (Off)");
-
 static const struct can_bittiming_const mcp251x_bittiming_const = {
 	.name = DEVICE_NAME,
 	.tseg1_min = 3,
@@ -249,8 +223,6 @@ struct mcp251x_priv {
 
 	u8 *spi_tx_buf;
 	u8 *spi_rx_buf;
-	dma_addr_t spi_tx_dma;
-	dma_addr_t spi_rx_dma;
 
 	struct sk_buff *tx_skb;
 	int tx_len;
@@ -321,12 +293,6 @@ static int mcp251x_spi_trans(struct spi_device *spi, int len)
 	int ret;
 
 	spi_message_init(&m);
-
-	if (mcp251x_enable_dma) {
-		t.tx_dma = priv->spi_tx_dma;
-		t.rx_dma = priv->spi_rx_dma;
-		m.is_dma_mapped = 1;
-	}
 
 	spi_message_add_tail(&t, &m);
 
@@ -1099,43 +1065,18 @@ static int mcp251x_can_probe(struct spi_device *spi)
 	priv->spi = spi;
 	mutex_init(&priv->mcp_lock);
 
-	/* If requested, allocate DMA buffers */
-	if (mcp251x_enable_dma) {
-		spi->dev.coherent_dma_mask = ~0;
-
-		/*
-		 * Minimum coherent DMA allocation is PAGE_SIZE, so allocate
-		 * that much and share it between Tx and Rx DMA buffers.
-		 */
-		priv->spi_tx_buf = dmam_alloc_coherent(&spi->dev,
-						       PAGE_SIZE,
-						       &priv->spi_tx_dma,
-						       GFP_DMA);
-
-		if (priv->spi_tx_buf) {
-			priv->spi_rx_buf = (priv->spi_tx_buf + (PAGE_SIZE / 2));
-			priv->spi_rx_dma = (dma_addr_t)(priv->spi_tx_dma +
-							(PAGE_SIZE / 2));
-		} else {
-			/* Fall back to non-DMA */
-			mcp251x_enable_dma = 0;
-		}
-	}
-
 	/* Allocate non-DMA buffers */
-	if (!mcp251x_enable_dma) {
-		priv->spi_tx_buf = devm_kzalloc(&spi->dev, SPI_TRANSFER_BUF_LEN,
-						GFP_KERNEL);
-		if (!priv->spi_tx_buf) {
-			ret = -ENOMEM;
-			goto error_probe;
-		}
-		priv->spi_rx_buf = devm_kzalloc(&spi->dev, SPI_TRANSFER_BUF_LEN,
-						GFP_KERNEL);
-		if (!priv->spi_rx_buf) {
-			ret = -ENOMEM;
-			goto error_probe;
-		}
+	priv->spi_tx_buf = devm_kzalloc(&spi->dev, SPI_TRANSFER_BUF_LEN,
+					GFP_KERNEL);
+	if (!priv->spi_tx_buf) {
+		ret = -ENOMEM;
+		goto error_probe;
+	}
+	priv->spi_rx_buf = devm_kzalloc(&spi->dev, SPI_TRANSFER_BUF_LEN,
+					GFP_KERNEL);
+	if (!priv->spi_rx_buf) {
+		ret = -ENOMEM;
+		goto error_probe;
 	}
 
 	SET_NETDEV_DEV(net, &spi->dev);
@@ -1185,6 +1126,7 @@ static int mcp251x_can_remove(struct spi_device *spi)
 	return 0;
 }
 
+#if 0
 static int __maybe_unused mcp251x_can_suspend(struct device *dev)
 {
 	struct spi_device *spi = to_spi_device(dev);
@@ -1238,18 +1180,20 @@ static int __maybe_unused mcp251x_can_resume(struct device *dev)
 
 static SIMPLE_DEV_PM_OPS(mcp251x_can_pm_ops, mcp251x_can_suspend,
 	mcp251x_can_resume);
+#endif
 
 static struct spi_driver mcp251x_can_driver = {
 	.driver = {
 		.name = DEVICE_NAME,
 		.owner = THIS_MODULE,
 		.of_match_table = mcp251x_of_match,
-		.pm = &mcp251x_can_pm_ops,
+		/* .pm = &mcp251x_can_pm_ops, */
 	},
 	.id_table = mcp251x_id_table,
 	.probe = mcp251x_can_probe,
 	.remove = mcp251x_can_remove,
 };
+
 module_spi_driver(mcp251x_can_driver);
 
 MODULE_AUTHOR("Chris Elston <celston@katalix.com>, "
