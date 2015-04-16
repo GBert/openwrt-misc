@@ -1088,7 +1088,6 @@ static int mcp251x_can_remove(void)
 	return 0;
 }
 
-#if 0
 static int __maybe_unused mcp251x_can_suspend(struct device *dev)
 {
 	struct spi_device *spi = to_spi_device(dev);
@@ -1104,7 +1103,7 @@ static int __maybe_unused mcp251x_can_suspend(struct device *dev)
 	if (netif_running(net)) {
 		netif_device_detach(net);
 
-		mcp251x_hw_sleep(spi);
+		mcp251x_hw_sleep();
 		mcp251x_power_enable(priv->transceiver, 0);
 		priv->after_suspend = AFTER_SUSPEND_UP;
 	} else {
@@ -1142,9 +1141,8 @@ static int __maybe_unused mcp251x_can_resume(struct device *dev)
 
 static SIMPLE_DEV_PM_OPS(mcp251x_can_pm_ops, mcp251x_can_suspend,
 	mcp251x_can_resume);
-#endif
 
-static struct spi_driver mcp251x_can_driver = {
+static struct platform_driver mcp251x_can_driver = {
 	.driver = {
 		.name = DEVICE_NAME,
 		.owner = THIS_MODULE,
@@ -1156,7 +1154,7 @@ static struct spi_driver mcp251x_can_driver = {
 	.remove = mcp251x_can_remove,
 };
 
-module_spi_driver(mcp251x_can_driver);
+module_platform_driver(mcp251x_can_driver);
 
 MODULE_AUTHOR("Chris Elston <celston@katalix.com>, "
 	      "Christian Pellegrin <chripell@evolware.org>");
