@@ -296,9 +296,10 @@ static void mcp251x_clean(struct net_device *net)
  */
 static int mcp251x_spi_trans(int len) {
 	int ret;
-	ret = 0;
-	uint8_t data_in, data_out;
 	int i, j;
+	uint8_t data_in, data_out;
+	ret = 0;
+
 /*	struct mcp251x_priv *priv = spi_get_drvdata(spi);
 	struct spi_transfer t = {
 		.tx_buf = priv->spi_tx_buf,
@@ -329,12 +330,21 @@ static int mcp251x_spi_trans(int len) {
 		}
 		priv->spi_rx_buf[i] = data_in;
 	}
+	printk(KERN_INFO "%s: write ", __func__);
+	for (i = 0; i < len; i++)
+		printk(KERN_INFO "0x%02x", priv->spi_tx_buf[i]);
+
+	printk(KERN_INFO "\n%s: read ", __func__);
+	for (i = 0; i < len; i++)
+		printk(KERN_INFO "0x%02x", priv->spi_tx_buf[i]);
+
+	printk(KERN_INFO "\n");
+
 	return ret;
 }
 
 static u8 mcp251x_read_reg(uint8_t reg) {
 	u8 val = 0;
-
 
 	priv->spi_tx_buf[0] = INSTRUCTION_READ;
 	priv->spi_tx_buf[1] = reg;
