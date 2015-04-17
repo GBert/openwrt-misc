@@ -47,8 +47,8 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/netdevice.h>
-#include <linux/of.h>
-#include <linux/of_device.h>
+/* #include <linux/of.h>
+#include <linux/of_device.h> */
 #include <linux/platform_device.h>
 #include <linux/slab.h>
 #include <linux/gpio.h>
@@ -1183,8 +1183,29 @@ static struct platform_driver mcp251x_can_driver = {
 	.probe = mcp251x_can_probe,
 	.remove = mcp251x_can_remove,
 };
+/* module_platform_driver(mcp251x_can_driver); */
 
-module_platform_driver(mcp251x_can_driver);
+static int __init mcp2515_banged_init(void)
+{
+	int err;
+        err = platform_driver_register(&mcp251x_can_driver);
+        if (err)
+                goto exit_free_device;
+
+        pr_info("driver device registered\n");
+
+        return 0;
+exit_free_device:
+	return err;
+}
+module_init(mcp2515_banged_init);
+
+static void __exit mcp2515_banged_exit(void)
+{
+        platform_driver_unregister(&mcp251x_can_driver);
+}
+
+module_exit(mcp2515_banged_exit);
 
 MODULE_AUTHOR("Chris Elston <celston@katalix.com>, "
 	      "Christian Pellegrin <chripell@evolware.org>");
