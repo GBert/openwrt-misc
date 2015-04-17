@@ -47,8 +47,6 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/netdevice.h>
-/* #include <linux/of.h>
-#include <linux/of_device.h> */
 #include <linux/platform_device.h>
 #include <linux/slab.h>
 #include <linux/gpio.h>
@@ -650,8 +648,7 @@ static void mcp251x_open_clean(struct net_device *net)
 {
 	struct mcp251x_priv *priv = netdev_priv(net);
 
-	/* TODO */
-	/* free_irq(spi->irq, priv); */
+	free_irq(priv->irq, priv);
 	mcp251x_hw_sleep(priv);
 	mcp251x_power_enable(priv->transceiver, 0);
 	close_candev(net);
@@ -1183,8 +1180,10 @@ static struct platform_driver mcp251x_can_driver = {
 	.probe = mcp251x_can_probe,
 	.remove = mcp251x_can_remove,
 };
-/* module_platform_driver(mcp251x_can_driver); */
 
+module_platform_driver(mcp251x_can_driver);
+
+#if 0
 static int __init mcp2515_banged_init(void)
 {
 	int err;
@@ -1206,6 +1205,7 @@ static void __exit mcp2515_banged_exit(void)
 }
 
 module_exit(mcp2515_banged_exit);
+#endif
 
 MODULE_AUTHOR("Chris Elston <celston@katalix.com>, "
 	      "Christian Pellegrin <chripell@evolware.org>");
