@@ -1060,6 +1060,9 @@ static int mcp251x_can_probe(struct platform_device *pdev)
 	}
 
 	/* SET_NETDEV_DEV(net, &spi->dev); */
+	/* netif_napi_add(dev, &priv->napi, flexcan_poll, FLEXCAN_NAPI_WEIGHT); */
+	/* platform_set_drvdata(pdev, dev);
+	SET_NETDEV_DEV(dev, &pdev->dev); */
 
 	/* Here is OK to not lock the MCP, no one knows about it yet */
 	ret = mcp251x_hw_probe(priv);
@@ -1070,7 +1073,7 @@ static int mcp251x_can_probe(struct platform_device *pdev)
 	if (ret)
 		goto error_probe;
 
-	devm_can_led_init(net);
+	/* devm_can_led_init(net); */
 
 	return 0;
 
@@ -1147,16 +1150,16 @@ static int __maybe_unused mcp251x_can_suspend(struct device *device)
 
 static int __maybe_unused mcp251x_can_resume(struct device *device)
 {
-	struct net_device *dev = dev_get_drvdata(device);
-	struct mcp251x_priv *priv = netdev_priv(dev);
+	struct net_device *net_dev = dev_get_drvdata(device);
+	struct mcp251x_priv *priv = netdev_priv(net_dev);
 
 	if (priv->after_suspend & AFTER_SUSPEND_POWER) {
 		mcp251x_power_enable(priv->power, 1);
-		queue_work(priv->wq, &priv->restart_work);
+		/* queue_work(priv->wq, &priv->restart_work); */
 	} else {
 		if (priv->after_suspend & AFTER_SUSPEND_UP) {
 			mcp251x_power_enable(priv->transceiver, 1);
-			queue_work(priv->wq, &priv->restart_work);
+			/* queue_work(priv->wq, &priv->restart_work); */
 		} else {
 			priv->after_suspend = 0;
 		}
@@ -1166,8 +1169,7 @@ static int __maybe_unused mcp251x_can_resume(struct device *device)
 	return 0;
 }
 
-static SIMPLE_DEV_PM_OPS(mcp251x_can_pm_ops, mcp251x_can_suspend,
-	mcp251x_can_resume);
+static SIMPLE_DEV_PM_OPS(mcp251x_can_pm_ops, mcp251x_can_suspend, mcp251x_can_resume);
 
 static struct platform_driver mcp251x_can_driver = {
 	.driver = {
