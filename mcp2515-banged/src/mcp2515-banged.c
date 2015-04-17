@@ -195,7 +195,7 @@
 
 #define MCP251X_OST_DELAY_MS	(5)
 
-#define DEVICE_NAME "mcp251x"
+#define DEVICE_NAME "mcp2515-banged"
 
 #define GPIO_MISO	0
 #define GPIO_MOSI	1
