@@ -317,16 +317,21 @@ static int mcp251x_spi_trans(int len) {
 	if (ret)
 		dev_err(&spi->dev, "spi transfer failed: ret = %d\n", ret);
 */
+
+	/* MSB first */
 	for (i = 0; i < len; i++) {
 		data_out = priv->spi_tx_buf[i];
 		data_in = 0;
 		for (j = 0; j < 8; j++) {
 			gpio_set_value(GPIO_CLK, 0);
-			gpio_set_value(GPIO_MOSI, data_out & 0x01);
+			if (data_out & 0x80)
+				gpio_set_value(GPIO_MOSI,1);
+			else
+				gpio_set_value(GPIO_MOSI,0);
 			gpio_set_value(GPIO_CLK, 1);
+			data_in <<= 1;
 			if (gpio_get_value(GPIO_MISO))
 				data_in |= 0x01;
-			data_in <<= 1;
 		}
 		priv->spi_rx_buf[i] = data_in;
 	}
