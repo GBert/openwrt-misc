@@ -999,6 +999,7 @@ static int mcp251x_can_probe(struct platform_device *pdev)
 	int freq, ret;
 
 	freq = 16000000;
+	printk(KERN_INFO "%s: started\n", __func__);
 
 	/* Allocate can/net device */
 	net = alloc_candev(sizeof(struct mcp251x_priv), TX_ECHO_SKB_MAX);
