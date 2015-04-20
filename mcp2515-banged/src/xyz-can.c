@@ -11,9 +11,10 @@
 
 #define TX_ECHO_SKB_MAX 1
 
-struct xyz_priv {
+struct xyz_can_priv {
 	struct can_priv	   can;
 	struct net_device *net;
+	struct device *dev;
 
 	u8 *tx_buf;
 	u8 *rx_buf;
@@ -23,41 +24,50 @@ struct xyz_priv {
 	int tx_len;
 };
 
-static int xyz_open(struct net_device *net) {
-        printk(KERN_INFO "%s: \n", __func__);
+static int xyz_can_open(struct net_device *net) {
+	struct xyz_can_priv *priv = netdev_priv(net);
+        dev_info(priv->dev, "open event");
 	return open_candev(net);
 }
 
-static int xyz_stop(struct net_device *net) {
+static int xyz_can_stop(struct net_device *net) {
+	struct xyz_can_priv *priv = netdev_priv(net);
+        dev_info(priv->dev, "close event");
 	close_candev(net);
-        printk(KERN_INFO "%s: \n", __func__);
 	return 0;
 }
 
-static netdev_tx_t xyz_start_xmit(struct sk_buff *skb, struct net_device *net) {
-        printk(KERN_INFO "%s: \n", __func__);
+static netdev_tx_t xyz_start_can_xmit(struct sk_buff *skb, struct net_device *net) {
+	struct xyz_can_priv *priv = netdev_priv(net);
+        dev_info(priv->dev, "close event");
 	return NETDEV_TX_OK;
 }
 
 static const struct net_device_ops xyz_netdev_ops = {
-	.ndo_open = xyz_open,
-	.ndo_stop = xyz_stop,
-	.ndo_start_xmit = xyz_start_xmit,
+	.ndo_open = xyz_can_open,
+	.ndo_stop = xyz_can_stop,
+	.ndo_start_xmit = xyz_start_can_xmit,
 	.ndo_change_mtu = can_change_mtu,
 };
 
 static int xyz_can_probe(struct platform_device *pdev) {
-	struct net_device *net;
-        printk(KERN_INFO "%s: \n", __func__);
-	net = alloc_candev(sizeof(struct xyz_priv), TX_ECHO_SKB_MAX);
-	if (!net)
+	struct net_device *net = NULL;
+	struct xyz_can_priv *priv = NULL;
+	struct device *dev = &pdev->dev;
+        dev_info(&pdev->dev, "close event");
+
+	net = alloc_candev(sizeof(struct xyz_can_priv), TX_ECHO_SKB_MAX);
+	if (!net) {
+		dev_err(&pdev->dev, "calloc_candev failed");
 		return -ENOMEM;
+	}
+	/* net->sysfs_groups[0]  */
 	return 0;
 }
 
 static int xyz_can_remove(struct platform_device *pdev) {
 	struct net_device *net_dev = platform_get_drvdata(pdev);
-        printk(KERN_INFO "%s: \n", __func__);
+        dev_info(&pdev->dev, "remove event");
 
 	unregister_candev(net_dev);
 	free_candev(net_dev);
@@ -88,7 +98,15 @@ static struct platform_driver xyz_can_driver = {
 	.remove = xyz_can_remove,
 };
 
-module_platform_driver(xyz_can_driver);
+static int __init xyz_can_init(void) {
+	return platform_driver_register(&xyz_can_driver);
+}
+module_init(xyz_can_init);
+
+static void __exit xyz_can_exit(void) {
+	platform_driver_unregister(&xyz_can_driver);
+}
+module_exit(xyz_can_exit);
 
 MODULE_AUTHOR("Mister X");
 MODULE_DESCRIPTION("CAN driver skeleton");
