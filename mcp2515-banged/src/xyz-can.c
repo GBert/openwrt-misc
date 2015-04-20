@@ -54,7 +54,8 @@ static int xyz_can_probe(struct platform_device *pdev) {
 	struct net_device *net = NULL;
 	struct xyz_can_priv *priv = NULL;
 	struct device *dev = &pdev->dev;
-        dev_info(&pdev->dev, "close event");
+	printk(KERN_INFO "%s called\n", __func__);
+        dev_info(&pdev->dev, "probe event");
 
 	net = alloc_candev(sizeof(struct xyz_can_priv), TX_ECHO_SKB_MAX);
 	if (!net) {
@@ -67,6 +68,7 @@ static int xyz_can_probe(struct platform_device *pdev) {
 
 static int xyz_can_remove(struct platform_device *pdev) {
 	struct net_device *net_dev = platform_get_drvdata(pdev);
+	printk(KERN_INFO "%s called\n", __func__);
         dev_info(&pdev->dev, "remove event");
 
 	unregister_candev(net_dev);
@@ -74,20 +76,6 @@ static int xyz_can_remove(struct platform_device *pdev) {
 
 	return 0;
 }
-
-static int __maybe_unused xyz_can_suspend(struct device *device) {
-	struct net_device *net_dev = dev_get_drvdata(device);
-        printk(KERN_INFO "%s: \n", __func__);
-	return 0;
-}
-
-static int __maybe_unused xyz_can_resume(struct device *device) {
-	struct net_device *net_dev = dev_get_drvdata(device);
-        printk(KERN_INFO "%s: \n", __func__);
-	return 0;
-}
-
-static SIMPLE_DEV_PM_OPS(xyz_can_pm_ops, xyz_can_suspend, xyz_can_resume);
 
 static struct platform_driver xyz_can_driver = {
 	.driver = {
