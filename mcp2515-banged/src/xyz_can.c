@@ -26,20 +26,20 @@ struct xyz_can_priv {
 
 static int xyz_can_open(struct net_device *net) {
 	struct xyz_can_priv *priv = netdev_priv(net);
-        dev_info(priv->dev, "open event");
+	dev_info(priv->dev, "open event\n");
 	return open_candev(net);
 }
 
 static int xyz_can_stop(struct net_device *net) {
 	struct xyz_can_priv *priv = netdev_priv(net);
-        dev_info(priv->dev, "close event");
+	dev_info(priv->dev, "close event\n");
 	close_candev(net);
 	return 0;
 }
 
 static netdev_tx_t xyz_start_can_xmit(struct sk_buff *skb, struct net_device *net) {
 	struct xyz_can_priv *priv = netdev_priv(net);
-        dev_info(priv->dev, "start xmit event");
+	dev_info(priv->dev, "start xmit event\n");
 	return NETDEV_TX_OK;
 }
 
@@ -55,11 +55,11 @@ static int xyz_can_probe(struct platform_device *pdev) {
 	struct xyz_can_priv *priv = NULL;
 	struct device *dev = &pdev->dev;
 	printk(KERN_INFO "%s called\n", __func__);
-	dev_info(&pdev->dev, "probe event");
+	dev_info(&pdev->dev, "probe event\n");
 
 	net = alloc_candev(sizeof(struct xyz_can_priv), TX_ECHO_SKB_MAX);
 	if (!net) {
-		dev_err(&pdev->dev, "calloc_candev failed");
+		dev_err(&pdev->dev, "calloc_candev failed\n");
 		return -ENOMEM;
 	}
 	return 0;
@@ -68,7 +68,7 @@ static int xyz_can_probe(struct platform_device *pdev) {
 static int xyz_can_remove(struct platform_device *pdev) {
 	struct net_device *net_dev = platform_get_drvdata(pdev);
 	printk(KERN_INFO "%s called\n", __func__);
-        dev_info(&pdev->dev, "remove event");
+	dev_info(&pdev->dev, "remove event\n");
 
 	unregister_candev(net_dev);
 	free_candev(net_dev);
@@ -83,15 +83,16 @@ static struct platform_driver xyz_can_driver = {
 	},
 	.probe = xyz_can_probe,
 	.remove = xyz_can_remove,
-	.suspend = NULL,
-	.resume = NULL,
+};
+
+static struct platform_device xyz_can_device = {
+	.name 		= "xyz_can",
+	.id		= -1,
 };
 
 static int __init xyz_can_init(void) {
-	int ret;
-	ret = platform_driver_register(&xyz_can_driver);
-	printk(KERN_INFO "%s called - return code %d\n", __func__, ret);
-	return ret;
+	printk(KERN_INFO "%s called\n", __func__);
+	return platform_driver_register(&xyz_can_driver);
 }
 module_init(xyz_can_init);
 
