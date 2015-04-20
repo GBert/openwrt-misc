@@ -47,7 +47,7 @@ static const struct net_device_ops xyz_netdev_ops = {
 	.ndo_open = xyz_can_open,
 	.ndo_stop = xyz_can_stop,
 	.ndo_start_xmit = xyz_start_can_xmit,
-	.ndo_change_mtu = can_change_mtu,
+	/* .ndo_change_mtu = can_change_mtu, */
 };
 
 static int xyz_can_probe(struct platform_device *pdev) {
@@ -55,14 +55,13 @@ static int xyz_can_probe(struct platform_device *pdev) {
 	struct xyz_can_priv *priv = NULL;
 	struct device *dev = &pdev->dev;
 	printk(KERN_INFO "%s called\n", __func__);
-        dev_info(&pdev->dev, "probe event");
+	dev_info(&pdev->dev, "probe event");
 
 	net = alloc_candev(sizeof(struct xyz_can_priv), TX_ECHO_SKB_MAX);
 	if (!net) {
 		dev_err(&pdev->dev, "calloc_candev failed");
 		return -ENOMEM;
 	}
-	/* net->sysfs_groups[0]  */
 	return 0;
 }
 
@@ -79,16 +78,20 @@ static int xyz_can_remove(struct platform_device *pdev) {
 
 static struct platform_driver xyz_can_driver = {
 	.driver = {
-		.name = "xyz_can",
+		.name = KBUILD_MODNAME,
 		.owner = THIS_MODULE,
 	},
 	.probe = xyz_can_probe,
 	.remove = xyz_can_remove,
+	.suspend = NULL,
+	.resume = NULL,
 };
 
 static int __init xyz_can_init(void) {
-	printk(KERN_INFO "%s called\n", __func__);
-	return platform_driver_register(&xyz_can_driver);
+	int ret;
+	ret = platform_driver_register(&xyz_can_driver);
+	printk(KERN_INFO "%s called - return code %d\n", __func__, ret);
+	return ret;
 }
 module_init(xyz_can_init);
 
