@@ -1181,9 +1181,8 @@ static struct platform_driver mcp251x_can_driver = {
 	.remove = mcp251x_can_remove,
 };
 
-module_platform_driver(mcp251x_can_driver);
+/* module_platform_driver(mcp251x_can_driver); */
 
-#if 0
 static int __init mcp2515_banged_init(void)
 {
 	int err;
@@ -1202,10 +1201,10 @@ module_init(mcp2515_banged_init);
 static void __exit mcp2515_banged_exit(void)
 {
         platform_driver_unregister(&mcp251x_can_driver);
+        pr_info("driver device unregistered\n");
 }
 
 module_exit(mcp2515_banged_exit);
-#endif
 
 MODULE_AUTHOR("Chris Elston <celston@katalix.com>, "
 	      "Christian Pellegrin <chripell@evolware.org>");
