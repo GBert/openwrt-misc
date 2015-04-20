@@ -39,7 +39,7 @@ static int xyz_can_stop(struct net_device *net) {
 
 static netdev_tx_t xyz_start_can_xmit(struct sk_buff *skb, struct net_device *net) {
 	struct xyz_can_priv *priv = netdev_priv(net);
-        dev_info(priv->dev, "close event");
+        dev_info(priv->dev, "start xmit event");
 	return NETDEV_TX_OK;
 }
 
