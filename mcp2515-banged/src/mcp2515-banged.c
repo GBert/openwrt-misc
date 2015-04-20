@@ -1190,7 +1190,7 @@ static int __init mcp2515_banged_init(void)
         if (err)
                 goto exit_free_device;
 
-        pr_info("driver device registered\n");
+        pr_info("banged MC2515 driver device registered\n");
 
         return 0;
 exit_free_device:
@@ -1201,7 +1201,7 @@ module_init(mcp2515_banged_init);
 static void __exit mcp2515_banged_exit(void)
 {
         platform_driver_unregister(&mcp251x_can_driver);
-        pr_info("driver device unregistered\n");
+        pr_info("banged MCP2515 driver device unregistered\n");
 }
 
 module_exit(mcp2515_banged_exit);
