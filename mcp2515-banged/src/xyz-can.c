@@ -99,11 +99,13 @@ static struct platform_driver xyz_can_driver = {
 };
 
 static int __init xyz_can_init(void) {
+	printk(KERN_INFO "%s called\n", __func__);
 	return platform_driver_register(&xyz_can_driver);
 }
 module_init(xyz_can_init);
 
 static void __exit xyz_can_exit(void) {
+	printk(KERN_INFO "%s called\n", __func__);
 	platform_driver_unregister(&xyz_can_driver);
 }
 module_exit(xyz_can_exit);
