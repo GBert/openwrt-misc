@@ -1008,8 +1008,10 @@ static int mcp2515_can_probe(struct platform_device *pdev)
 	net->flags |= IFF_ECHO;
 	printk(KERN_INFO "%s: p2\n", __func__);
 
-	priv->can.bittiming_const = &mcp2515_bittiming_const;
+	priv = netdev_priv(net);
 	printk(KERN_INFO "%s: p2a\n", __func__);
+	priv->can.bittiming_const = &mcp2515_bittiming_const;
+	printk(KERN_INFO "%s: p2b\n", __func__);
 	priv->can.do_set_mode = mcp2515_do_set_mode;
 	printk(KERN_INFO "%s: p3\n", __func__);
 	priv->can.clock.freq = freq / 2;
