@@ -37,23 +37,23 @@ static int xyz_can_stop(struct net_device *net) {
 	return 0;
 }
 
-static netdev_tx_t xyz_start_can_xmit(struct sk_buff *skb, struct net_device *net) {
+static netdev_tx_t xyz_can_start_xmit(struct sk_buff *skb, struct net_device *net) {
 	struct xyz_can_priv *priv = netdev_priv(net);
 	dev_info(priv->dev, "start xmit event\n");
 	return NETDEV_TX_OK;
 }
 
-static const struct net_device_ops xyz_netdev_ops = {
+static const struct net_device_ops xyz_can_netdev_ops = {
 	.ndo_open = xyz_can_open,
 	.ndo_stop = xyz_can_stop,
-	.ndo_start_xmit = xyz_start_can_xmit,
+	.ndo_start_xmit = xyz_can_start_xmit,
 	/* .ndo_change_mtu = can_change_mtu, */
 };
 
 static int xyz_can_probe(struct platform_device *pdev) {
 	struct net_device *net = NULL;
-	struct xyz_can_priv *priv = NULL;
-	struct device *dev = &pdev->dev;
+	/* struct xyz_can_priv *priv = NULL; */
+	/* struct device *dev = &pdev->dev; */
 	printk(KERN_INFO "%s called\n", __func__);
 	dev_info(&pdev->dev, "probe event\n");
 
@@ -70,15 +70,20 @@ static int xyz_can_remove(struct platform_device *pdev) {
 	printk(KERN_INFO "%s called\n", __func__);
 	dev_info(&pdev->dev, "remove event\n");
 
-	unregister_candev(net_dev);
-	free_candev(net_dev);
+	/* unregister_candev(net_dev);
+	free_candev(net_dev); */
 
 	return 0;
 }
 
+static void xyz_can_device_release(struct device *dev) {
+	dev_info(dev, "device release event\n");
+}
+
+
 static struct platform_driver xyz_can_driver = {
 	.driver = {
-		.name = KBUILD_MODNAME,
+		.name = "xyz_can",
 		.owner = THIS_MODULE,
 	},
 	.probe = xyz_can_probe,
@@ -87,11 +92,16 @@ static struct platform_driver xyz_can_driver = {
 
 static struct platform_device xyz_can_device = {
 	.name 		= "xyz_can",
-	.id		= -1,
+	.id		= 0,
+	.dev = {
+		.release = xyz_can_device_release,
+        },
+
 };
 
 static int __init xyz_can_init(void) {
 	printk(KERN_INFO "%s called\n", __func__);
+	platform_device_register(&xyz_can_device);
 	return platform_driver_register(&xyz_can_driver);
 }
 module_init(xyz_can_init);
@@ -99,6 +109,7 @@ module_init(xyz_can_init);
 static void __exit xyz_can_exit(void) {
 	printk(KERN_INFO "%s called\n", __func__);
 	platform_driver_unregister(&xyz_can_driver);
+	platform_device_unregister(&xyz_can_device);
 }
 module_exit(xyz_can_exit);
 
