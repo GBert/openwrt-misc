@@ -201,7 +201,7 @@
 #define GPIO_CS		3
 #define GPIO_INT	4
 
-static int gpios [] = {22, 19, 18, 7, 6};
+static int gpios [] = {20, 19, 18, 7, 6};
 static int gpio_count;
 module_param_array(gpios, int, &gpio_count, 0);
 MODULE_PARM_DESC(gpios, "used GPIOS for MISO, MOSI, CLK, CS and INT");
@@ -1030,8 +1030,11 @@ static int mcp2515_can_probe(struct platform_device *pdev)
 
 	mutex_init(&priv->mcp_lock);
 
+	printk(KERN_INFO "%s: p8\n", __func__);
+
 	/* GPIO stuff */
 	ret = gpio_request_one(gpios[GPIO_MISO], GPIOF_IN, "MCP2515 MISO");
+	printk(KERN_INFO "%s: p8\n", __func__);
         if (ret) {
 		printk(KERN_ERR "can't get MISO pin GPIO%d\n", GPIO_MISO);
                 goto out_clock;
