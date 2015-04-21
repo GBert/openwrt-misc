@@ -1034,7 +1034,7 @@ static int mcp2515_can_probe(struct platform_device *pdev)
 
 	/* GPIO stuff */
 	ret = gpio_request_one(gpios[GPIO_MISO], GPIOF_IN, "MCP2515 MISO");
-	printk(KERN_INFO "%s: p8\n", __func__);
+	printk(KERN_INFO "%s: p9\n", __func__);
         if (ret) {
 		printk(KERN_ERR "can't get MISO pin GPIO%d\n", GPIO_MISO);
                 goto out_clock;
@@ -1063,8 +1063,10 @@ static int mcp2515_can_probe(struct platform_device *pdev)
 		printk(KERN_ERR "can't get INT pin GPIO%d\n", GPIO_INT);
                 goto out_int;
 	}
+	printk(KERN_INFO "%s: p10\n", __func__);
 
 	priv->irq=gpio_to_irq(gpios[GPIO_INT]);
+	printk(KERN_INFO "%s: p11\n", __func__);
 	if (priv->irq<0) {
 		printk(KERN_ERR "can't map GPIO %d to IRQ : error %d\n", gpios[GPIO_INT],  priv->irq);
 		goto out_int_irq;
