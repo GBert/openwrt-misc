@@ -1009,18 +1009,22 @@ static int mcp2515_can_probe(struct platform_device *pdev)
 	printk(KERN_INFO "%s: p2\n", __func__);
 
 	priv->can.bittiming_const = &mcp2515_bittiming_const;
+	printk(KERN_INFO "%s: p2a\n", __func__);
 	priv->can.do_set_mode = mcp2515_do_set_mode;
+	printk(KERN_INFO "%s: p3\n", __func__);
 	priv->can.clock.freq = freq / 2;
 	priv->can.ctrlmode_supported = CAN_CTRLMODE_3_SAMPLES |
 		CAN_CTRLMODE_LOOPBACK | CAN_CTRLMODE_LISTENONLY;
+	printk(KERN_INFO "%s: p4\n", __func__);
 	priv->net = net;
+	printk(KERN_INFO "%s: p5\n", __func__);
 	priv->clk = clk;
-	printk(KERN_INFO "%s: p3\n", __func__);
+	printk(KERN_INFO "%s: p6\n", __func__);
 
 	ret = mcp2515_power_enable(priv->power, 1);
 	if (ret)
 		goto out_clock;
-	printk(KERN_INFO "%s: p4\n", __func__);
+	printk(KERN_INFO "%s: p7\n", __func__);
 
 	mutex_init(&priv->mcp_lock);
 
