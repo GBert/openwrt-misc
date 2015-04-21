@@ -1085,6 +1085,7 @@ static int mcp2515_can_probe(struct platform_device *pdev)
 		goto error_probe;
 
 	ret = register_candev(net);
+	printk(KERN_INFO "%s: registered CAN device\n", __func__);
 	if (ret)
 		goto error_probe;
 
