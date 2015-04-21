@@ -1002,9 +1002,11 @@ static int mcp2515_can_probe(struct platform_device *pdev)
 	net = alloc_candev(sizeof(struct mcp2515_priv), TX_ECHO_SKB_MAX);
 	if (!net)
 		return -ENOMEM;
+	printk(KERN_INFO "%s: p1\n", __func__);
 
 	net->netdev_ops = &mcp2515_netdev_ops;
 	net->flags |= IFF_ECHO;
+	printk(KERN_INFO "%s: p2\n", __func__);
 
 	priv->can.bittiming_const = &mcp2515_bittiming_const;
 	priv->can.do_set_mode = mcp2515_do_set_mode;
@@ -1013,10 +1015,12 @@ static int mcp2515_can_probe(struct platform_device *pdev)
 		CAN_CTRLMODE_LOOPBACK | CAN_CTRLMODE_LISTENONLY;
 	priv->net = net;
 	priv->clk = clk;
+	printk(KERN_INFO "%s: p3\n", __func__);
 
 	ret = mcp2515_power_enable(priv->power, 1);
 	if (ret)
 		goto out_clock;
+	printk(KERN_INFO "%s: p4\n", __func__);
 
 	mutex_init(&priv->mcp_lock);
 
