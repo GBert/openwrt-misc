@@ -1078,7 +1078,9 @@ static int mcp2515_can_probe(struct platform_device *pdev)
 	SET_NETDEV_DEV(dev, &pdev->dev); */
 
 	/* Here is OK to not lock the MCP, no one knows about it yet */
+	printk(KERN_INFO "%s: p12\n", __func__);
 	ret = mcp2515_hw_probe(priv);
+	printk(KERN_INFO "%s: p13\n", __func__);
 	if (ret)
 		goto error_probe;
 
