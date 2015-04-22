@@ -331,13 +331,13 @@ static int mcp2515_spi_trans(struct mcp2515_priv *priv, int len) {
 		}
 		priv->spi_rx_buf[i] = data_in;
 	}
-	printk(KERN_INFO "%s: write ", __func__);
+	printk(KERN_INFO "\n%s: [0x%02x] write ", __func__, len);
 	for (i = 0; i < len; i++)
-		printk(KERN_INFO "0x%02x", priv->spi_tx_buf[i]);
+		printk(KERN_INFO "0x%02x ", priv->spi_tx_buf[i]);
 
-	printk(KERN_INFO "\n%s: read ", __func__);
+	printk(KERN_INFO "\n%s: [0x%02x] read ", __func__, len);
 	for (i = 0; i < len; i++)
-		printk(KERN_INFO "0x%02x", priv->spi_tx_buf[i]);
+		printk(KERN_INFO "0x%02x ", priv->spi_rx_buf[i]);
 
 	printk(KERN_INFO "\n");
 
@@ -601,6 +601,7 @@ static int mcp2515_hw_reset(struct mcp2515_priv *priv) {
 	priv->spi_tx_buf[0] = INSTRUCTION_RESET;
 	ret = mcp2515_spi_trans(priv, 1);
 
+	printk(KERN_INFO "%s: INSTRUCTION_RESET 0x%02x\n", __func__, ret);
 	if (ret)
 		return ret;
 
@@ -619,10 +620,12 @@ static int mcp2515_hw_probe(struct mcp2515_priv *priv) {
 	int ret;
 
 	ret = mcp2515_hw_reset(priv);
+	printk(KERN_INFO "%s: RESET 0x%02x\n", __func__, ret);
 	if (ret)
 		return ret;
 
 	ctrl = mcp2515_read_reg(priv, CANCTRL);
+	printk(KERN_INFO "%s: CANTRL 0x%02x\n", __func__, ctrl);
 
 	/* dev_dbg(&spi->dev, "CANCTRL 0x%02x\n", ctrl); */
 
@@ -1078,20 +1081,33 @@ static int mcp2515_can_probe(struct platform_device *pdev)
 	SET_NETDEV_DEV(dev, &pdev->dev); */
 
 	/* Here is OK to not lock the MCP, no one knows about it yet */
+
+	priv->spi_tx_buf = kzalloc(SPI_TRANSFER_BUF_LEN, GFP_KERNEL);
+	if (!priv->spi_tx_buf) {
+		ret = -ENOMEM;
+		goto out_gpios;
+	}
+	priv->spi_rx_buf = kzalloc(SPI_TRANSFER_BUF_LEN, GFP_KERNEL);
+	if (!priv->spi_rx_buf) {
+		ret = -ENOMEM;
+		goto out_gpios;
+	}
 	printk(KERN_INFO "%s: p12\n", __func__);
 	ret = mcp2515_hw_probe(priv);
 	printk(KERN_INFO "%s: p13\n", __func__);
 	if (ret)
-		goto error_probe;
+		goto out_gpios;
 
 	ret = register_candev(net);
 	printk(KERN_INFO "%s: registered CAN device\n", __func__);
 	if (ret)
-		goto error_probe;
+		goto out_gpios;
 
 	/* devm_can_led_init(net); */
 
 	return 0;
+
+out_gpios:
 
 out_int_irq:
 	gpio_free(GPIO_INT);
