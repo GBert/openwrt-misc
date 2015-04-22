@@ -490,7 +490,7 @@ static netdev_tx_t mcp2515_hard_start_xmit(struct sk_buff *skb, struct net_devic
 	struct can_frame *frame;
 
 
-	printk(KERN_INFO "%s\n", __func__);
+	/* printk(KERN_INFO "%s\n", __func__); */
 	if (priv->tx_skb || priv->tx_len) {
 		/* dev_warn(&spi->dev, "hard_xmit called while tx busy\n"); */
 		printk(KERN_INFO "%s: hard_xmit called while tx busy\n", __func__);
@@ -936,8 +936,7 @@ static int mcp2515_open(struct net_device *net)
 	priv->tx_skb = NULL;
 	priv->tx_len = 0;
 
-	ret = request_threaded_irq(priv->irq, NULL, mcp2515_can_ist,
-				   flags | IRQF_ONESHOT, DEVICE_NAME, priv);
+	ret = request_irq(priv->irq, mcp2515_can_ist, flags | IRQF_ONESHOT, DEVICE_NAME, priv);
 	if (ret) {
 		/* TODO */
 		/* dev_err(&spi->dev, "failed to acquire irq %d\n", spi->irq); */
