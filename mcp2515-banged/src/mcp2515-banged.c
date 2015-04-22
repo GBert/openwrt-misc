@@ -1076,8 +1076,8 @@ static int mcp2515_can_probe(struct platform_device *pdev)
 
 	/* SET_NETDEV_DEV(net, &spi->dev); */
 	/* netif_napi_add(dev, &priv->napi, flexcan_poll, FLEXCAN_NAPI_WEIGHT); */
-	/* platform_set_drvdata(pdev, dev);
-	SET_NETDEV_DEV(dev, &pdev->dev); */
+	/* platform_set_drvdata(pdev, dev); */
+	SET_NETDEV_DEV(net, &pdev->dev);
 
 	/* Here is OK to not lock the MCP, no one knows about it yet */
 
