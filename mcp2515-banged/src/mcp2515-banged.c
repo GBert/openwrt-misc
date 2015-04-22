@@ -575,11 +575,10 @@ static int mcp2515_do_set_bittiming(struct net_device *net)
 	mcp2515_write_reg(priv, CNF2, CNF2_BTLMODE | (priv->can.ctrlmode & CAN_CTRLMODE_3_SAMPLES ?
 			   CNF2_SAM : 0) | ((bt->phase_seg1 - 1) << CNF2_PS1_SHIFT) | (bt->prop_seg - 1));
 	mcp2515_write_bits(priv, CNF3, CNF3_PHSEG2_MASK, (bt->phase_seg2 - 1));
-	/* dev_dbg(&spi->dev, "CNF: 0x%02x 0x%02x 0x%02x\n",
+	dev_dbg(&net, "CNF: 0x%02x 0x%02x 0x%02x\n",
 		mcp2515_read_reg(priv, CNF1),
 		mcp2515_read_reg(priv, CNF2),
 		mcp2515_read_reg(priv, CNF3));
-	*/
 	return 0;
 }
 
