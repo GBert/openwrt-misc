@@ -487,6 +487,8 @@ static void mcp2515_hw_sleep(struct mcp2515_priv *priv)
 static netdev_tx_t mcp2515_hard_start_xmit(struct sk_buff *skb, struct net_device *net)
 {
 	struct mcp2515_priv *priv = netdev_priv(net);
+	struct can_frame *frame;
+
 
 	printk(KERN_INFO "%s\n", __func__);
 	if (priv->tx_skb || priv->tx_len) {
@@ -500,7 +502,25 @@ static netdev_tx_t mcp2515_hard_start_xmit(struct sk_buff *skb, struct net_devic
 
 	netif_stop_queue(net);
 	priv->tx_skb = skb;
-	queue_work(priv->wq, &priv->tx_work);
+	/* TODO */
+	/* queue_work(priv->wq, &priv->tx_work); */
+
+	mutex_lock(&priv->mcp_lock);
+	if (priv->tx_skb) {
+		if (priv->can.state == CAN_STATE_BUS_OFF) {
+			mcp2515_clean(net);
+		} else {
+			frame = (struct can_frame *)priv->tx_skb->data;
+
+			if (frame->can_dlc > CAN_FRAME_MAX_DATA_LEN)
+				frame->can_dlc = CAN_FRAME_MAX_DATA_LEN;
+			mcp2515_hw_tx(priv, frame, 0);
+			priv->tx_len = 1 + frame->can_dlc;
+			can_put_echo_skb(priv->tx_skb, net, 0);
+			priv->tx_skb = NULL;
+		}
+	}
+	mutex_unlock(&priv->mcp_lock);
 
 	return NETDEV_TX_OK;
 }
@@ -509,6 +529,7 @@ static int mcp2515_do_set_mode(struct net_device *net, enum can_mode mode)
 {
 	struct mcp2515_priv *priv = netdev_priv(net);
 
+	printk(KERN_INFO "%s\n", __func__);
 	switch (mode) {
 	case CAN_MODE_START:
 		printk(KERN_INFO "%s: CAN_MODE_START\n", __func__);
@@ -518,7 +539,8 @@ static int mcp2515_do_set_mode(struct net_device *net, enum can_mode mode)
 		priv->restart_tx = 1;
 		if (priv->can.restart_ms == 0)
 			priv->after_suspend = AFTER_SUSPEND_RESTART;
-		queue_work(priv->wq, &priv->restart_work);
+		/* TODO */
+		/* queue_work(priv->wq, &priv->restart_work); */
 		break;
 	default:
 		return -EOPNOTSUPP;
@@ -662,7 +684,7 @@ static int mcp2515_stop(struct net_device *net) {
 	priv->force_quit = 1;
 	/* TODO */
 	/* free_irq(spi->irq, priv); */
-	destroy_workqueue(priv->wq);
+	/* destroy_workqueue(priv->wq); */
 	priv->wq = NULL;
 
 	mutex_lock(&priv->mcp_lock);
