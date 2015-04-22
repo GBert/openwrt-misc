@@ -319,19 +319,20 @@ static int mcp2515_spi_trans(struct mcp2515_priv *priv, int len) {
 		data_out = priv->spi_tx_buf[i];
 		data_in = 0;
 		for (j = 0; j < 8; j++) {
-			gpio_set_value(GPIO_CLK, 0);
+			data_in  <<= 1;
 			if (data_out & 0x80)
-				gpio_set_value(GPIO_MOSI,1);
+				gpio_set_value(gpios[GPIO_MOSI],1);
 			else
-				gpio_set_value(GPIO_MOSI,0);
-			gpio_set_value(GPIO_CLK, 1);
-			data_in <<= 1;
-			if (gpio_get_value(GPIO_MISO))
+				gpio_set_value(gpios[GPIO_MOSI],0);
+			gpio_set_value(gpios[GPIO_CLK], 1);
+			if (gpio_get_value(gpios[GPIO_MISO]))
 				data_in |= 0x01;
+			gpio_set_value(gpios[GPIO_CLK], 0);
+			data_out <<= 1;
 		}
 		priv->spi_rx_buf[i] = data_in;
 	}
-	printk(KERN_INFO "\n%s: [0x%02x] write ", __func__, len);
+	/* printk(KERN_INFO "\n%s: [0x%02x] write ", __func__, len);
 	for (i = 0; i < len; i++)
 		printk(KERN_INFO "0x%02x ", priv->spi_tx_buf[i]);
 
@@ -340,7 +341,7 @@ static int mcp2515_spi_trans(struct mcp2515_priv *priv, int len) {
 		printk(KERN_INFO "0x%02x ", priv->spi_rx_buf[i]);
 
 	printk(KERN_INFO "\n");
-
+	*/
 	return ret;
 }
 
@@ -350,10 +351,10 @@ static u8 mcp2515_read_reg(struct mcp2515_priv *priv, uint8_t reg) {
 	priv->spi_tx_buf[0] = INSTRUCTION_READ;
 	priv->spi_tx_buf[1] = reg;
 
-	gpio_set_value(GPIO_CS, 0);
+	gpio_set_value(gpios[GPIO_CS], 0);
 	mcp2515_spi_trans(priv, 3);
 	udelay(1);
-	gpio_set_value(GPIO_CS, 1);
+	gpio_set_value(gpios[GPIO_CS], 1);
 
 	val = priv->spi_rx_buf[2];
 
@@ -365,10 +366,10 @@ static void mcp2515_read_2regs(struct mcp2515_priv *priv, uint8_t reg, uint8_t *
 	priv->spi_tx_buf[0] = INSTRUCTION_READ;
 	priv->spi_tx_buf[1] = reg;
 
-	gpio_set_value(GPIO_CS, 0);
+	gpio_set_value(gpios[GPIO_CS], 0);
 	mcp2515_spi_trans(priv, 4);
 	udelay(1);
-	gpio_set_value(GPIO_CS, 1);
+	gpio_set_value(gpios[GPIO_CS], 1);
 
 	*v1 = priv->spi_rx_buf[2];
 	*v2 = priv->spi_rx_buf[3];
@@ -380,10 +381,10 @@ static void mcp2515_write_reg(struct mcp2515_priv *priv, u8 reg, uint8_t val) {
 	priv->spi_tx_buf[1] = reg;
 	priv->spi_tx_buf[2] = val;
 
-	gpio_set_value(GPIO_CS, 0);
+	gpio_set_value(gpios[GPIO_CS], 0);
 	mcp2515_spi_trans(priv, 3);
 	udelay(1);
-	gpio_set_value(GPIO_CS, 1);
+	gpio_set_value(gpios[GPIO_CS], 1);
 }
 
 static void mcp2515_write_bits(struct mcp2515_priv *priv, u8 reg, u8 mask, uint8_t val) {
@@ -393,15 +394,17 @@ static void mcp2515_write_bits(struct mcp2515_priv *priv, u8 reg, u8 mask, uint8
 	priv->spi_tx_buf[2] = mask;
 	priv->spi_tx_buf[3] = val;
 
-	gpio_set_value(GPIO_CS, 0);
+	gpio_set_value(gpios[GPIO_CS], 0);
 	mcp2515_spi_trans(priv, 4);
 	udelay(1);
-	gpio_set_value(GPIO_CS, 1);
+	gpio_set_value(gpios[GPIO_CS], 1);
 }
 
 static void mcp2515_hw_tx_frame(struct mcp2515_priv *priv, u8 *buf, int len, int tx_buf_idx) {
 	memcpy(priv->spi_tx_buf, buf, TXBDAT_OFF + len);
+	gpio_set_value(gpios[GPIO_CS], 0);
 	mcp2515_spi_trans(priv, TXBDAT_OFF + len);
+	gpio_set_value(gpios[GPIO_CS], 1);
 }
 
 static void mcp2515_hw_tx(struct mcp2515_priv *priv, struct can_frame *frame, int tx_buf_idx) {
@@ -425,17 +428,23 @@ static void mcp2515_hw_tx(struct mcp2515_priv *priv, struct can_frame *frame, in
 	buf[TXBEID0_OFF] = GET_BYTE(eid, 0);
 	buf[TXBDLC_OFF] = (rtr << DLC_RTR_SHIFT) | frame->can_dlc;
 	memcpy(buf + TXBDAT_OFF, frame->data, frame->can_dlc);
+	gpio_set_value(gpios[GPIO_CS], 0);
 	mcp2515_hw_tx_frame(priv, buf, frame->can_dlc, tx_buf_idx);
+	gpio_set_value(gpios[GPIO_CS], 1);
 
 	/* use INSTRUCTION_RTS, to avoid "repeated frame problem" */
 	priv->spi_tx_buf[0] = INSTRUCTION_RTS(1 << tx_buf_idx);
+	gpio_set_value(gpios[GPIO_CS], 0);
 	mcp2515_spi_trans(priv, 1);
+	gpio_set_value(gpios[GPIO_CS], 1);
 }
 
 static void mcp2515_hw_rx_frame(struct mcp2515_priv *priv, u8 *buf, int buf_idx) {
 
 	priv->spi_tx_buf[RXBCTRL_OFF] = INSTRUCTION_READ_RXB(buf_idx);
+	gpio_set_value(gpios[GPIO_CS], 0);
 	mcp2515_spi_trans(priv, SPI_TRANSFER_BUF_LEN);
+	gpio_set_value(gpios[GPIO_CS], 0);
 
 	memcpy(buf, priv->spi_rx_buf, SPI_TRANSFER_BUF_LEN);
 }
@@ -598,7 +607,9 @@ static int mcp2515_hw_reset(struct mcp2515_priv *priv) {
 	mdelay(MCP251X_OST_DELAY_MS);
 
 	priv->spi_tx_buf[0] = INSTRUCTION_RESET;
+	gpio_set_value(gpios[GPIO_CS], 0);
 	ret = mcp2515_spi_trans(priv, 1);
+	gpio_set_value(gpios[GPIO_CS], 1);
 
 	printk(KERN_INFO "%s: INSTRUCTION_RESET 0x%02x\n", __func__, ret);
 	if (ret)
@@ -607,7 +618,10 @@ static int mcp2515_hw_reset(struct mcp2515_priv *priv) {
 	/* Wait for oscillator startup timer after reset */
 	mdelay(MCP251X_OST_DELAY_MS);
 	
+	gpio_set_value(gpios[GPIO_CS], 0);
 	reg = mcp2515_read_reg(priv, CANSTAT);
+	gpio_set_value(gpios[GPIO_CS], 1);
+	printk(KERN_INFO "%s: CANSTAT 0x%02x\n", __func__, reg);
 	if ((reg & CANCTRL_REQOP_MASK) != CANCTRL_REQOP_CONF)
 		return -ENODEV;
 
@@ -1004,71 +1018,60 @@ static int mcp2515_can_probe(struct platform_device *pdev)
 	net = alloc_candev(sizeof(struct mcp2515_priv), TX_ECHO_SKB_MAX);
 	if (!net)
 		return -ENOMEM;
-	printk(KERN_INFO "%s: p1\n", __func__);
 
 	net->netdev_ops = &mcp2515_netdev_ops;
 	net->flags |= IFF_ECHO;
-	printk(KERN_INFO "%s: p2\n", __func__);
 
 	priv = netdev_priv(net);
-	printk(KERN_INFO "%s: p2a\n", __func__);
 	priv->can.bittiming_const = &mcp2515_bittiming_const;
-	printk(KERN_INFO "%s: p2b\n", __func__);
 	priv->can.do_set_mode = mcp2515_do_set_mode;
-	printk(KERN_INFO "%s: p3\n", __func__);
 	priv->can.clock.freq = freq / 2;
 	priv->can.ctrlmode_supported = CAN_CTRLMODE_3_SAMPLES |
 		CAN_CTRLMODE_LOOPBACK | CAN_CTRLMODE_LISTENONLY;
-	printk(KERN_INFO "%s: p4\n", __func__);
 	priv->net = net;
-	printk(KERN_INFO "%s: p5\n", __func__);
 	priv->clk = clk;
-	printk(KERN_INFO "%s: p6\n", __func__);
 
 	ret = mcp2515_power_enable(priv->power, 1);
 	if (ret)
 		goto out_clock;
-	printk(KERN_INFO "%s: p7\n", __func__);
 
 	mutex_init(&priv->mcp_lock);
-
-	printk(KERN_INFO "%s: p8\n", __func__);
 
 	/* GPIO stuff */
 	ret = gpio_request_one(gpios[GPIO_MISO], GPIOF_IN, "MCP2515 MISO");
 	printk(KERN_INFO "%s: p9\n", __func__);
         if (ret) {
-		printk(KERN_ERR "can't get MISO pin GPIO%d\n", GPIO_MISO);
+		printk(KERN_ERR "can't get MISO pin GPIO%d\n", gpios[GPIO_MISO]);
                 goto out_clock;
 	}
+	printk(KERN_INFO "requested GPIO%d for MISO\n", gpios[GPIO_MISO]);
 
 	ret = gpio_request_one(gpios[GPIO_MOSI], GPIOF_OUT_INIT_HIGH, "MCP2515 MOSI");
         if (ret) {
-		printk(KERN_ERR "can't get MOSI pin GPIO%d\n", GPIO_MOSI);
+		printk(KERN_ERR "can't get MOSI pin GPIO%d\n", gpios[GPIO_MOSI]);
                 goto out_mosi;
 	}
+	printk(KERN_INFO "requested GPIO%d for MOSI\n", gpios[GPIO_MOSI]);
 
-	ret = gpio_request_one(gpios[GPIO_CLK], GPIOF_OUT_INIT_HIGH, "MCP2515 CLK");
+	ret = gpio_request_one(gpios[GPIO_CLK], GPIOF_OUT_INIT_LOW, "MCP2515 CLK");
         if (ret) {
-		printk(KERN_ERR "can't get CLK pin GPIO%d\n", GPIO_CLK);
+		printk(KERN_ERR "can't get CLK pin GPIO%d\n", gpios[GPIO_CLK]);
                 goto out_clk;
 	}
 
 	ret = gpio_request_one(gpios[GPIO_CS], GPIOF_OUT_INIT_HIGH, "MCP2515 CS");
         if (ret) {
-		printk(KERN_ERR "can't get CS pin GPIO%d\n", GPIO_CS);
+		printk(KERN_ERR "can't get CS pin GPIO%d\n", gpios[GPIO_CS]);
                 goto out_cs;
 	}
 
 	ret = gpio_request_one(gpios[GPIO_INT], GPIOF_IN, "MCP2515 INT");
         if (ret) {
-		printk(KERN_ERR "can't get INT pin GPIO%d\n", GPIO_INT);
+		printk(KERN_ERR "can't get INT pin GPIO%d\n", gpios[GPIO_INT]);
                 goto out_int;
 	}
-	printk(KERN_INFO "%s: p10\n", __func__);
 
 	priv->irq=gpio_to_irq(gpios[GPIO_INT]);
-	printk(KERN_INFO "%s: p11\n", __func__);
 	if (priv->irq<0) {
 		printk(KERN_ERR "can't map GPIO %d to IRQ : error %d\n", gpios[GPIO_INT],  priv->irq);
 		goto out_int_irq;
@@ -1091,7 +1094,7 @@ static int mcp2515_can_probe(struct platform_device *pdev)
 		ret = -ENOMEM;
 		goto out_gpios;
 	}
-	printk(KERN_INFO "%s: p12\n", __func__);
+	printk(KERN_INFO "%s: mcp2515_hw_probe\n", __func__);
 	ret = mcp2515_hw_probe(priv);
 	printk(KERN_INFO "%s: p13\n", __func__);
 	if (ret)
@@ -1109,19 +1112,19 @@ static int mcp2515_can_probe(struct platform_device *pdev)
 out_gpios:
 
 out_int_irq:
-	gpio_free(GPIO_INT);
+	gpio_free(gpios[GPIO_INT]);
 
 out_int:
-	gpio_free(GPIO_CS);
+	gpio_free(gpios[GPIO_CS]);
 
 out_cs:
-	gpio_free(GPIO_CLK);
+	gpio_free(gpios[GPIO_CLK]);
 
 out_clk:
-	gpio_free(GPIO_MOSI);
+	gpio_free(gpios[GPIO_MOSI]);
 
 out_mosi:
-	gpio_free(GPIO_MISO);
+	gpio_free(gpios[GPIO_MISO]);
 
 error_probe:
 	mcp2515_power_enable(priv->power, 0);
