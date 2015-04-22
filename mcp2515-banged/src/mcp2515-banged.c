@@ -1096,16 +1096,15 @@ static int mcp2515_can_probe(struct platform_device *pdev)
 	}
 	printk(KERN_INFO "%s: mcp2515_hw_probe\n", __func__);
 	ret = mcp2515_hw_probe(priv);
-	printk(KERN_INFO "%s: p13\n", __func__);
 	if (ret)
 		goto out_gpios;
 
 	ret = register_candev(net);
-	printk(KERN_INFO "%s: registered CAN device\n", __func__);
 	if (ret)
 		goto out_gpios;
 
 	/* devm_can_led_init(net); */
+	printk(KERN_INFO "%s: registered CAN device\n", __func__);
 
 	return 0;
 
