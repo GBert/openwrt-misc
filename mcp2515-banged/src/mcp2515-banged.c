@@ -35,7 +35,6 @@
 
 #include <linux/can/core.h>
 #include <linux/can/dev.h>
-#include <linux/can/led.h>
 #include <linux/can/platform/mcp251x.h>
 #include <linux/clk.h>
 #include <linux/completion.h>
@@ -266,42 +265,11 @@ static void mcp2515_clean(struct net_device *net)
 	priv->tx_len = 0;
 }
 
-/*
- * Note about handling of error return of mcp2515_spi_trans: accessing
- * registers via SPI is not really different conceptually than using
- * normal I/O assembler instructions, although it's much more
- * complicated from a practical POV. So it's not advisable to always
- * check the return value of this function. Imagine that every
- * read{b,l}, write{b,l} and friends would be bracketed in "if ( < 0)
- * error();", it would be a great mess (well there are some situation
- * when exception handling C++ like could be useful after all). So we
- * just check that transfers are OK at the beginning of our
- * conversation with the chip and to avoid doing really nasty things
- * (like injecting bogus packets in the network stack).
- */
 static int mcp2515_spi_trans(struct mcp2515_priv *priv, int len) {
 	int ret;
 	int i, j;
 	uint8_t data_in, data_out;
 	ret = 0;
-
-/*	struct mcp2515_priv *priv = spi_get_drvdata(spi);
-	struct spi_transfer t = {
-		.tx_buf = priv->spi_tx_buf,
-		.rx_buf = priv->spi_rx_buf,
-		.len = len,
-		.cs_change = 0,
-	};
-	struct spi_message m;
-
-	spi_message_init(&m);
-
-	spi_message_add_tail(&t, &m);
-
-	ret = spi_sync(spi, &m);
-	if (ret)
-		dev_err(&spi->dev, "spi transfer failed: ret = %d\n", ret);
-*/
 
 	gpio_set_value(gpios[GPIO_CS], 0);
 	/* MSB first */
@@ -413,14 +381,6 @@ static void mcp2515_hw_tx(struct mcp2515_priv *priv, struct can_frame *frame, in
 	mcp2515_spi_trans(priv, 1);
 }
 
-static void mcp2515_hw_rx_frame(struct mcp2515_priv *priv, u8 *buf, int buf_idx) {
-
-	priv->spi_tx_buf[RXBCTRL_OFF] = INSTRUCTION_READ_RXB(buf_idx);
-	mcp2515_spi_trans(priv, SPI_TRANSFER_BUF_LEN);
-
-	memcpy(buf, priv->spi_rx_buf, SPI_TRANSFER_BUF_LEN);
-}
-
 static void mcp2515_hw_rx(struct mcp2515_priv *priv, int buf_idx) {
 	struct sk_buff *skb;
 	struct can_frame *frame;
@@ -433,7 +393,10 @@ static void mcp2515_hw_rx(struct mcp2515_priv *priv, int buf_idx) {
 		return;
 	}
 
-	mcp2515_hw_rx_frame(priv, buf, buf_idx);
+	priv->spi_tx_buf[RXBCTRL_OFF] = INSTRUCTION_READ_RXB(buf_idx);
+	mcp2515_spi_trans(priv, SPI_TRANSFER_BUF_LEN);
+	memcpy(buf, priv->spi_rx_buf, SPI_TRANSFER_BUF_LEN);
+
 	if (buf[RXBSIDL_OFF] & RXBSIDL_IDE) {
 		/* Extended ID format */
 		frame->can_id = CAN_EFF_FLAG;
@@ -462,8 +425,6 @@ static void mcp2515_hw_rx(struct mcp2515_priv *priv, int buf_idx) {
 
 	priv->net->stats.rx_packets++;
 	priv->net->stats.rx_bytes += frame->can_dlc;
-
-	/* can_led_event(priv->net, CAN_LED_EVENT_RX); */
 
 	netif_rx_ni(skb);
 }
@@ -581,7 +542,7 @@ static int mcp2515_do_set_bittiming(struct net_device *net)
 	mcp2515_write_reg(priv, CNF2, CNF2_BTLMODE | (priv->can.ctrlmode & CAN_CTRLMODE_3_SAMPLES ?
 			   CNF2_SAM : 0) | ((bt->phase_seg1 - 1) << CNF2_PS1_SHIFT) | (bt->prop_seg - 1));
 	mcp2515_write_bits(priv, CNF3, CNF3_PHSEG2_MASK, (bt->phase_seg2 - 1));
-	dev_dbg(&net, "CNF: 0x%02x 0x%02x 0x%02x\n",
+	printk(KERN_INFO "%s: CNF: 0x%02x 0x%02x 0x%02x\n", __func__,
 		mcp2515_read_reg(priv, CNF1),
 		mcp2515_read_reg(priv, CNF2),
 		mcp2515_read_reg(priv, CNF3));
@@ -658,6 +619,7 @@ static int mcp2515_stop(struct net_device *net) {
 
 	close_candev(net);
 
+	printk(KERN_INFO "%s\n", __func__);
 	priv->force_quit = 1;
 	/* TODO */
 	/* free_irq(spi->irq, priv); */
@@ -677,8 +639,6 @@ static int mcp2515_stop(struct net_device *net) {
 	priv->can.state = CAN_STATE_STOPPED;
 
 	mutex_unlock(&priv->mcp_lock);
-
-	/* can_led_event(net, CAN_LED_EVENT_STOP); */
 
 	return 0;
 }
@@ -878,7 +838,6 @@ static irqreturn_t mcp2515_can_ist(int irq, void *dev_id)
 		if (intf & CANINTF_TX) {
 			net->stats.tx_packets++;
 			net->stats.tx_bytes += priv->tx_len - 1;
-			/* can_led_event(net, CAN_LED_EVENT_TX); */
 			if (priv->tx_len) {
 				can_get_echo_skb(net, 0);
 				priv->tx_len = 0;
@@ -940,8 +899,6 @@ static int mcp2515_open(struct net_device *net)
 		mcp2515_open_clean(net);
 		goto open_unlock;
 	}
-	/* TODO */
-	/* can_led_event(net, CAN_LED_EVENT_OPEN); */
 
 	netif_wake_queue(net);
 
@@ -1077,7 +1034,6 @@ static int mcp2515_can_probe(struct platform_device *pdev)
 	if (ret)
 		goto out_gpios;
 
-	/* devm_can_led_init(net); */
 	printk(KERN_INFO "%s: registered CAN device\n", __func__);
 
 	return 0;
@@ -1098,8 +1054,6 @@ out_clk:
 
 out_mosi:
 	gpio_free(gpios[GPIO_MISO]);
-
-error_probe:
 
 out_clock:
 	free_candev(net);
