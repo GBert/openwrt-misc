@@ -474,7 +474,7 @@ static void mcp2515_hw_rx(struct mcp2515_priv *priv, int buf_idx) {
 	priv->net->stats.rx_packets++;
 	priv->net->stats.rx_bytes += frame->can_dlc;
 
-	can_led_event(priv->net, CAN_LED_EVENT_RX);
+	/* can_led_event(priv->net, CAN_LED_EVENT_RX); */
 
 	netif_rx_ni(skb);
 }
@@ -702,7 +702,7 @@ static int mcp2515_stop(struct net_device *net) {
 
 	mutex_unlock(&priv->mcp_lock);
 
-	can_led_event(net, CAN_LED_EVENT_STOP);
+	/* can_led_event(net, CAN_LED_EVENT_STOP); */
 
 	return 0;
 }
@@ -902,7 +902,7 @@ static irqreturn_t mcp2515_can_ist(int irq, void *dev_id)
 		if (intf & CANINTF_TX) {
 			net->stats.tx_packets++;
 			net->stats.tx_bytes += priv->tx_len - 1;
-			can_led_event(net, CAN_LED_EVENT_TX);
+			/* can_led_event(net, CAN_LED_EVENT_TX); */
 			if (priv->tx_len) {
 				can_get_echo_skb(net, 0);
 				priv->tx_len = 0;
