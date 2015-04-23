@@ -919,7 +919,7 @@ static int mcp2515_open(struct net_device *net)
 {
 	struct mcp2515_priv *priv = netdev_priv(net);
 
-	unsigned long flags = IRQF_ONESHOT | IRQF_TRIGGER_FALLING;
+	unsigned long flags = IRQF_TRIGGER_FALLING;
 	int ret;
 
 	ret = open_candev(net);
@@ -936,7 +936,7 @@ static int mcp2515_open(struct net_device *net)
 	priv->tx_skb = NULL;
 	priv->tx_len = 0;
 
-	ret = request_irq(priv->irq, mcp2515_can_ist, flags | IRQF_ONESHOT, DEVICE_NAME, priv);
+	ret = request_irq(priv->irq, mcp2515_can_ist, flags, DEVICE_NAME, priv);
 	if (ret) {
 		/* TODO */
 		/* dev_err(&spi->dev, "failed to acquire irq %d\n", spi->irq); */
