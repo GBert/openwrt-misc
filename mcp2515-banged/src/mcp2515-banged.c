@@ -333,7 +333,7 @@ static int mcp2515_spi_trans(struct mcp2515_priv *priv, int len) {
 		}
 		priv->spi_rx_buf[i] = data_in;
 	}
-	udelay(1);
+	udelay(5);
 	gpio_set_value(gpios[GPIO_CS], 1);
 	/* printk(KERN_INFO "\n%s: [0x%02x] write ", __func__, len);
 	for (i = 0; i < len; i++)
