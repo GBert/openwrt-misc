@@ -252,15 +252,6 @@ struct mcp2515_priv {
 	struct clk *clk;
 };
 
-#define MCP251X_IS(_model) \
-static inline int mcp2515_is_##_model(struct spi_device *spi) \
-{ \
-	struct mcp2515_priv *priv = spi_get_drvdata(spi); \
-	return priv->model == CAN_MCP251X_MCP##_model; \
-}
-
-MCP251X_IS(2515);
-
 static void mcp2515_clean(struct net_device *net)
 {
 	struct mcp2515_priv *priv = netdev_priv(net);
