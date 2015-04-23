@@ -278,19 +278,23 @@ static int mcp2515_spi_trans(struct mcp2515_priv *priv, int len) {
 		data_in = 0;
 		for (j = 0; j < 8; j++) {
 			data_in  <<= 1;
+			/* master data is valid on the rising edge */
 			if (data_out & 0x80)
 				gpio_set_value(gpios[GPIO_MOSI],1);
 			else
 				gpio_set_value(gpios[GPIO_MOSI],0);
+
 			gpio_set_value(gpios[GPIO_CLK], 1);
+			data_out <<= 1;
+
+			/* slave data is vlaid on the falling edge */
+			gpio_set_value(gpios[GPIO_CLK], 0);
 			if (gpio_get_value(gpios[GPIO_MISO]))
 				data_in |= 0x01;
-			gpio_set_value(gpios[GPIO_CLK], 0);
-			data_out <<= 1;
 		}
 		priv->spi_rx_buf[i] = data_in;
 	}
-	udelay(5);
+	udelay(1);
 	gpio_set_value(gpios[GPIO_CS], 1);
 	/* printk(KERN_INFO "\n%s: [0x%02x] write ", __func__, len);
 	for (i = 0; i < len; i++)
