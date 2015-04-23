@@ -249,8 +249,6 @@ struct mcp2515_priv {
 #define AFTER_SUSPEND_POWER 4
 #define AFTER_SUSPEND_RESTART 8
 	int restart_tx;
-	struct regulator *power;
-	struct regulator *transceiver;
 	struct clk *clk;
 };
 
@@ -655,24 +653,12 @@ static int mcp2515_hw_probe(struct mcp2515_priv *priv) {
 	return 0;
 }
 
-static int mcp2515_power_enable(struct regulator *reg, int enable)
-{
-	if (IS_ERR_OR_NULL(reg))
-		return 0;
-
-	if (enable)
-		return regulator_enable(reg);
-	else
-		return regulator_disable(reg);
-}
-
 static void mcp2515_open_clean(struct net_device *net)
 {
 	struct mcp2515_priv *priv = netdev_priv(net);
 
 	free_irq(priv->irq, priv);
 	mcp2515_hw_sleep(priv);
-	mcp2515_power_enable(priv->transceiver, 0);
 	close_candev(net);
 }
 
@@ -696,7 +682,6 @@ static int mcp2515_stop(struct net_device *net) {
 	mcp2515_write_reg(priv, TXBCTRL(0), 0);
 	mcp2515_clean(net);
 
-	mcp2515_power_enable(priv->transceiver, 0);
 
 	priv->can.state = CAN_STATE_STOPPED;
 
@@ -930,7 +915,6 @@ static int mcp2515_open(struct net_device *net)
 	}
 
 	mutex_lock(&priv->mcp_lock);
-	mcp2515_power_enable(priv->transceiver, 1);
 
 	priv->force_quit = 0;
 	priv->tx_skb = NULL;
@@ -940,7 +924,6 @@ static int mcp2515_open(struct net_device *net)
 	if (ret) {
 		/* TODO */
 		/* dev_err(&spi->dev, "failed to acquire irq %d\n", spi->irq); */
-		mcp2515_power_enable(priv->transceiver, 0);
 		close_candev(net);
 		goto open_unlock;
 	}
@@ -1036,10 +1019,6 @@ static int mcp2515_can_probe(struct platform_device *pdev)
 	priv->net = net;
 	priv->clk = clk;
 
-	ret = mcp2515_power_enable(priv->power, 1);
-	if (ret)
-		goto out_clock;
-
 	mutex_init(&priv->mcp_lock);
 
 	/* GPIO stuff */
@@ -1130,7 +1109,6 @@ out_mosi:
 	gpio_free(gpios[GPIO_MISO]);
 
 error_probe:
-	mcp2515_power_enable(priv->power, 0);
 
 out_clock:
 	free_candev(net);
@@ -1145,8 +1123,6 @@ static int mcp2515_can_remove(struct platform_device *pdev)
 	struct mcp2515_priv *priv = netdev_priv(net_dev);
 
 	unregister_candev(net_dev);
-
-	mcp2515_power_enable(priv->power, 0);
 
 	if (!IS_ERR(priv->clk))
 		clk_disable_unprepare(priv->clk);
@@ -1171,15 +1147,9 @@ static int __maybe_unused mcp2515_can_suspend(struct device *device)
 		netif_device_detach(net_dev);
 
 		mcp2515_hw_sleep(priv);
-		mcp2515_power_enable(priv->transceiver, 0);
 		priv->after_suspend = AFTER_SUSPEND_UP;
 	} else {
 		priv->after_suspend = AFTER_SUSPEND_DOWN;
-	}
-
-	if (!IS_ERR_OR_NULL(priv->power)) {
-		regulator_disable(priv->power);
-		priv->after_suspend |= AFTER_SUSPEND_POWER;
 	}
 
 	return 0;
@@ -1191,11 +1161,9 @@ static int __maybe_unused mcp2515_can_resume(struct device *device)
 	struct mcp2515_priv *priv = netdev_priv(net_dev);
 
 	if (priv->after_suspend & AFTER_SUSPEND_POWER) {
-		mcp2515_power_enable(priv->power, 1);
 		/* queue_work(priv->wq, &priv->restart_work); */
 	} else {
 		if (priv->after_suspend & AFTER_SUSPEND_UP) {
-			mcp2515_power_enable(priv->transceiver, 1);
 			/* queue_work(priv->wq, &priv->restart_work); */
 		} else {
 			priv->after_suspend = 0;
