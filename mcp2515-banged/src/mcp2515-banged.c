@@ -286,11 +286,11 @@ static int mcp2515_spi_trans(struct mcp2515_priv *priv, int len) {
 
 			gpio_set_value(gpios[GPIO_CLK], 1);
 			data_out <<= 1;
-
-			/* slave data is vlaid on the falling edge */
-			gpio_set_value(gpios[GPIO_CLK], 0);
+			/* slave data ssems to be valid here */
 			if (gpio_get_value(gpios[GPIO_MISO]))
 				data_in |= 0x01;
+
+			gpio_set_value(gpios[GPIO_CLK], 0);
 		}
 		priv->spi_rx_buf[i] = data_in;
 	}
@@ -396,6 +396,8 @@ static void mcp2515_hw_rx(struct mcp2515_priv *priv, int buf_idx) {
 		priv->net->stats.rx_dropped++;
 		return;
 	}
+
+	memset(priv->spi_tx_buf, 0, SPI_TRANSFER_BUF_LEN);
 
 	priv->spi_tx_buf[RXBCTRL_OFF] = INSTRUCTION_READ_RXB(buf_idx);
 	mcp2515_spi_trans(priv, SPI_TRANSFER_BUF_LEN);
