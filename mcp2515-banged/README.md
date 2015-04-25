@@ -1,7 +1,7 @@
 # Bit Banged MCP2515 driver
 
 this code is an example how you should **not** write Linux kernel modules.
-The CAN interface device driver is tightly interlocked with GPIO bibanging
+The CAN interface device driver is tightly interlocked with GPIO SPI bibanging
 code. The interclock avoids rescheduling and speed up the whole driver.
 
 ## TODO
