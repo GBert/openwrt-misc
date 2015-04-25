@@ -9,7 +9,7 @@ driver.
 
  * fix exit code
  * speed up bitbanging
- * speed up reding RXxBUF (only DLC bytes)
+ * speed up reading RXxBUF (only DLC bytes)
 
 ### Outlook
 
