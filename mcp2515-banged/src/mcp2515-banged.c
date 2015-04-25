@@ -860,7 +860,7 @@ static int mcp2515_open(struct net_device *net)
 {
 	struct mcp2515_priv *priv = netdev_priv(net);
 
-	unsigned long flags = IRQF_TRIGGER_FALLING;
+	unsigned long flags = IRQF_TRIGGER_LOW;
 	int ret;
 
 	ret = open_candev(net);
