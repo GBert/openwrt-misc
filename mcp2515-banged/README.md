@@ -7,9 +7,9 @@ driver.
 
 ## TODO
 
-... speed up reding RXxBUF (only DLC bytes)
-... fix exit code
-... speedup bitbanging
+ * speed up reding RXxBUF (only DLC bytes)
+ * fix exit code
+ * speedup bitbanging
 
 ### Outlook
 
