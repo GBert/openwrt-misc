@@ -724,7 +724,6 @@ static void mcp2515_restart_work_handler(struct work_struct *ws)
 
 static irqreturn_t mcp2515_can_ist(int irq, void *dev_id) {
 	struct mcp2515_priv *priv = dev_id;
-	/* struct spi_device *spi = priv->spi; */
 	struct net_device *net = priv->net;
 
 	mutex_lock(&priv->mcp_lock);
@@ -741,17 +740,16 @@ static irqreturn_t mcp2515_can_ist(int irq, void *dev_id) {
 
 		/* receive buffer 0 */
 		if (intf & CANINTF_RX0IF) {
-			mcp2515_hw_rx(priv, 0);
 			/*
 			 * Free one buffer ASAP
 			 * (The MCP2515 does this automatically.)
 			 */
+			mcp2515_hw_rx(priv, 0);
 		}
 
 		/* receive buffer 1 */
 		if (intf & CANINTF_RX1IF) {
 			mcp2515_hw_rx(priv, 1);
-			/* the MCP2515 does this automatically */
 		}
 
 		/* any error or tx interrupt we need to clear? */
@@ -906,33 +904,7 @@ static const struct net_device_ops mcp2515_netdev_ops = {
 	.ndo_change_mtu = can_change_mtu,
 };
 
-#if 0
-
-static const struct of_device_id mcp2515_of_match[] = {
-	{
-		.compatible	= "microchip,mcp2515",
-		.data		= (void *)CAN_MCP251X_MCP2515,
-	},
-	{ }
-};
-MODULE_DEVICE_TABLE(of, mcp2515_of_match);
-
-static const struct spi_device_id mcp2515_id_table[] = {
-	{
-		.name		= "mcp2515",
-		.driver_data	= (kernel_ulong_t)CAN_MCP251X_MCP2515,
-	},
-	{ }
-};
-MODULE_DEVICE_TABLE(spi, mcp2515_id_table);
-#endif
-
-/* static int mcp2515_can_probe(struct spi_device *spi) */
-static int mcp2515_can_probe(struct platform_device *pdev)
-{
-	/* const struct of_device_id *of_id = of_match_device(mcp2515_of_match,
-							   &spi->dev);
-	struct mcp2515_platform_data *pdata = dev_get_platdata(&spi->dev); */
+static int mcp2515_can_probe(struct platform_device *pdev) {
 	struct mcp2515_priv *priv;
 
 	struct net_device *net;
@@ -1000,8 +972,6 @@ static int mcp2515_can_probe(struct platform_device *pdev)
 		goto out_int_irq;
 	}
 
-	/* SET_NETDEV_DEV(net, &spi->dev); */
-	/* netif_napi_add(dev, &priv->napi, flexcan_poll, FLEXCAN_NAPI_WEIGHT); */
 	platform_set_drvdata(pdev, net);
 	SET_NETDEV_DEV(net, &pdev->dev);
 
@@ -1056,11 +1026,14 @@ out_clock:
 /* static int mcp2515_can_remove(struct spi_device *spi) */
 static int mcp2515_can_remove(struct platform_device *pdev)
 {
+	int i;
 	struct net_device *net_dev = platform_get_drvdata(pdev);
 	struct mcp2515_priv *priv = netdev_priv(net_dev);
 
 	printk(KERN_INFO "%s\n", __func__);
 	unregister_candev(net_dev);
+	for (i = 0; i < 5; i++)
+		gpio_free(gpios[i]);
 
 	if (!IS_ERR(priv->clk))
 		clk_disable_unprepare(priv->clk);
@@ -1122,10 +1095,8 @@ static struct platform_driver mcp2515_can_driver = {
         .driver = {
                 .name = DEVICE_NAME,
                 .owner = THIS_MODULE,
-                /* .of_match_table = mcp2515_of_match, */
                 /* .pm = &mcp2515_can_pm_ops, */
         },
-        /* .id_table = mcp2515_id_table, */
         .probe = mcp2515_can_probe,
         .remove = mcp2515_can_remove,
 };
