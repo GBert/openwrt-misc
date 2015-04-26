@@ -237,7 +237,6 @@ struct mcp2515_priv {
 	struct sk_buff *tx_skb;
 	int tx_len;
 
-	struct workqueue_struct *wq;
 	struct work_struct tx_work;
 	struct work_struct restart_work;
 
@@ -445,7 +444,6 @@ static netdev_tx_t mcp2515_hard_start_xmit(struct sk_buff *skb, struct net_devic
 	struct mcp2515_priv *priv = netdev_priv(net);
 	struct can_frame *frame;
 
-
 	/* printk(KERN_INFO "%s\n", __func__); */
 	if (priv->tx_skb || priv->tx_len) {
 		/* dev_warn(&spi->dev, "hard_xmit called while tx busy\n"); */
@@ -458,8 +456,6 @@ static netdev_tx_t mcp2515_hard_start_xmit(struct sk_buff *skb, struct net_devic
 
 	netif_stop_queue(net);
 	priv->tx_skb = skb;
-	/* TODO */
-	/* queue_work(priv->wq, &priv->tx_work); */
 
 	mutex_lock(&priv->mcp_lock);
 	if (priv->tx_skb) {
@@ -611,10 +607,10 @@ static int mcp2515_hw_probe(struct mcp2515_priv *priv) {
 	return 0;
 }
 
-static void mcp2515_open_clean(struct net_device *net)
-{
+static void mcp2515_open_clean(struct net_device *net) {
 	struct mcp2515_priv *priv = netdev_priv(net);
 
+	printk(KERN_INFO "%s\n", __func__);
 	free_irq(priv->irq, priv);
 	mcp2515_hw_sleep(priv);
 	close_candev(net);
@@ -623,14 +619,12 @@ static void mcp2515_open_clean(struct net_device *net)
 static int mcp2515_stop(struct net_device *net) {
 	struct mcp2515_priv *priv = netdev_priv(net);
 
+	printk(KERN_INFO "%s\n", __func__);
 	close_candev(net);
 
-	printk(KERN_INFO "%s\n", __func__);
 	priv->force_quit = 1;
-	/* TODO */
-	/* free_irq(spi->irq, priv); */
-	/* destroy_workqueue(priv->wq); */
-	priv->wq = NULL;
+
+	free_irq(priv->irq, priv);
 
 	mutex_lock(&priv->mcp_lock);
 
@@ -641,7 +635,6 @@ static int mcp2515_stop(struct net_device *net) {
 	mcp2515_write_reg(priv, TXBCTRL(0), 0);
 	mcp2515_clean(net);
 
-
 	priv->can.state = CAN_STATE_STOPPED;
 
 	mutex_unlock(&priv->mcp_lock);
@@ -649,8 +642,7 @@ static int mcp2515_stop(struct net_device *net) {
 	return 0;
 }
 
-static void mcp2515_error_skb(struct net_device *net, int can_id, int data1)
-{
+static void mcp2515_error_skb(struct net_device *net, int can_id, int data1) {
 	struct sk_buff *skb;
 	struct can_frame *frame;
 
@@ -730,8 +722,7 @@ static void mcp2515_restart_work_handler(struct work_struct *ws)
 }
 #endif
 
-static irqreturn_t mcp2515_can_ist(int irq, void *dev_id)
-{
+static irqreturn_t mcp2515_can_ist(int irq, void *dev_id) {
 	struct mcp2515_priv *priv = dev_id;
 	/* struct spi_device *spi = priv->spi; */
 	struct net_device *net = priv->net;
@@ -856,12 +847,13 @@ static irqreturn_t mcp2515_can_ist(int irq, void *dev_id)
 	return IRQ_HANDLED;
 }
 
-static int mcp2515_open(struct net_device *net)
-{
+static int mcp2515_open(struct net_device *net) {
 	struct mcp2515_priv *priv = netdev_priv(net);
 
 	unsigned long flags = IRQF_TRIGGER_LOW;
 	int ret;
+
+	printk(KERN_INFO "%s\n", __func__);
 
 	ret = open_candev(net);
 	if (ret) {
@@ -884,12 +876,6 @@ static int mcp2515_open(struct net_device *net)
 		goto open_unlock;
 	}
 
-	/* TODO */
-	/*
-	priv->wq = create_freezable_workqueue("mcp2515_wq");
-	INIT_WORK(&priv->tx_work, mcp2515_tx_work_handler);
-	INIT_WORK(&priv->restart_work, mcp2515_restart_work_handler);
-	*/
 	ret = mcp2515_hw_reset(priv);
 	if (ret) {
 		mcp2515_open_clean(net);
@@ -1016,7 +1002,7 @@ static int mcp2515_can_probe(struct platform_device *pdev)
 
 	/* SET_NETDEV_DEV(net, &spi->dev); */
 	/* netif_napi_add(dev, &priv->napi, flexcan_poll, FLEXCAN_NAPI_WEIGHT); */
-	/* platform_set_drvdata(pdev, dev); */
+	platform_set_drvdata(pdev, net);
 	SET_NETDEV_DEV(net, &pdev->dev);
 
 	/* Here is OK to not lock the MCP, no one knows about it yet */
@@ -1073,6 +1059,7 @@ static int mcp2515_can_remove(struct platform_device *pdev)
 	struct net_device *net_dev = platform_get_drvdata(pdev);
 	struct mcp2515_priv *priv = netdev_priv(net_dev);
 
+	printk(KERN_INFO "%s\n", __func__);
 	unregister_candev(net_dev);
 
 	if (!IS_ERR(priv->clk))
