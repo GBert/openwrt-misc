@@ -28,7 +28,7 @@
 #include <linux/can.h>
 #include <linux/can/dev.h>
 #include <linux/can/error.h>
-#include <linux/can/led.h>
+/* #include <linux/can/led.h> */
 
 /* driver constants */
 #define MAX_RX_URBS			20
@@ -46,7 +46,7 @@ enum mcp2515dm_bm_endpoint {
 };
 
 /* device CAN clock */
-#define MCP2515DM_BM_CLOCK		16000000
+#define MCP2515DM_BM_CLOCK		20000000
 
 /* setup flags */
 #define MCP2515DM_BM_SILENT			0x01
@@ -1031,7 +1031,7 @@ static const struct net_device_ops mcp2515dm_bm_netdev_ops = {
 	.ndo_open = mcp2515dm_bm_open,
 	.ndo_stop = mcp2515dm_bm_close,
 	.ndo_start_xmit = mcp2515dm_bm_start_xmit,
-	.ndo_change_mtu = can_change_mtu,
+	/* .ndo_change_mtu = can_change_mtu, */
 };
 
 static const struct can_bittiming_const mcp2515dm_bm_bittiming_const = {
