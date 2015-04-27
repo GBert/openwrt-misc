@@ -1,9 +1,6 @@
 /*
  * CAN bus driver for Microchip 251x CAN Controller with SPI Interface
  *
- * MCP2510 support and bug fixes by Christian Pellegrin
- * <chripell@evolware.org>
- *
  * Copyright 2009 Christian Pellegrin EVOL S.r.l.
  *
  * Copyright 2007 Raymarine UK, Ltd. All Rights Reserved.
@@ -295,16 +292,6 @@ static int mcp2515_spi_trans(struct mcp2515_priv *priv, int len) {
 	}
 	udelay(1);
 	gpio_set_value(gpios[GPIO_CS], 1);
-	/* printk(KERN_INFO "\n%s: [0x%02x] write ", __func__, len);
-	for (i = 0; i < len; i++)
-		printk(KERN_INFO "0x%02x ", priv->spi_tx_buf[i]);
-
-	printk(KERN_INFO "\n%s: [0x%02x] read ", __func__, len);
-	for (i = 0; i < len; i++)
-		printk(KERN_INFO "0x%02x ", priv->spi_rx_buf[i]);
-
-	printk(KERN_INFO "\n");
-	*/
 	return ret;
 }
 
