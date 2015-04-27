@@ -266,7 +266,7 @@ struct mcp2515dm_bm_priv {
 
 	struct can_berr_counter bec;
 
-	u8 *cmd_msg_buffer;
+	u8 *usb_msg_buffer;
 
 	struct mutex mcp2515dm_bm_cmd_lock;
 
@@ -367,24 +367,24 @@ static int mcp2515dm_bm_send_cmd(struct mcp2515dm_bm_priv *priv,
 
 	mutex_lock(&priv->mcp2515dm_bm_cmd_lock);
 
-	memcpy(priv->cmd_msg_buffer, out, sizeof(struct mcp2515dm_bm_cmd_msg));
+	memcpy(priv->usb_msg_buffer, out, sizeof(struct usb_msg));
 
-	err = mcp2515dm_bm_send_cmd_msg(priv, priv->cmd_msg_buffer,
-					sizeof(struct mcp2515dm_bm_cmd_msg));
+	err = mcp2515dm_bm_send_cmd_msg(priv, priv->usb_msg_buffer,
+					sizeof(struct usb_msg));
 	if (err < 0) {
 		netdev_err(netdev, "sending command message failed\n");
 		goto failed;
 	}
 
-	err = mcp2515dm_bm_wait_cmd_msg(priv, priv->cmd_msg_buffer,
-					sizeof(struct mcp2515dm_bm_cmd_msg),
+	err = mcp2515dm_bm_wait_cmd_msg(priv, priv->usb_msg_buffer,
+					sizeof(struct usb_msg),
 					&num_bytes_read);
 	if (err < 0) {
 		netdev_err(netdev, "no command message answer\n");
 		goto failed;
 	}
 
-	memcpy(in, priv->cmd_msg_buffer, sizeof(struct mcp2515dm_bm_cmd_msg));
+	memcpy(in, priv->usb_msg_buffer, sizeof(struct usb_msg));
 
 	if (in->begin != MCP2515DM_BM_CMD_START
 	    || in->end != MCP2515DM_BM_CMD_END || num_bytes_read != 16
@@ -1100,9 +1100,12 @@ static int mcp2515dm_bm_probe(struct usb_interface *intf,
 	for (i = 0; i < MAX_TX_URBS; i++)
 		priv->tx_contexts[i].echo_index = MAX_TX_URBS;
 
-	priv->cmd_msg_buffer = kzalloc(sizeof(struct mcp2515dm_bm_cmd_msg),
-				       GFP_KERNEL);
-	if (!priv->cmd_msg_buffer)
+	/* TODO */
+	/* priv->cmd_msg_buffer = kzalloc(sizeof(struct mcp2515dm_bm_cmd_msg),
+				       GFP_KERNEL); */
+	priv->usb_msg_buffer = kzalloc(sizeof(struct usb_msg), GFP_KERNEL);
+
+	if (!priv->usb_msg_buffer)
 		goto cleanup_candev;
 
 	usb_set_intfdata(intf, priv);
@@ -1136,7 +1139,7 @@ cleanup_unregister_candev:
 	unregister_netdev(priv->netdev);
 
 cleanup_cmd_msg_buffer:
-	kfree(priv->cmd_msg_buffer);
+	kfree(priv->usb_msg_buffer);
 
 cleanup_candev:
 	free_candev(netdev);
