@@ -16,10 +16,8 @@ include $(INCLUDE_DIR)/package.mk
 define KernelPackage/mcp2515-banged
   SUBMENU:=CAN Support
   TITLE:=MCP2515 banged module
-  DEPENDS:=@GPIO_SUPPORT
-  FILES:=$(PKG_BUILD_DIR)/mcp2515-banged.ko \
-	 $(LINUX_DIR)/net/can/can.ko \
-         $(LINUX_DIR)/drivers/net/can/can-dev.ko
+  DEPENDS:=@GPIO_SUPPORT +kmod-can +kmod-can-dev
+  FILES:=$(PKG_BUILD_DIR)/mcp2515-banged.ko
   KCONFIG:=
 endef
 
