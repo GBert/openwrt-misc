@@ -18,6 +18,7 @@ Challenge: get the RX0BUF in 47 us starting at INT.
 min 47 bits (no bit stuffing)
 
 ![SPI Performance](https://github.com/GBert/openwrt-misc/blob/master/mcp2515-banged/pictures/mcp2515_b_perf_04.png)
+
 Sequence
 - interrupt
 - reading (0x03) CANINTF (0x2c) and EFLG
