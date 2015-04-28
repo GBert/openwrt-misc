@@ -27,7 +27,7 @@ Sequence
 
 ### Performance
 
-In this sequence the interrupt is cleared after ~60us - close to 47us.
+In this sequence the interrupt is cleared fast enough, because no data bytes a read (DLC=0)
 
-![SPI Performance](https://github.com/GBert/openwrt-misc/blob/master/mcp2515-banged/pictures/mcp2515_b_perf_03.png)
+![SPI Performance](https://github.com/GBert/openwrt-misc/blob/master/mcp2515-banged/pictures/mcp2515_b_dlc_a_01.png)
 
