@@ -18,3 +18,5 @@ Challenge: get the RX0BUF in 47 us starting at INT.
 min 47 bits (no bit stuffing)
 
 [![alt text](https://github.com/GBert/openwrt-misc/blob/master/mcp2515-banged/pictures/mcp2515_b_perf_03.png "SPI Performance")]
+
+The interrupt is cleared after ~60us - close to 47us.
