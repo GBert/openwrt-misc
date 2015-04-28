@@ -295,6 +295,50 @@ static int mcp2515_spi_trans(struct mcp2515_priv *priv, int len) {
 	return ret;
 }
 
+static int mcp2515_spi_rxbuf(struct mcp2515_priv *priv) {
+	int ret;
+	int i, j, dlc = 8;
+	uint8_t data_in, data_out;
+	ret = 0;
+
+	gpio_set_value(gpios[GPIO_CS], 0);
+	for (i = 0; i < SPI_TRANSFER_BUF_LEN; i++) {
+		data_out = priv->spi_tx_buf[i];
+		data_in = 0;
+		for (j = 0; j < 8; j++) {
+			data_in  <<= 1;
+			/* master data is valid on the rising edge */
+			if (data_out & 0x80)
+				gpio_set_value(gpios[GPIO_MOSI],1);
+			else
+				gpio_set_value(gpios[GPIO_MOSI],0);
+
+			gpio_set_value(gpios[GPIO_CLK], 1);
+			data_out <<= 1;
+			/* slave data ssems to be valid here */
+			if (gpio_get_value(gpios[GPIO_MISO]))
+				data_in |= 0x01;
+
+			gpio_set_value(gpios[GPIO_CLK], 0);
+		}
+		priv->spi_rx_buf[i] = data_in;
+		/* read DLC */
+		if (i==5)
+			dlc = data_in & 0x0f;
+		/* exit loop if we reached the DLC value */
+		if ((i - 5) >= dlc)
+			break;
+	}
+
+	udelay(1);
+	gpio_set_value(gpios[GPIO_CS], 1);
+	return ret;
+}
+
+
+
+
+
 static u8 mcp2515_read_reg(struct mcp2515_priv *priv, uint8_t reg) {
 	u8 val = 0;
 
@@ -386,7 +430,9 @@ static void mcp2515_hw_rx(struct mcp2515_priv *priv, int buf_idx) {
 	memset(priv->spi_tx_buf, 0, SPI_TRANSFER_BUF_LEN);
 
 	priv->spi_tx_buf[RXBCTRL_OFF] = INSTRUCTION_READ_RXB(buf_idx);
-	mcp2515_spi_trans(priv, SPI_TRANSFER_BUF_LEN);
+	/* mcp2515_spi_trans(priv, SPI_TRANSFER_BUF_LEN); */
+	/* read only DLC data length */
+	mcp2515_spi_rxbuf(priv);
 	memcpy(buf, priv->spi_rx_buf, SPI_TRANSFER_BUF_LEN);
 
 	if (buf[RXBSIDL_OFF] & RXBSIDL_IDE) {
