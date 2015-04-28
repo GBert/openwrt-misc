@@ -22,7 +22,7 @@ Sequence
 - interrupt
 - reading (0x03) CANINTF (0x2c) and EFLG
 - response buffer 0 is full ( 0x.. 0x.. 0x01 0x..)
-- reding RXB0 buffer
+- reding RXB0 buffer (0x90 ...)
 
 ### Performance
 
