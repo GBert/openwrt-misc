@@ -282,7 +282,7 @@ static int mcp2515_spi_trans(struct mcp2515_priv *priv, int len) {
 
 			gpio_set_value(gpios[GPIO_CLK], 1);
 			data_out <<= 1;
-			/* slave data ssems to be valid here */
+			/* slave data seems to be valid here */
 			if (gpio_get_value(gpios[GPIO_MISO]))
 				data_in |= 0x01;
 
@@ -290,7 +290,7 @@ static int mcp2515_spi_trans(struct mcp2515_priv *priv, int len) {
 		}
 		priv->spi_rx_buf[i] = data_in;
 	}
-	udelay(1);
+	/* udelay(1); */
 	gpio_set_value(gpios[GPIO_CS], 1);
 	return ret;
 }
@@ -301,20 +301,24 @@ static int mcp2515_spi_rxbuf(struct mcp2515_priv *priv) {
 	uint8_t data_in, data_out;
 	ret = 0;
 
+	data_out = priv->spi_tx_buf[0];
+
 	gpio_set_value(gpios[GPIO_CS], 0);
 	for (i = 0; i < SPI_TRANSFER_BUF_LEN; i++) {
-		data_out = priv->spi_tx_buf[i];
 		data_in = 0;
 		for (j = 0; j < 8; j++) {
-			data_in  <<= 1;
-			/* master data is valid on the rising edge */
-			if (data_out & 0x80)
-				gpio_set_value(gpios[GPIO_MOSI],1);
-			else
-				gpio_set_value(gpios[GPIO_MOSI],0);
+			/* only first byte to send */
+			if ( i < 1 ) {
+				/* master data is valid on the rising edge */
+				if (data_out & 0x80)
+					gpio_set_value(gpios[GPIO_MOSI],1);
+				else
+					gpio_set_value(gpios[GPIO_MOSI],0);
+				data_out <<= 1;
+			}
 
+			data_in <<= 1;
 			gpio_set_value(gpios[GPIO_CLK], 1);
-			data_out <<= 1;
 			/* slave data ssems to be valid here */
 			if (gpio_get_value(gpios[GPIO_MISO]))
 				data_in |= 0x01;
@@ -330,7 +334,7 @@ static int mcp2515_spi_rxbuf(struct mcp2515_priv *priv) {
 			break;
 	}
 
-	udelay(1);
+	/* udelay(1); */
 	gpio_set_value(gpios[GPIO_CS], 1);
 	return ret;
 }
