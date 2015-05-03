@@ -9,12 +9,14 @@
 
 #define NR_REPEAT	1*1000*1000UL
 
+#define ATH79_SOC
 
 #ifdef ATH79_SOC
 #define AR71XX_RESET_BASE	0x18060000
 #define AR71XX_RESET_REG_REV_ID	0x90
 #define GPIO_START_ADDR		0x18040000
 #define GPIO_SIZE		0x20
+#define GPIO_OFFS_READ		0x04
 #define GPIO_OFFS_SET		0x0C
 #define GPIO_OFFS_CLEAR		0x10
 #else
@@ -33,9 +35,10 @@ MODULE_PARM_DESC(gpio, "GPIO");
 static int __init mymodule_init(void) {
     unsigned long t1, t2, t_diff_msec;
 
-    uint32_t mask, repeat;
+    uint32_t mask, repeat, in;
 
     void __iomem *gpio_addr = NULL;
+    void __iomem *gpio_readdata_addr = NULL;
     void __iomem *gpio_setdataout_addr = NULL;
     void __iomem *gpio_cleardataout_addr = NULL;
 
@@ -60,6 +63,7 @@ static int __init mymodule_init(void) {
         return -1;
     }
 
+    gpio_readdata_addr     = gpio_addr + GPIO_OFFS_READ;
     gpio_setdataout_addr   = gpio_addr + GPIO_OFFS_SET;
     gpio_cleardataout_addr = gpio_addr + GPIO_OFFS_CLEAR;
     mask = 1 << gpio;
@@ -71,7 +75,10 @@ static int __init mymodule_init(void) {
     for(repeat=0;repeat<NR_REPEAT;repeat++)
     {
         __raw_writel(mask, gpio_setdataout_addr);
+	in = __raw_readl(gpio_setdataout_addr);
         __raw_writel(mask, gpio_cleardataout_addr);
+	in = __raw_readl(gpio_cleardataout_addr);
+
         /*
         iowrite32(mask, gpio_setdataout_addr);
         iowrite32(mask, gpio_cleardataout_addr);
