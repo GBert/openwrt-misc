@@ -158,7 +158,7 @@
 +	}
 +
 +	/* TODO: reset GPIO MISC INT - this is not the usual place to do this */
-+	__raw_writel(__raw_readl(base2 + AR71XX_RESET_REG_MISC_INT_STATUS) & ~( 1 << 2),
++	__raw_writel(__raw_readl(base2 + AR71XX_RESET_REG_MISC_INT_STATUS) & ~MISC_INT_GPIO,
 +		 base2 + AR71XX_RESET_REG_MISC_INT_STATUS);
 +	/* and flush write */
 +	__raw_readl(base2 + AR71XX_RESET_REG_MISC_INT_STATUS);
