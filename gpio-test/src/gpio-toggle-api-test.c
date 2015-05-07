@@ -9,21 +9,6 @@
 
 #define NR_REPEAT	1*1000*1000UL
 
-
-#ifdef ATH79_SOC
-#define AR71XX_RESET_BASE	0x18060000
-#define AR71XX_RESET_REG_REV_ID	0x90
-#define GPIO_START_ADDR		0x18040000
-#define GPIO_SIZE		0x20
-#define GPIO_OFFS_SET		0x0C
-#define GPIO_OFFS_CLEAR		0x10
-#else
-#define GPIO_START_ADDR		0x10000600
-#define GPIO_SIZE		0x40
-#define GPIO_OFFS_SET		0x2C
-#define GPIO_OFFS_CLEAR		0x30
-#endif
-
 #define DRV_NAME "GPIO toggle speed test"
 
 static unsigned int gpio = 0;
@@ -33,7 +18,7 @@ MODULE_PARM_DESC(gpio, "GPIO");
 static int __init mymodule_init(void) {
     unsigned long t1, t2, t_diff_msec;
 
-    uint32_t mask, repeat;
+    uint32_t repeat;
 
     /* requesting port to be sure the port is free */
     if (gpio_request(gpio, "GPIO toggle speed test")) {
