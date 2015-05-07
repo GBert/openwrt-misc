@@ -20,13 +20,11 @@ static int __init mymodule_init(void) {
 
     uint32_t repeat;
 
-    /* requesting port to be sure the port is free */
     if (gpio_request(gpio, "GPIO toggle speed test")) {
         printk (KERN_ERR "can't get GPIO %d\n", gpio);
         return -1;
-    } else {
+    } else
         printk (KERN_INFO "requested GPIO %d\n", gpio);
-    }
 
     if (gpio_direction_output(gpio,0)) {
         printk (KERN_ERR "can't set GPIO %d as output\n", gpio);
@@ -37,8 +35,7 @@ static int __init mymodule_init(void) {
 
     printk (KERN_INFO "start toggling GPIO %d\n", gpio);
     t1 = jiffies;
-    for(repeat=0;repeat<NR_REPEAT;repeat++)
-    {
+    for(repeat=0;repeat<NR_REPEAT;repeat++) {
 	gpio_set_value(gpio,1);
 	gpio_set_value(gpio,0);
     }
