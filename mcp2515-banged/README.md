@@ -2,8 +2,9 @@
 
 this code is an example how you should **not** write Linux kernel modules.
 The CAN interface device driver is tightly interlocked with the GPIO SPI
-bitbanging code. The interclock avoids task switches and speed up the whole
-driver.
+bitbanging code. The interclock avoids task switching which speed up the whole
+driver. Drawback: driver blocks CPU during reading the MCP2515. On high
+CAN-Bus load the driver is claiming lots of CPU cycles.
 
 ## TODO
 
