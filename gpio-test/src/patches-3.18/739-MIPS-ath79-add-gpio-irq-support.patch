@@ -28,11 +28,11 @@
 +
  static void __ath79_gpio_set_value(unsigned gpio, int value)
  {
- 	void __iomem *base = ath79_gpio_base;
-@@ -209,6 +221,136 @@ void __init ath79_gpio_output_select(uns
- 	spin_unlock_irqrestore(&ath79_gpio_lock, flags);
+	void __iomem *base = ath79_gpio_base;
+@@ -209,6 +221,133 @@ void __init ath79_gpio_output_select(uns
+	spin_unlock_irqrestore(&ath79_gpio_lock, flags);
  }
- 
+
 +static int ath79_gpio_irq_type(struct irq_data *d, unsigned type)
 +{
 +	int offset = d->irq - ATH79_GPIO_IRQ_BASE;
@@ -130,8 +130,6 @@
 +	void __iomem *base = ath79_gpio_base;
 +	unsigned int stat = __raw_readl(base + AR71XX_GPIO_REG_INT_PENDING);
 +
-+	int irq_base = ATH79_GPIO_IRQ_BASE;
-+
 +	while (stat) {
 +		int bit_num = __ffs(stat);
 +		unsigned long bit = (1<<bit_num);
@@ -141,7 +139,7 @@
 +				base + AR71XX_GPIO_REG_INT_POLARITY);
 +		}
 +
-+		handle_nested_irq(irq_base + bit_num);
++		generic_handle_irq(ATH79_GPIO_IRQ(bit_num));
 +		stat &= ~bit;
 +	}
 +
@@ -156,7 +154,6 @@
 +	for (irq = irq_base; irq < irq_base + chip->ngpio; irq++) {
 +		irq_set_chip_data(irq, chip);
 +		irq_set_chip_and_handler(irq, &ath79_gpio_irqchip, handle_simple_irq);
-+		irq_set_nested_thread(irq, 1);
 +		irq_set_noprobe(irq);
 +	}
 +
@@ -166,19 +163,19 @@
  void __init ath79_gpio_init(void)
  {
  	int err;
-@@ -245,6 +387,10 @@ void __init ath79_gpio_init(void)
+@@ -245,6 +384,10 @@ void __init ath79_gpio_init(void)
  	err = gpiochip_add(&ath79_gpio_chip);
  	if (err)
- 		panic("cannot add AR71xx GPIO chip, error=%d", err);
+		panic("cannot add AR71xx GPIO chip, error=%d", err);
 +
 +	ath79_gpio_irq_init(&ath79_gpio_chip);
 +
-+	request_threaded_irq(ATH79_MISC_IRQ_GPIO, NULL, ath79_gpio_irq, IRQF_ONESHOT, "ath79-gpio", NULL);
++	request_irq(ATH79_MISC_IRQ(2), ath79_gpio_irq, 0, "ath79-gpio", NULL);
  }
- 
+
  int gpio_get_value(unsigned gpio)
-@@ -267,14 +413,22 @@ EXPORT_SYMBOL(gpio_set_value);
- 
+@@ -267,14 +410,22 @@ EXPORT_SYMBOL(gpio_set_value);
+
  int gpio_to_irq(unsigned gpio)
  {
 -	/* FIXME */
@@ -190,7 +187,7 @@
 +	return ATH79_GPIO_IRQ_BASE + gpio;
  }
  EXPORT_SYMBOL(gpio_to_irq);
- 
+
  int irq_to_gpio(unsigned irq)
  {
 -	/* FIXME */
@@ -215,27 +212,14 @@
  
  #define ATH79_CPU_IRQ(_x)	(MIPS_CPU_IRQ_BASE + (_x))
  
-@@ -30,6 +30,23 @@
+@@ -30,6 +30,10 @@
  #define ATH79_IP3_IRQ_COUNT     3
  #define ATH79_IP3_IRQ(_x)       (ATH79_IP3_IRQ_BASE + (_x))
  
-+#define ATH79_GPIO_IRQ_BASE	(ATH79_IP3_IRQ_BASE + ATH79_IP3_IRQ_COUNT)
-+#define ATH79_GPIO_IRQ_COUNT	32
-+#define ATH79_GPIO_IRQ(_x)	(ATH79_GPIO_IRQ_BASE + (_x))
-+
-+#define ATH79_MISC_IRQ_TIMER	(ATH79_MISC_IRQ_BASE + 0)
-+#define ATH79_MISC_IRQ_ERROR	(ATH79_MISC_IRQ_BASE + 1)
-+#define ATH79_MISC_IRQ_GPIO	(ATH79_MISC_IRQ_BASE + 2)
-+#define ATH79_MISC_IRQ_UART	(ATH79_MISC_IRQ_BASE + 3)
-+#define ATH79_MISC_IRQ_WDOG	(ATH79_MISC_IRQ_BASE + 4)
-+#define ATH79_MISC_IRQ_PERFC	(ATH79_MISC_IRQ_BASE + 5)
-+#define ATH79_MISC_IRQ_OHCI	(ATH79_MISC_IRQ_BASE + 6)
-+#define ATH79_MISC_IRQ_DMA	(ATH79_MISC_IRQ_BASE + 7)
-+#define ATH79_MISC_IRQ_TIMER2	(ATH79_MISC_IRQ_BASE + 8)
-+#define ATH79_MISC_IRQ_TIMER3	(ATH79_MISC_IRQ_BASE + 9)
-+#define ATH79_MISC_IRQ_TIMER4	(ATH79_MISC_IRQ_BASE + 10)
-+#define ATH79_MISC_IRQ_ETHSW	(ATH79_MISC_IRQ_BASE + 12)
++#define ATH79_GPIO_IRQ_BASE     (ATH79_IP3_IRQ_BASE + ATH79_IP3_IRQ_COUNT)
++#define ATH79_GPIO_IRQ_COUNT    32
++#define ATH79_GPIO_IRQ(_x)      (ATH79_GPIO_IRQ_BASE + (_x))
 +
  #include_next <irq.h>
- 
+
  #endif /* __ASM_MACH_ATH79_IRQ_H */
