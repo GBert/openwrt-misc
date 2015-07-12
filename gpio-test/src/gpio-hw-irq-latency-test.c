@@ -33,7 +33,7 @@ MODULE_PARM_DESC(gpio_out, "GPIO_OUT");
 static irqreturn_t gpio_irq_handler(int irq, void* dev_id) {
    
    gpio_set_value(gpio_out, 1);
-   msleep(1);
+   udelay(1);
    gpio_set_value(gpio_out, 0);
    
    return IRQ_HANDLED;
