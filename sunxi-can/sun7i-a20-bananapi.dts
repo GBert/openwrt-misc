@@ -119,21 +119,6 @@
 				allwinner,drive = <0>;
 				allwinner,pull = <0>;
 			};
-
-                        can_pins_bananapi: can_pins@0 {
-                                allwinner,pins = "PH20", "PH21";
-                                allwinner,function = "can";
-                        };
-		};
-
-		can0: can@01c2bc00 {
-			compatible = "nxp,sja1000";
-			pinctrl-names = "default";
-			pinctrl-0 = <&can_pins_bananapi>;
-			reg = <3 0x100 0x80>;
-			interrupts = <26 0x8>;
-			nxp,external-clock-frequency = <24000000>;
-			status = "okay";
 		};
 
 		ir0: ir@01c21800 {
@@ -179,6 +164,12 @@
 		i2c2: i2c@01c2b400 {
 			pinctrl-names = "default";
 			pinctrl-0 = <&i2c2_pins_a>;
+			status = "okay";
+		};
+
+		can0: can0@01c2bc00 {
+			pinctrl-names = "default";
+			pinctrl-0 = <&can0_pins_a>;
 			status = "okay";
 		};
 
