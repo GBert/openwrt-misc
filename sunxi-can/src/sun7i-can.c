@@ -228,7 +228,7 @@ static void chipset_init(struct net_device *dev)
         /* config pins
          * PH20-TX, PH21-RX :4 */
 
-	void __iomem *gpio_base = ioremap(PIO_BASE, 0x400);
+	/* void __iomem *gpio_base = ioremap(PIO_BASE, 0x400);
 	void __iomem * port_h_config = gpio_base + PH_CFG2_OFFSET;
 
 	msleep(100);
@@ -237,6 +237,7 @@ static void chipset_init(struct net_device *dev)
 	tmp &= 0xFF00FFFF;
 	writel(tmp | (4 << 16) | (4 << 20), port_h_config);
 	msleep(100);
+	*/
 
 	/* 
 	if (gpio_request("can_para", "can_tx") == 0 || gpio_request("can_para", "can_rx") == 0 ) {
@@ -245,7 +246,7 @@ static void chipset_init(struct net_device *dev)
 	*/
 
         //enable clock
-        writel(readl((void *)0xF1C20000 + 0x6C) | (1 << 4), (void *)0xF1C20000 + 0x6C);
+        // writel(readl((void *)0xF1C20000 + 0x6C) | (1 << 4), (void *)0xF1C20000 + 0x6C);
 
         //set can controller in reset mode
         set_reset_mode(dev);
@@ -681,7 +682,7 @@ static __init int sun7i_can_init(void)
         priv = netdev_priv(sun7ican_dev);
         sun7ican_dev->irq = SW_INT_IRQNO_CAN;
         priv->irq_flags = 0;
-        priv->can.clock.freq = clk_get_rate(clk_get(NULL, CLK_MOD_CAN));
+        priv->can.clock.freq = 12000000;
         chipset_init(sun7ican_dev);
         err = register_sun7icandev(sun7ican_dev);
         if(err) {

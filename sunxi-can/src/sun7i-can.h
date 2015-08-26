@@ -18,7 +18,7 @@
 
 /* Registers' address */
 /* #define CAN_BASE0		0xF1C2BC00 */
-static void __iomem *CAN_BASE0 = (void *)0xF1C2BC00;
+static void __iomem *CAN_BASE0 = (void *)0x01C2BC00;
 #define CAN_MSEL_ADDR		(CAN_BASE0 + 0x0000)         //Can Mode Select Register
 #define CAN_CMD_ADDR		(CAN_BASE0 + 0x0004)         //Can Command Register
 #define CAN_STA_ADDR		(CAN_BASE0 + 0x0008)         //Can Status Register
