@@ -63,7 +63,7 @@ int __init mymodule_init(void) {
       err = 0;
    }
 
-   err = request_irq(gpio_irq, gpio_irq_handler, IRQ_TYPE_EDGE_RISING, "gpio_irq_reset", NULL);
+   err = request_irq(gpio_irq, gpio_irq_handler, IRQ_TYPE_EDGE_RISING | IRQF_NO_SUSPEND | IRQF_FORCE_RESUME, "gpio_irq_reset", NULL);
    if ( err ) {
         printk(KERN_ERR "GPIO IRQ latency test: trouble requesting IRQ %d error %d\n",gpio_irq, err);
         goto err_free_irq_return;

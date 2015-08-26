@@ -1066,7 +1066,7 @@
 			#size-cells = <0>;
 		};
 
-		can0: can0@01c2bc00 {
+		can0: can@01c2bc00 {
 			compatible = "nxp,sja1000";
 			reg = <0x01c2bc00 0x400>;
 			reg-io-width = <4>;

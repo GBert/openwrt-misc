@@ -167,7 +167,7 @@
 			status = "okay";
 		};
 
-		can0: can0@01c2bc00 {
+		can0: can@01c2bc00 {
 			pinctrl-names = "default";
 			pinctrl-0 = <&can0_pins_a>;
 			status = "okay";
