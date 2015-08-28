@@ -91,15 +91,10 @@ static int sun7i_can_is_absent(struct sun7i_can_priv *priv)
 static int sun7i_can_probe(struct net_device *dev)
 {
 	int err, irq = 0;
-	void __iomem *addr;
 	/* struct net_device *dev; */
 
 	struct sun7i_can_priv *priv = netdev_priv(dev);
 
-	printk(KERN_INFO "%s: mapping CAN io ...\n", DRV_NAME);
-	addr = ioremap_nocache(CAN_BASE0,0x400);
-	printk(KERN_INFO "%s: mapping CAN io done\n", DRV_NAME);
-	priv->reg_base = addr;
 
 	if (sun7i_can_is_absent(priv)) {
 		printk(KERN_INFO "%s: probing @0x%lX failed\n",
@@ -689,6 +684,7 @@ static __init int sun7i_can_init(void)
 {
 	struct sun7i_can_priv *priv;
 	int err = 0;
+	void __iomem *addr;
 	/* 
 	   int ret = 0;
 	   int used = 0;
@@ -708,7 +704,13 @@ static __init int sun7i_can_init(void)
 */
 
 	priv = netdev_priv(sun7ican_dev);
-	sun7ican_dev->irq = SW_INT_IRQNO_CAN;
+	printk(KERN_INFO "%s: mapping CAN io ...\n", DRV_NAME);
+	addr = ioremap_nocache(CAN_BASE0,0x400);
+	printk(KERN_INFO "%s: mapping CAN io done\n", DRV_NAME);
+	priv->reg_base = addr;
+
+	/* sun7ican_dev->irq = SW_INT_IRQNO_CAN; */
+	sun7ican_dev->irq = 32 + SW_INT_IRQNO_CAN;
 	priv->irq_flags = 0;
 	priv->can.clock.freq = 12000000;
 	chipset_init(sun7ican_dev);
