@@ -685,10 +685,24 @@ static __init int sun7i_can_init(void)
 	struct sun7i_can_priv *priv;
 	int err = 0;
 	void __iomem *addr;
+	struct clk *clk;
+
 	/* 
 	   int ret = 0;
 	   int used = 0;
 	 */
+
+/*	clk = clk_get(&pdev->dev, "apb1_can");
+	if (IS_ERR(clk)) {
+		dev_err(&pdev->dev, "no clock defined\n");
+		err = -ENODEV;
+		goto exit_clk;
+	}
+
+        err = clk_prepare_enable(clk);
+        if (err)
+                goto exit_clk;
+*/
 
 	sun7ican_dev = alloc_sun7icandev(0);
 	if (!sun7ican_dev) {
@@ -702,6 +716,7 @@ static __init int sun7i_can_init(void)
 			goto exit_free;
 		}
 */
+
 
 	priv = netdev_priv(sun7ican_dev);
 	printk(KERN_INFO "%s: mapping CAN io ...\n", DRV_NAME);
@@ -731,7 +746,7 @@ static __init int sun7i_can_init(void)
 
 exit_free:
 	free_sun7icandev(sun7ican_dev);
-
+exit_clk:
 	return err;
 }
 
