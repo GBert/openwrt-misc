@@ -18,34 +18,34 @@
 
 /* Registers' address */
 /* #define CAN_BASE0		0x01C2BC00 */
-static void __iomem *CAN_BASE0 = (void *)0x01C2BC00;
-#define CAN_MSEL_ADDR		(CAN_BASE0 + 0x0000)	//Can Mode Select Register
-#define CAN_CMD_ADDR		(CAN_BASE0 + 0x0004)	//Can Command Register
-#define CAN_STA_ADDR		(CAN_BASE0 + 0x0008)	//Can Status Register
-#define CAN_INT_ADDR		(CAN_BASE0 + 0x000c)	//Can Interrupt Flag Register
-#define CAN_INTEN_ADDR		(CAN_BASE0 + 0x0010)	//Can Interrupt Enable Register
-#define CAN_BTIME_ADDR		(CAN_BASE0 + 0x0014)	//Can Bus Timing 0 Register
-#define CAN_TEWL_ADDR		(CAN_BASE0 + 0x0018)	//Can Tx Error Warning Limit Register
-#define CAN_ERRC_ADDR		(CAN_BASE0 + 0x001c)	//Can Error Counter Register
-#define CAN_RMCNT_ADDR		(CAN_BASE0 + 0x0020)	//Can Receive Message Counter Register
-#define CAN_RBUFSA_ADDR		(CAN_BASE0 + 0x0024)	//Can Receive Buffer Start Address Register
-#define CAN_BUF0_ADDR		(CAN_BASE0 + 0x0040)	//Can Tx/Rx Buffer 0 Register
-#define CAN_BUF1_ADDR		(CAN_BASE0 + 0x0044)	//Can Tx/Rx Buffer 1 Register
-#define CAN_BUF2_ADDR		(CAN_BASE0 + 0x0048)	//Can Tx/Rx Buffer 2 Register
-#define CAN_BUF3_ADDR		(CAN_BASE0 + 0x004c)	//Can Tx/Rx Buffer 3 Register
-#define CAN_BUF4_ADDR		(CAN_BASE0 + 0x0050)	//Can Tx/Rx Buffer 4 Register
-#define CAN_BUF5_ADDR		(CAN_BASE0 + 0x0054)	//Can Tx/Rx Buffer 5 Register
-#define CAN_BUF6_ADDR		(CAN_BASE0 + 0x0058)	//Can Tx/Rx Buffer 6 Register
-#define CAN_BUF7_ADDR		(CAN_BASE0 + 0x005c)	//Can Tx/Rx Buffer 7 Register
-#define CAN_BUF8_ADDR		(CAN_BASE0 + 0x0060)	//Can Tx/Rx Buffer 8 Register
-#define CAN_BUF9_ADDR		(CAN_BASE0 + 0x0064)	//Can Tx/Rx Buffer 9 Register
-#define CAN_BUF10_ADDR		(CAN_BASE0 + 0x0068)	//Can Tx/Rx Buffer 10 Register
-#define CAN_BUF11_ADDR		(CAN_BASE0 + 0x006c)	//Can Tx/Rx Buffer 11 Register
-#define CAN_BUF12_ADDR		(CAN_BASE0 + 0x0070)	//Can Tx/Rx Buffer 12 Register
-#define CAN_ACPC_ADDR		(CAN_BASE0 + 0x0040)	//Can Acceptance Code 0 Register
-#define CAN_ACPM_ADDR		(CAN_BASE0 + 0x0044)	//Can Acceptance Mask 0 Register
-#define CAN_RBUF_RBACK_START_ADDR	(CAN_BASE0 + 0x0180)	//CAN transmit buffer for read back register
-#define CAN_RBUF_RBACK_END_ADDR		(CAN_BASE0 + 0x01b0)	//CAN transmit buffer for read back register
+#define CAN_BASE0 		0x01C2BC00
+#define CAN_MSEL_ADDR		0x0000	//Can Mode Select Register
+#define CAN_CMD_ADDR		0x0004	//Can Command Register
+#define CAN_STA_ADDR		0x0008	//Can Status Register
+#define CAN_INT_ADDR		0x000c	//Can Interrupt Flag Register
+#define CAN_INTEN_ADDR		0x0010	//Can Interrupt Enable Register
+#define CAN_BTIME_ADDR		0x0014	//Can Bus Timing 0 Register
+#define CAN_TEWL_ADDR		0x0018	//Can Tx Error Warning Limit Register
+#define CAN_ERRC_ADDR		0x001c	//Can Error Counter Register
+#define CAN_RMCNT_ADDR		0x0020	//Can Receive Message Counter Register
+#define CAN_RBUFSA_ADDR		0x0024	//Can Receive Buffer Start Address Register
+#define CAN_BUF0_ADDR		0x0040	//Can Tx/Rx Buffer 0 Register
+#define CAN_BUF1_ADDR		0x0044	//Can Tx/Rx Buffer 1 Register
+#define CAN_BUF2_ADDR		0x0048	//Can Tx/Rx Buffer 2 Register
+#define CAN_BUF3_ADDR		0x004c	//Can Tx/Rx Buffer 3 Register
+#define CAN_BUF4_ADDR		0x0050	//Can Tx/Rx Buffer 4 Register
+#define CAN_BUF5_ADDR		0x0054	//Can Tx/Rx Buffer 5 Register
+#define CAN_BUF6_ADDR		0x0058	//Can Tx/Rx Buffer 6 Register
+#define CAN_BUF7_ADDR		0x005c	//Can Tx/Rx Buffer 7 Register
+#define CAN_BUF8_ADDR		0x0060	//Can Tx/Rx Buffer 8 Register
+#define CAN_BUF9_ADDR		0x0064	//Can Tx/Rx Buffer 9 Register
+#define CAN_BUF10_ADDR		0x0068	//Can Tx/Rx Buffer 10 Register
+#define CAN_BUF11_ADDR		0x006c	//Can Tx/Rx Buffer 11 Register
+#define CAN_BUF12_ADDR		0x0070	//Can Tx/Rx Buffer 12 Register
+#define CAN_ACPC_ADDR		0x0040	//Can Acceptance Code 0 Register
+#define CAN_ACPM_ADDR		0x0044	//Can Acceptance Mask 0 Register
+#define CAN_RBUF_RBACK_START_ADDR	+ 0x0180	//CAN transmit buffer for read back register
+#define CAN_RBUF_RBACK_END_ADDR		+ 0x01b0	//CAN transmit buffer for read back register
 
 /* Controller Register Description */
 
@@ -158,24 +158,25 @@ static void __iomem *CAN_BASE0 = (void *)0x01C2BC00;
 #define SUN7I_CAN_CUSTOM_IRQ_HANDLER 0x1
 
 #define SW_INT_IRQNO_CAN	26
-#define CLK_MOD_CAN "can"
+#define CLK_MOD_CANi		"can"
 #define SUN7I_CAN_MAX_IRQ	20	/* max. number of interrupts handled in ISR */
 
 /*
 * sun7i_can private data structure
 */
 struct sun7i_can_priv {
-	struct can_priv can;	/* must be the first member */
+	struct can_priv can;		/* must be the first member */
 	int open_time;
 	struct sk_buff *echo_skb;
+	void __iomem *reg_base;
 
-	void *priv;		/* for board-specific data */
+	void *priv;			/* for board-specific data */
 	struct net_device *dev;
 
 	unsigned long irq_flags;	/* for request_irq() */
-	spinlock_t cmdreg_lock;	/* lock for concurrent cmd register writes */
+	spinlock_t cmdreg_lock;		/* lock for concurrent cmd register writes */
 
-	u16 flags;		/* custom mode flags */
+	u16 flags;			/* custom mode flags */
 };
 
 #endif

@@ -1,13 +1,27 @@
 /*
- * sunxi_can.c - CAN bus controller driver for sunxi
+ * sun7i_can.c - CAN bus controller driver for Allwinner SUN7I based SoCs
  *
  * Copyright (c) 2013 Peter Chen
- *               2015 Gerhard Bertelsmann
+ * Copyright (c) 2015 Gerhard Bertelsmann
  *
+ * Parts of this software are based on (derived from) the SJA1000 code by:
+ *   Copyright (C) 2007 Wolfgang Grandegger <wg@grandegger.com>
+ *   Copyright (c) 2002-2007 Volkswagen Group Electronic Research
+ *   Copyright (c) 2003 Matthias Brukner, Trajet Gmbh, Rebenring 33,
+ *   38106 Braunschweig, GERMANY
+ *   Copyright (c) 2014 Oliver Hartkopp <oliver.hartkopp@volkswagen.de>
  * 
- * Copyright (c) 2013 Inmotion Co,. LTD
- * All right reserved.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the version 2 of the GNU General Public License
+ * as published by the Free Software Foundation
  *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <linux/module.h>
@@ -65,18 +79,27 @@ static void sun7i_can_write_cmdreg(struct sun7i_can_priv *priv, u8 val)
 	 * the write_reg() operation - especially on SMP systems.
 	 */
 	spin_lock_irqsave(&priv->cmdreg_lock, flags);
-	writel(val, CAN_CMD_ADDR);
+	writel(val, priv->reg_base + CAN_CMD_ADDR);
 	spin_unlock_irqrestore(&priv->cmdreg_lock, flags);
 }
 
 static int sun7i_can_is_absent(struct sun7i_can_priv *priv)
 {
-	return ((readl(CAN_MSEL_ADDR) & 0xFF) == 0xFF);
+	return ((readl(priv->reg_base + CAN_MSEL_ADDR) & 0xFF) == 0xFF);
 }
 
 static int sun7i_can_probe(struct net_device *dev)
 {
+	int err, irq = 0;
+	void __iomem *addr;
+	/* struct net_device *dev; */
+
 	struct sun7i_can_priv *priv = netdev_priv(dev);
+
+	printk(KERN_INFO "%s: mapping CAN io ...\n", DRV_NAME);
+	addr = ioremap_nocache(CAN_BASE0,0x400);
+	printk(KERN_INFO "%s: mapping CAN io done\n", DRV_NAME);
+	priv->reg_base = addr;
 
 	if (sun7i_can_is_absent(priv)) {
 		printk(KERN_INFO "%s: probing @0x%lX failed\n",
@@ -89,7 +112,7 @@ static int sun7i_can_probe(struct net_device *dev)
 static void set_reset_mode(struct net_device *dev)
 {
 	struct sun7i_can_priv *priv = netdev_priv(dev);
-	uint32_t status = readl(CAN_MSEL_ADDR);
+	uint32_t status = readl(priv->reg_base + CAN_MSEL_ADDR);
 	int i;
 
 	for (i = 0; i < 100; i++) {
@@ -99,10 +122,10 @@ static void set_reset_mode(struct net_device *dev)
 			return;
 		}
 
-		writel(readl(CAN_MSEL_ADDR) | RESET_MODE, CAN_MSEL_ADDR);	/* select reset mode */
+		writel(readl(priv->reg_base + CAN_MSEL_ADDR) | RESET_MODE, priv->reg_base + CAN_MSEL_ADDR);	/* select reset mode */
 		/* writel(RESET_MODE, CAN_MSEL_ADDR); */ /* select reset mode */
 		udelay(10);
-		status = readl(CAN_MSEL_ADDR);
+		status = readl(priv->reg_base + CAN_MSEL_ADDR);
 	}
 
 	netdev_err(dev, "setting SUN7I_CAN into reset mode failed!\n");
@@ -111,7 +134,7 @@ static void set_reset_mode(struct net_device *dev)
 static void set_normal_mode(struct net_device *dev)
 {
 	struct sun7i_can_priv *priv = netdev_priv(dev);
-	unsigned char status = readl(CAN_MSEL_ADDR);
+	unsigned char status = readl(priv->reg_base + CAN_MSEL_ADDR);
 	int i;
 
 	for (i = 0; i < 100; i++) {
@@ -120,27 +143,27 @@ static void set_normal_mode(struct net_device *dev)
 			priv->can.state = CAN_STATE_ERROR_ACTIVE;
 			/* enable interrupts */
 			if (priv->can.ctrlmode & CAN_CTRLMODE_BERR_REPORTING) {
-				writel(0xFFFF, CAN_INTEN_ADDR);
+				writel(0xFFFF, priv->reg_base + CAN_INTEN_ADDR);
 			} else {
-				writel(0xFFFF & ~BERR_IRQ_EN, CAN_INTEN_ADDR);
+				writel(0xFFFF & ~BERR_IRQ_EN, priv->reg_base + CAN_INTEN_ADDR);
 			}
 
 			if (priv->can.ctrlmode & CAN_CTRLMODE_LOOPBACK) {
 				/* Put device into loopback mode */
-				writel(readl(CAN_MSEL_ADDR) | LOOPBACK_MODE,
-				       CAN_MSEL_ADDR);
+				writel(readl(priv->reg_base + CAN_MSEL_ADDR) | LOOPBACK_MODE,
+				       priv->reg_base + CAN_MSEL_ADDR);
 			} else if (priv->can.ctrlmode & CAN_CTRLMODE_LISTENONLY) {
 				/* Put device into listen-only mode */
-				writel(readl(CAN_MSEL_ADDR) | LISTEN_ONLY_MODE,
-				       CAN_MSEL_ADDR);
+				writel(readl( priv->reg_base + CAN_MSEL_ADDR) | LISTEN_ONLY_MODE,
+				       priv->reg_base + CAN_MSEL_ADDR);
 			}
 			return;
 		}
 
 		/* set chip to normal mode */
-		writel(readl(CAN_MSEL_ADDR) & (~RESET_MODE), CAN_MSEL_ADDR);
+		writel(readl(priv->reg_base + CAN_MSEL_ADDR) & (~RESET_MODE), priv->reg_base + CAN_MSEL_ADDR);
 		udelay(10);
-		status = readl(CAN_MSEL_ADDR);
+		status = readl(priv->reg_base + CAN_MSEL_ADDR);
 	}
 
 	netdev_err(dev, "setting SUN7I_CAN into normal mode failed!\n");
@@ -155,7 +178,7 @@ static void sun7i_can_start(struct net_device *dev)
 		set_reset_mode(dev);
 
 	/* Clear error counters and error code capture */
-	writel(0x0, CAN_ERRC_ADDR);
+	writel(0x0,  priv->reg_base + CAN_ERRC_ADDR);
 
 	/* leave reset mode */
 	set_normal_mode(dev);
@@ -198,7 +221,7 @@ static int sun7i_can_set_bittiming(struct net_device *dev)
 	netdev_info(dev, "setting BITTIMING=0x%08x\n", cfg);
 
 	set_reset_mode(dev);	/* CAN_BTIME_ADDR only writable in reset mode */
-	writel(cfg, CAN_BTIME_ADDR);
+	writel(cfg,  priv->reg_base + CAN_BTIME_ADDR);
 	set_normal_mode(dev);
 
 	return 0;
@@ -207,8 +230,9 @@ static int sun7i_can_set_bittiming(struct net_device *dev)
 static int sun7i_can_get_berr_counter(const struct net_device *dev,
 				      struct can_berr_counter *bec)
 {
-	bec->txerr = readl(CAN_ERRC_ADDR) & 0x000F;
-	bec->rxerr = (readl(CAN_ERRC_ADDR) & 0x0F00) >> 16;
+	struct sun7i_can_priv *priv = netdev_priv(dev);
+	bec->txerr = readl(priv->reg_base + CAN_ERRC_ADDR) & 0x000F;
+	bec->rxerr = (readl(priv->reg_base + CAN_ERRC_ADDR) & 0x0F00) >> 16;
 
 	return 0;
 }
@@ -253,7 +277,8 @@ static void chipset_init(struct net_device *dev)
 
 	/* enable interrupt */
 	temp_irqen = BERR_IRQ_EN | ERR_PASSIVE_IRQ_EN | OR_IRQ_EN | RX_IRQ_EN;
-	writel(readl(CAN_INTEN_ADDR) | temp_irqen, CAN_INTEN_ADDR);
+	/* TODO */
+	/* writel(readl(  priv->reg_base + CAN_INTEN_ADDR) | temp_irqen,  priv->reg_base + CAN_INTEN_ADDR); */
 
 	/* return to transfer mode */
 	set_normal_mode(dev);
@@ -276,11 +301,11 @@ static netdev_tx_t sun7i_can_start_xmit(struct sk_buff *skb,
 	uint8_t i;
 
 	/* wait buff ready */
-	while (!(readl(CAN_STA_ADDR) & TBUF_RDY)) ;
+	while (!(readl(priv->reg_base + CAN_STA_ADDR) & TBUF_RDY)) ;
 
 	set_reset_mode(dev);
 
-	writel(0xffffffff, CAN_ACPM_ADDR);
+	writel(0xffffffff,  priv->reg_base + CAN_ACPM_ADDR);
 
 	/* enter transfer mode */
 	set_normal_mode(dev);
@@ -294,28 +319,28 @@ static netdev_tx_t sun7i_can_start_xmit(struct sk_buff *skb,
 	id = cf->can_id;
 
 	temp = ((id >> 30) << 6) | dlc;
-	writel(temp, CAN_BUF0_ADDR);
+	writel(temp,  priv->reg_base + CAN_BUF0_ADDR);
 	if (id & CAN_EFF_FLAG) {	/* extern frame */
-		writel(0xFF & (id >> 21), CAN_BUF1_ADDR);	/* id28~21 */
-		writel(0xFF & (id >> 13), CAN_BUF2_ADDR);	/* id20~13 */
-		writel(0xFF & (id >> 5), CAN_BUF3_ADDR);	/* id12~5  */
-		writel((id & 0x1F) << 3, CAN_BUF4_ADDR);	/* id4~0   */
+		writel(0xFF & (id >> 21), priv->reg_base + CAN_BUF1_ADDR);	/* id28~21 */
+		writel(0xFF & (id >> 13), priv->reg_base + CAN_BUF2_ADDR);	/* id20~13 */
+		writel(0xFF & (id >> 5),  priv->reg_base + CAN_BUF3_ADDR);	/* id12~5  */
+		writel((id & 0x1F) << 3,  priv->reg_base + CAN_BUF4_ADDR);	/* id4~0   */
 
 		for (i = 0; i < dlc; i++) {
-			writel(cf->data[i], CAN_BUF5_ADDR + i * 4);
+			writel(cf->data[i], priv->reg_base + (CAN_BUF5_ADDR + i * 4));
 		}
 	} else {			/* standard frame */
-		writel(0xFF & (id >> 3), CAN_BUF1_ADDR);	/* id28~21 */
-		writel((id & 0x7) << 5, CAN_BUF2_ADDR);		/* id20~13 */
+		writel(0xFF & (id >> 3),  priv->reg_base + CAN_BUF1_ADDR);	/* id28~21 */
+		writel((id & 0x7) << 5,  priv->reg_base + CAN_BUF2_ADDR);		/* id20~13 */
 
 		for (i = 0; i < dlc; i++) {
-			writel(cf->data[i], CAN_BUF3_ADDR + i * 4);
+			writel(cf->data[i],  priv->reg_base + CAN_BUF3_ADDR + i * 4);
 		}
 	}
 
 	can_put_echo_skb(skb, dev, 0);
 
-	while (!(readl(CAN_STA_ADDR) & TBUF_RDY)) ;
+	while (!(readl(priv->reg_base + CAN_STA_ADDR) & TBUF_RDY)) ;
 	sun7i_can_write_cmdreg(priv, TRANS_REQ);
 
 	return NETDEV_TX_OK;
@@ -336,32 +361,32 @@ static void sun7i_can_rx(struct net_device *dev)
 	if (skb == NULL)
 		return;
 
-	fi = readl(CAN_BUF0_ADDR);
+	fi = readl(priv->reg_base + CAN_BUF0_ADDR);
 	cf->can_dlc = get_can_dlc(fi & 0x0F);
 	if (fi >> 7) {
 		/* extended frame format (EFF) */
-		id = (readl(CAN_BUF1_ADDR) << 21) |		/* id28~21 */
-		     (readl(CAN_BUF2_ADDR) << 13) |		/* id20~13 */
-		     (readl(CAN_BUF3_ADDR) << 5)  | 		/* id12~5  */
-		     ((readl(CAN_BUF4_ADDR) >> 3) & 0x1f);	/* id4~0   */
+		id = (readl(priv->reg_base + CAN_BUF1_ADDR) << 21) |		/* id28~21 */
+		     (readl(priv->reg_base + CAN_BUF2_ADDR) << 13) |		/* id20~13 */
+		     (readl(priv->reg_base + CAN_BUF3_ADDR) << 5)  | 		/* id12~5  */
+		     ((readl(priv->reg_base + CAN_BUF4_ADDR) >> 3) & 0x1f);	/* id4~0   */
 		id |= CAN_EFF_FLAG;
 
 		if ((fi >> 6) & 0x1) {	/* remote transmission request */
 			id |= CAN_RTR_FLAG;
 		} else {
 			for (i = 0; i < cf->can_dlc; i++)
-				cf->data[i] = readl(CAN_BUF5_ADDR + i * 4);
+				cf->data[i] = readl(priv->reg_base + CAN_BUF5_ADDR + i * 4);
 		}
 	} else {
 		/* standard frame format (SFF) */
-		id = (readl(CAN_BUF1_ADDR) << 3)		/* id28~21 */
-		    | ((readl(CAN_BUF2_ADDR) >> 5) & 0x7);	/* id20~18 */
+		id = (readl(priv->reg_base + CAN_BUF1_ADDR) << 3)		/* id28~21 */
+		    | ((readl(priv->reg_base + CAN_BUF2_ADDR) >> 5) & 0x7);	/* id20~18 */
 
 		if ((fi >> 6) & 0x1) {	/* remote transmission request */
 			id |= CAN_RTR_FLAG;
 		} else {
 			for (i = 0; i < cf->can_dlc; i++)
-				cf->data[i] = readl(CAN_BUF3_ADDR + i * 4);
+				cf->data[i] = readl(priv->reg_base + CAN_BUF3_ADDR + i * 4);
 		}
 	}
 
@@ -417,7 +442,7 @@ static int sun7i_can_err(struct net_device *dev, uint8_t isrc, uint8_t status)
 		priv->can.can_stats.bus_error++;
 		stats->rx_errors++;
 
-		ecc = readl(CAN_STA_ADDR);
+		ecc = readl(priv->reg_base + CAN_STA_ADDR);
 
 		cf->can_id |= CAN_ERR_PROT | CAN_ERR_BUSERROR;
 
@@ -446,7 +471,7 @@ static int sun7i_can_err(struct net_device *dev, uint8_t isrc, uint8_t status)
 	if (isrc & ARB_LOST) {
 		/* arbitration lost interrupt */
 		netdev_dbg(dev, "arbitration lost interrupt\n");
-		alc = readl(CAN_STA_ADDR);
+		alc = readl(priv->reg_base + CAN_STA_ADDR);
 		priv->can.can_stats.arbitration_lost++;
 		stats->tx_errors++;
 		cf->can_id |= CAN_ERR_LOSTARB;
@@ -455,8 +480,8 @@ static int sun7i_can_err(struct net_device *dev, uint8_t isrc, uint8_t status)
 
 	if (state != priv->can.state && (state == CAN_STATE_ERROR_WARNING ||
 					 state == CAN_STATE_ERROR_PASSIVE)) {
-		uint8_t rxerr = (readl(CAN_ERRC_ADDR) >> 16) & 0xFF;
-		uint8_t txerr = readl(CAN_ERRC_ADDR) & 0xFF;
+		uint8_t rxerr = (readl(priv->reg_base + CAN_ERRC_ADDR) >> 16) & 0xFF;
+		uint8_t txerr = readl(priv->reg_base + CAN_ERRC_ADDR) & 0xFF;
 		cf->can_id |= CAN_ERR_CRTL;
 		if (state == CAN_STATE_ERROR_WARNING) {
 			priv->can.can_stats.error_warning++;
@@ -492,12 +517,12 @@ irqreturn_t sun7i_can_interrupt(int irq, void *dev_id)
 	printk(KERN_INFO "sun7ican: capture a interrupt\n");
 
 	/* Shared interrupts and IRQ off? */
-	if ((readl(CAN_INT_ADDR) & 0xF) == 0x0)
+	if ((readl(priv->reg_base + CAN_INT_ADDR) & 0xF) == 0x0)
 		return IRQ_NONE;
 
-	while ((isrc = readl(CAN_INT_ADDR)) && (n < SUN7I_CAN_MAX_IRQ)) {
+	while ((isrc = readl(priv->reg_base + CAN_INT_ADDR)) && (n < SUN7I_CAN_MAX_IRQ)) {
 		n++;
-		status = readl(CAN_STA_ADDR);
+		status = readl(priv->reg_base + CAN_STA_ADDR);
 		/* check for absent controller due to hw unplug */
 		if (sun7i_can_is_absent(priv))
 			return IRQ_NONE;
@@ -508,7 +533,7 @@ irqreturn_t sun7i_can_interrupt(int irq, void *dev_id)
 		if (isrc & TBUF_VLD) {
 			/* transmission complete interrupt */
 			stats->tx_bytes +=
-			    readl(CAN_RBUF_RBACK_START_ADDR) & 0xf;
+			    readl(priv->reg_base + CAN_RBUF_RBACK_START_ADDR) & 0xf;
 			stats->tx_packets++;
 			can_get_echo_skb(dev, 0);
 			netif_wake_queue(dev);
@@ -517,7 +542,7 @@ irqreturn_t sun7i_can_interrupt(int irq, void *dev_id)
 			/* receive interrupt */
 			while (status & RBUF_RDY) {	/* RX buffer is not empty */
 				sun7i_can_rx(dev);
-				status = readl(CAN_STA_ADDR);
+				status = readl(priv->reg_base + CAN_STA_ADDR);
 				/* check for absent controller */
 				if (sun7i_can_is_absent(priv))
 					return IRQ_NONE;
@@ -530,7 +555,7 @@ irqreturn_t sun7i_can_interrupt(int irq, void *dev_id)
 				break;
 		}
 		/* clear the interrupt */
-		writel(isrc, CAN_INT_ADDR);
+		writel(isrc, priv->reg_base + CAN_INT_ADDR);
 		udelay(10);
 	}
 
@@ -712,6 +737,8 @@ module_init(sun7i_can_init);
 
 static __exit void sun7i_can_exit(void)
 {
+	/* TODO */
+	/* iounmap(priv->reg_base); */
 	unregister_sun7icandev(sun7ican_dev);
 	free_sun7icandev(sun7ican_dev);
 
@@ -721,5 +748,6 @@ static __exit void sun7i_can_exit(void)
 module_exit(sun7i_can_exit);
 
 MODULE_AUTHOR("Peter Chen <xingkongcp@gmail.com>");
+MODULE_AUTHOR("Gerhard Bertelsmann <info@gerhard-bertelsmann.de>");
 MODULE_LICENSE("Dual BSD/GPL");
 MODULE_DESCRIPTION(DRV_NAME "CAN netdevice driver");
