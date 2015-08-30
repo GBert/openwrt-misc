@@ -727,7 +727,7 @@ static __init int sun7i_can_init(void)
 	/* sun7ican_dev->irq = SW_INT_IRQNO_CAN; */
 	sun7ican_dev->irq = 32 + SW_INT_IRQNO_CAN;
 	priv->irq_flags = 0;
-	priv->can.clock.freq = 12000000;
+	priv->can.clock.freq = 24000000;
 	chipset_init(sun7ican_dev);
 	err = register_sun7icandev(sun7ican_dev);
 	if (err) {
