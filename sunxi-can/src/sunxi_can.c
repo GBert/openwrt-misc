@@ -649,6 +649,8 @@ static int sunxican_open(struct net_device *dev)
 	struct sunxican_priv *priv = netdev_priv(dev);
 	int err;
 
+	printk(KERN_INFO "%s: called\n", __func__);
+
 	/* set chip into reset mode */
 	set_reset_mode(dev);
 
@@ -724,14 +726,14 @@ void unregister_sunxicandev(struct net_device *dev)
 
 static const struct of_device_id sunxican_of_match[] = {
         { .compatible = "allwinner,sunxi-can"},
-	{ /* sentinel */ },
+	{},
 }
 
 MODULE_DEVICE_TABLE(of, sunxican_of_match);
 
 static const struct platform_device_id sunxican_id_table[] = {
         { .name = "sunxi-can"},
-        { /* sentinel */ },
+        {},
 };
 MODULE_DEVICE_TABLE(platform, sunxican_id_table);
 
@@ -832,6 +834,8 @@ static int __maybe_unused sunxi_can_suspend(struct device *device)
 {
 	struct net_device *dev = dev_get_drvdata(device);
 	struct sunxican_priv *priv = netdev_priv(dev);
+	
+	printk(KERN_INFO "%s: called\n", __func__);
 
 	if (netif_running(dev)) {
 		netif_stop_queue(dev);
@@ -846,6 +850,8 @@ static int __maybe_unused sunxi_can_resume(struct device *device)
 {
 	struct net_device *dev = dev_get_drvdata(device);
 	struct sunxican_priv *priv = netdev_priv(dev);
+
+	printk(KERN_INFO "%s: called\n", __func__);
 
 	priv->can.state = CAN_STATE_ERROR_ACTIVE;
 	if (netif_running(dev)) {
