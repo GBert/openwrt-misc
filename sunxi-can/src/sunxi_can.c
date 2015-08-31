@@ -757,6 +757,7 @@ static int sunxican_probe(struct platform_device *pdev)
 	struct net_device *dev;
 	struct sunxican_priv *priv;
 	
+	printk(KERN_INFO "%s: get_clock\n", __func__);
 	clk = clk_get(&pdev->dev, "apb1_can");
 	if (IS_ERR(clk)) {
 		dev_err(&pdev->dev, "no clock defined\n");
@@ -764,12 +765,14 @@ static int sunxican_probe(struct platform_device *pdev)
 		goto exit;
 	}
 	/* turn on clocking for CAN IP */
+	printk(KERN_INFO "%s: start_clock\n", __func__);
 	err = clk_prepare_enable(clk);
 	if (err) {
 		dev_err(&pdev->dev, "could not enable clocking (apb1_can)\n");
 		goto exit;
 	}
 
+	printk(KERN_INFO "%s: io mapping\n", __func__);
 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	irq = platform_get_irq(pdev, 0);
         if (!res || irq <= 0) {
