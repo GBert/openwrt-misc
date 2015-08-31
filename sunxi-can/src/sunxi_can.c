@@ -188,7 +188,6 @@
 
 #define SUNXI_CAN_CUSTOM_IRQ_HANDLER	0x1
 
-#define SUNXI_CAN_ECHO_SKB_MAX	1	/* the SUNXI CAN has one TX buffer object */
 #define SW_INT_IRQNO_CAN	26
 #define CLK_MOD_CANi		"can"
 #define SUNXI_CAN_MAX_IRQ	20	/* max. number of interrupts handled in ISR */
@@ -758,12 +757,16 @@ static int sunxican_probe(struct platform_device *pdev)
 	struct net_device *dev;
 	struct sunxican_priv *priv;
 	
-	/* struct net_device *dev; */
-
 	clk = clk_get(&pdev->dev, "apb1_can");
 	if (IS_ERR(clk)) {
 		dev_err(&pdev->dev, "no clock defined\n");
 		err = -ENODEV;
+		goto exit;
+	}
+	/* turn on clocking for CAN IP */
+	err = clk_prepare_enable(clk);
+	if (err) {
+		dev_err(&pdev->dev, "could not enable clocking (apb1_can)\n");
 		goto exit;
 	}
 
@@ -785,7 +788,7 @@ static int sunxican_probe(struct platform_device *pdev)
 		goto exit_release;
 	}
 
-	dev = alloc_candev(sizeof(struct sunxican_priv), SUNXI_CAN_ECHO_SKB_MAX);
+	dev = alloc_candev(sizeof(struct sunxican_priv), 1);
 
 	if (!dev) {
 		err = -ENOMEM;
