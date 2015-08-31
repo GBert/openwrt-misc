@@ -1,6 +1,7 @@
 /*
  * sunxi_can.c - CAN bus controller driver for Allwinner SUN4I&UN7I based SoCs
  *
+ * Copyright (c) 2013 Peter Chen
  * Copyright (c) 2015 Gerhard Bertelsmann
  *
  * Parts of this software are based on (derived from) the SJA1000 code by:
@@ -27,7 +28,7 @@
 #include <linux/can.h>
 #include <linux/can/dev.h>
 #include <linux/can/error.h>
-/* #include <linux/can/led.h> */
+/*  #include <linux/can/led.h> */
 #include <linux/clk.h>
 #include <linux/delay.h>
 #include <linux/if_arp.h>
@@ -35,9 +36,9 @@
 #include <linux/interrupt.h>
 #include <linux/io.h>
 #include <linux/kernel.h>
-#include <linux/list.h>
 
 #include <linux/module.h>
+#include <linux/init.h>
 #include <linux/of.h>
 #include <linux/of_device.h>
 #include <linux/platform_device.h>
@@ -818,8 +819,9 @@ static int sunxican_probe(struct platform_device *pdev)
 
 	return 0;
 
- exit_free:
+ /* exit_free:
 	free_candev(dev);
+*/
  exit_iounmap:
 	iounmap(addr);
  exit_release:
@@ -875,7 +877,24 @@ static struct platform_driver sunxi_can_driver = {
 	.id_table = sunxican_id_table,
 };
 
-module_platform_driver(sunxi_can_driver);
+// module_platform_driver(sunxi_can_driver);
+
+static __init int sunxican_init(void)
+{
+	printk(KERN_INFO "%s CAN netdevice driver\n", __func__);
+	return platform_driver_register(&sunxi_can_driver);
+}
+
+module_init(sunxican_init);
+
+static __exit void sunxican_exit(void)
+{
+	platform_driver_unregister(&sunxi_can_driver);
+        printk(KERN_INFO "%s: driver removed\n", DRV_NAME);
+}
+
+module_exit(sunxican_exit);
+
 
 MODULE_AUTHOR("Gerhard Bertelsmann <info@gerhard-bertelsmann.de>");
 MODULE_LICENSE("Dual BSD/GPL");

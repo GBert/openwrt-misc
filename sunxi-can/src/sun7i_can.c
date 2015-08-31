@@ -90,7 +90,6 @@ static int sun7i_can_is_absent(struct sun7i_can_priv *priv)
 
 static int sun7i_can_probe(struct net_device *dev)
 {
-	int err, irq = 0;
 	/* struct net_device *dev; */
 
 	struct sun7i_can_priv *priv = netdev_priv(dev);
@@ -685,7 +684,6 @@ static __init int sun7i_can_init(void)
 	struct sun7i_can_priv *priv;
 	int err = 0;
 	void __iomem *addr;
-	struct clk *clk;
 
 	/* 
 	   int ret = 0;
@@ -746,7 +744,6 @@ static __init int sun7i_can_init(void)
 
 exit_free:
 	free_sun7icandev(sun7ican_dev);
-exit_clk:
 	return err;
 }
 
