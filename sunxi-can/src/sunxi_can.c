@@ -884,7 +884,6 @@ static struct platform_driver sunxi_can_driver = {
 static __init int sunxican_init(void)
 {
 	printk(KERN_INFO "%s CAN netdevice driver\n", __func__);
-	platform_driver_register(&sunxi_can_driver);
 	platform_driver_probe(&sunxi_can_driver, &sunxican_probe);
 	return 0;
 }
