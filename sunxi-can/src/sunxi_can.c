@@ -711,6 +711,8 @@ int register_sunxicandev(struct net_device *dev)
 	/* TODO */
 	/* struct sunxican_priv *priv = netdev_priv(dev); */
 
+	printk(KERN_INFO "%s: called\n", __func__);
+
 	dev->flags |= IFF_ECHO;	/* support local echo */
 	dev->netdev_ops = &sunxican_netdev_ops;
 
@@ -882,7 +884,9 @@ static struct platform_driver sunxi_can_driver = {
 static __init int sunxican_init(void)
 {
 	printk(KERN_INFO "%s CAN netdevice driver\n", __func__);
-	return platform_driver_register(&sunxi_can_driver);
+	platform_driver_register(&sunxi_can_driver);
+	platform_driver_probe(&sunxi_can_driver, &sunxican_probe);
+	return 0;
 }
 
 module_init(sunxican_init);
