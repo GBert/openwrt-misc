@@ -404,13 +404,6 @@ static int sunxican_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	/* wait buff ready */
 	while (!(readl(priv->base + CAN_STA_ADDR) & TBUF_RDY)) ;
 
-	set_reset_mode(dev);
-
-	writel(0xffffffff, priv->base + CAN_ACPM_ADDR);
-
-	/* enter transfer mode */
-	set_normal_mode(dev);
-
 	if (can_dropped_invalid_skb(dev, skb))
 		return NETDEV_TX_OK;
 
