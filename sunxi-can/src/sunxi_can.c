@@ -1,9 +1,9 @@
 /*
- * sunxi_can.c - CAN bus controller driver for Allwinner SUN4I&UN7I based SoCs
+ * sunxi_can.c - CAN bus controller driver for Allwinner SUN4I&SUN7I based SoCs
  *
  * Copyright (c) 2013 Peter Chen
  * Copyright (c) 2015 Gerhard Bertelsmann
- *
+ *   
  * Parts of this software are based on (derived from) the SJA1000 code by:
  *   Copyright (C) 2007 Wolfgang Grandegger <wg@grandegger.com>
  *   Copyright (c) 2002-2007 Volkswagen Group Electronic Research
@@ -22,6 +22,30 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
+ *
+ *
+ * To use the driver CAN must be defined like:
+ *  soc@01c00000 {
+ *    ...
+ *    pio: pinctrl@01c20800 {
+ *      ...
+ *      can0_pins_a: can0@0 {
+ *        allwinner,pins = "PH20","PH21";
+ *        allwinner,function = "can";
+ *        allwinner,drive = <0>;
+ *        allwinner,pull = <0>;
+ *      };
+ *    };
+ *    can0: can@01c2bc00 {
+ *      compatible = "allwinner,sunxican";
+ *      reg = <0x01c2bc00 0x400>;
+ *      reg-io-width = <4>;
+ *      interrupts = <0 26 4>;
+ *      clocks = <&apb1_gates 4>;
+ *      #address-cells = <1>;
+ *      #size-cells = <0>;
+ *   };
+ *   
  */
 
 #include <linux/netdevice.h>
