@@ -354,6 +354,10 @@ static void sunxi_can_start(struct net_device *dev)
 	if (priv->can.state != CAN_STATE_STOPPED)
 		set_reset_mode(dev);
 
+	/* set filters - we accept all */
+	writel(0x00000000, priv->base + CAN_ACPC_ADDR);
+	writel(0xffffffff, priv->base + CAN_ACPM_ADDR);
+
 	/* Clear error counters and error code capture */
 	writel(0x0, priv->base + CAN_ERRC_ADDR);
 
