@@ -813,7 +813,8 @@ static int sunxican_probe(struct platform_device *pdev)
 	priv->can.do_set_mode = sunxican_set_mode;
 	priv->can.do_get_berr_counter = sunxican_get_berr_counter;
 	priv->can.ctrlmode_supported = CAN_CTRLMODE_BERR_REPORTING |
-	    CAN_CTRLMODE_LISTENONLY | CAN_CTRLMODE_LOOPBACK ;
+	    CAN_CTRLMODE_LISTENONLY | CAN_CTRLMODE_LOOPBACK |
+	    CAN_CTRLMODE_3_SAMPLES;
 	priv->dev = dev;
 	priv->base = addr;
 	priv->clk = clk;
