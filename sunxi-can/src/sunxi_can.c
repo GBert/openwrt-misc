@@ -1,14 +1,14 @@
 /*
  * sunxi_can.c - CAN bus controller driver for Allwinner SUN4I&SUN7I based SoCs
  *
- * Copyright (c) 2013 Peter Chen
- * Copyright (c) 2015 Gerhard Bertelsmann
+ * Copyright (C) 2013 Peter Chen
+ * Copyright (C) 2015 Gerhard Bertelsmann
  *   
  * Parts of this software are based on (derived from) the SJA1000 code by:
- *   Copyright (c) 2014 Oliver Hartkopp <oliver.hartkopp@volkswagen.de>
+ *   Copyright (C) 2014 Oliver Hartkopp <oliver.hartkopp@volkswagen.de>
  *   Copyright (C) 2007 Wolfgang Grandegger <wg@grandegger.com>
- *   Copyright (c) 2002-2007 Volkswagen Group Electronic Research
- *   Copyright (c) 2003 Matthias Brukner, Trajet Gmbh, Rebenring 33,
+ *   Copyright (C) 2002-2007 Volkswagen Group Electronic Research
+ *   Copyright (C) 2003 Matthias Brukner, Trajet Gmbh, Rebenring 33,
  *   38106 Braunschweig, GERMANY
  * 
  * This program is free software; you can redistribute it and/or modify
