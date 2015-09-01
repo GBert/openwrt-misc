@@ -286,7 +286,7 @@ static void set_normal_mode(struct net_device *dev)
 		status = readl(priv->base + CAN_MSEL_ADDR);
 	}
 
-	netdev_err(dev, "setting SUNXI_CAN into normal mode failed!\n");
+	netdev_err(dev, "setting controller into normal mode failed!\n");
 }
 
 static void set_reset_mode(struct net_device *dev)
@@ -309,7 +309,7 @@ static void set_reset_mode(struct net_device *dev)
 		status = readl(priv->base + CAN_MSEL_ADDR);
 	}
 
-	netdev_err(dev, "setting SUNXI_CAN into reset mode failed!\n");
+	netdev_err(dev, "setting controller into reset mode failed!\n");
 }
 
 static int sunxican_set_bittiming(struct net_device *dev)
@@ -401,7 +401,7 @@ static int sunxican_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	uint32_t temp = 0;
 	uint8_t i;
 
-	/* wait buff ready */
+	/* wait buffer ready */
 	while (!(readl(priv->base + CAN_STA_ADDR) & TBUF_RDY)) ;
 
 	if (can_dropped_invalid_skb(dev, skb))
@@ -434,8 +434,6 @@ static int sunxican_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	}
 
 	can_put_echo_skb(skb, dev, 0);
-
-	while (!(readl(priv->base + CAN_STA_ADDR) & TBUF_RDY)) ;
 	sunxi_can_write_cmdreg(priv, TRANS_REQ);
 
 	return NETDEV_TX_OK;
