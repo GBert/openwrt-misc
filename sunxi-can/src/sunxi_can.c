@@ -66,6 +66,7 @@
 #include <linux/platform_device.h>
 
 #define DRV_NAME "sunxi_can"
+#define DRV_MODULE_VERSION "0.90"
 
 /* Registers address */
 #define CAN_BASE0		0x01C2BC00
@@ -899,3 +900,4 @@ MODULE_AUTHOR("Peter Chen <xingkongcp@gmail.com>, "
 	      "Gerhard Bertelsmann <info@gerhard-bertelsmann.de>");
 MODULE_LICENSE("Dual BSD/GPL");
 MODULE_DESCRIPTION(DRV_NAME "CAN driver for Allwinner SoCs (A10/A20)");
+MODULE_VERSION(DRV_MODULE_VERSION);
