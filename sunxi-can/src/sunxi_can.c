@@ -5,11 +5,11 @@
  * Copyright (c) 2015 Gerhard Bertelsmann
  *   
  * Parts of this software are based on (derived from) the SJA1000 code by:
+ *   Copyright (c) 2014 Oliver Hartkopp <oliver.hartkopp@volkswagen.de>
  *   Copyright (C) 2007 Wolfgang Grandegger <wg@grandegger.com>
  *   Copyright (c) 2002-2007 Volkswagen Group Electronic Research
  *   Copyright (c) 2003 Matthias Brukner, Trajet Gmbh, Rebenring 33,
  *   38106 Braunschweig, GERMANY
- *   Copyright (c) 2014 Oliver Hartkopp <oliver.hartkopp@volkswagen.de>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the version 2 of the GNU General Public License
@@ -128,7 +128,7 @@
 #define FORM_ERR		(0x01<<22)
 #define STUFF_ERR		(0x02<<22)
 #define OTHER_ERR		(0x03<<22)
-#define ERR_DIR			(0x01<<21)
+#define ERR_DIR			BIT(21)
 #define ERR_SEG_CODE		(0x1f<<16)
 #define START			(0x03<<16)
 #define ID28_21			(0x02<<16)
@@ -187,10 +187,6 @@
 #define TX_IRQ_EN		BIT(1)
 #define RX_IRQ_EN		BIT(0)
 
-/* output control */
-#define NOR_OMODE		(2)
-#define CLK_OMODE		(3)
-
 /* error code */
 #define ERR_INRCV		(0x1<<5)
 #define ERR_INTRANS		(0x0<<5)
@@ -200,8 +196,6 @@
 #define SINGLE_FLTER_MODE	1
 #define DUAL_FILTER_MODE	2
 
-#define SW_INT_IRQNO_CAN	26
-#define CLK_MOD_CANi		"can"
 #define SUNXI_CAN_MAX_IRQ	20	/* max. number of interrupts handled in ISR */
 
 struct sunxican_priv {
