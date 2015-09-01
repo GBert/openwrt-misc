@@ -728,14 +728,14 @@ void unregister_sunxicandev(struct net_device *dev)
 }
 
 static const struct of_device_id sunxican_of_match[] = {
-        { .compatible = "allwinner,sunxi-can"},
+        { .compatible = "allwinner,sunxican"},
 	{},
 }
 
 MODULE_DEVICE_TABLE(of, sunxican_of_match);
 
 static const struct platform_device_id sunxican_id_table[] = {
-        { .name = "sunxi-can"},
+        { .name = "sunxican"},
         {},
 };
 MODULE_DEVICE_TABLE(platform, sunxican_id_table);
@@ -879,8 +879,9 @@ static struct platform_driver sunxi_can_driver = {
 	.id_table = sunxican_id_table,
 };
 
-// module_platform_driver(sunxi_can_driver);
+module_platform_driver(sunxi_can_driver);
 
+#if 0
 static __init int sunxican_init(void)
 {
 	printk(KERN_INFO "%s CAN netdevice driver\n", __func__);
@@ -897,6 +898,7 @@ static __exit void sunxican_exit(void)
 }
 
 module_exit(sunxican_exit);
+#endif
 
 
 MODULE_AUTHOR("Gerhard Bertelsmann <info@gerhard-bertelsmann.de>");

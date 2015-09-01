@@ -72,12 +72,14 @@
 		cpu@0 {
 			compatible = "arm,cortex-a7";
 			device_type = "cpu";
+			clocks = <&cpu>;
 			reg = <0>;
 		};
 
 		cpu@1 {
 			compatible = "arm,cortex-a7";
 			device_type = "cpu";
+			clocks = <&cpu>;
 			reg = <1>;
 		};
 	};
@@ -1067,7 +1069,7 @@
 		};
 
 		can0: can@01c2bc00 {
-			compatible = "allwinner,sun7i-can";
+			compatible = "allwinner,sunxican";
 			reg = <0x01c2bc00 0x400>;
 			reg-io-width = <4>;
 			interrupts = <0 26 4>;
