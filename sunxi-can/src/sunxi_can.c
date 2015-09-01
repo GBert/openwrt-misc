@@ -55,18 +55,13 @@
 /*  #include <linux/can/led.h> */
 #include <linux/clk.h>
 #include <linux/delay.h>
-#include <linux/if_arp.h>
-#include <linux/if_ether.h>
 #include <linux/interrupt.h>
-#include <linux/io.h>
-#include <linux/kernel.h>
-
-#include <linux/module.h>
 #include <linux/init.h>
+#include <linux/io.h>
+#include <linux/module.h>
 #include <linux/of.h>
 #include <linux/of_device.h>
 #include <linux/platform_device.h>
-#include <linux/regulator/consumer.h>
 
 #define DRV_NAME "sunxi_can"
 
@@ -105,10 +100,10 @@
 /* mode select register (r/w)
  * offset:0x0000 default:0x0000_0001
  */
-#define SLEEP_MODE		(1<<4)	/* This bit can only be written in Reset Mode */
-#define WAKE_UP			(0<<4)
-#define SINGLE_FILTER		(1<<3)	/* This bit can only be written in Reset Mode */
-#define DUAL_FILTERS		(0<<3)
+#define SLEEP_MODE		(0x01<<4)	/* This bit can only be written in Reset Mode */
+#define WAKE_UP			(0x00<<4)
+#define SINGLE_FILTER		(0x01<<3)	/* This bit can only be written in Reset Mode */
+#define DUAL_FILTERS		(0x00<<3)
 #define LOOPBACK_MODE		BIT(2)
 #define LISTEN_ONLY_MODE	BIT(1)
 #define RESET_MODE		BIT(0)
@@ -126,11 +121,11 @@
 /* status register (r)
  * offset:0x0008 default:0x0000_003c
  */
-#define BIT_ERR			(0<<22)
-#define FORM_ERR		(1<<22)
-#define STUFF_ERR		(2<<22)
-#define OTHER_ERR		(3<<22)
-#define ERR_DIR			(1<<21)
+#define BIT_ERR			(0x00<<22)
+#define FORM_ERR		(0x01<<22)
+#define STUFF_ERR		(0x02<<22)
+#define OTHER_ERR		(0x03<<22)
+#define ERR_DIR			(0x01<<21)
 #define ERR_SEG_CODE		(0x1f<<16)
 #define START			(0x03<<16)
 #define ID28_21			(0x02<<16)
@@ -180,37 +175,35 @@
 /* interrupt enable register (r/w)
  * offset:0x0010 default:0x0000_0000
  */
-#define BERR_IRQ_EN		(1<<7)
-#define BERR_IRQ_DIS		(0<<7)
-#define ARB_LOST_IRQ_EN		(1<<6)
-#define ARB_LOST_IRQ_DIS	(0<<6)
-#define ERR_PASSIVE_IRQ_EN	(1<<5)
-#define ERR_PASSIVE_IRQ_DIS	(0<<5)
-#define WAKEUP_IRQ_EN		(1<<4)
-#define WAKEUP_IRQ_DIS		(0<<4)
-#define OR_IRQ_EN		(1<<3)
-#define OR_IRQ_DIS		(0<<3)
-#define ERR_WRN_IRQ_EN		(1<<2)
-#define ERR_WRN_IRQ_DIS		(0<<2)
-#define TX_IRQ_EN		(1<<1)
-#define TX_IRQ_DIS		(0<<1)
-#define RX_IRQ_EN		(1<<0)
-#define RX_IRQ_DIS		(0<<0)
+#define BERR_IRQ_EN		(0x1<<7)
+#define BERR_IRQ_DIS		(0x0<<7)
+#define ARB_LOST_IRQ_EN		(0x1<<6)
+#define ARB_LOST_IRQ_DIS	(0x0<<6)
+#define ERR_PASSIVE_IRQ_EN	(0x1<<5)
+#define ERR_PASSIVE_IRQ_DIS	(0x0<<5)
+#define WAKEUP_IRQ_EN		(0x1<<4)
+#define WAKEUP_IRQ_DIS		(0x0<<4)
+#define OR_IRQ_EN		(0x1<<3)
+#define OR_IRQ_DIS		(0x0<<3)
+#define ERR_WRN_IRQ_EN		(0x1<<2)
+#define ERR_WRN_IRQ_DIS		(0x0<<2)
+#define TX_IRQ_EN		(0x1<<1)
+#define TX_IRQ_DIS		(0x0<<1)
+#define RX_IRQ_EN		(0x1<<0)
+#define RX_IRQ_DIS		(0x0<<0)
 
 /* output control */
 #define NOR_OMODE		(2)
 #define CLK_OMODE		(3)
 
 /* error code */
-#define ERR_INRCV		(1<<5)
-#define ERR_INTRANS		(0<<5)
+#define ERR_INRCV		(0x1<<5)
+#define ERR_INTRANS		(0x0<<5)
 
 /* filter mode */
 #define FILTER_CLOSE		0
 #define SINGLE_FLTER_MODE	1
 #define DUAL_FILTER_MODE	2
-
-#define SUNXI_CAN_CUSTOM_IRQ_HANDLER	0x1
 
 #define SW_INT_IRQNO_CAN	26
 #define CLK_MOD_CANi		"can"
@@ -476,9 +469,9 @@ static void sunxi_can_rx(struct net_device *dev)
 	if (fi >> 7) {
 		/* extended frame format (EFF) */
 		id = (readl(priv->base + CAN_BUF1_ADDR) << 21) |	/* id28~21 */
-		    (readl(priv->base + CAN_BUF2_ADDR) << 13) |	/* id20~13 */
-		    (readl(priv->base + CAN_BUF3_ADDR) << 5) |	/* id12~5  */
-		    ((readl(priv->base + CAN_BUF4_ADDR) >> 3) & 0x1f);	/* id4~0   */
+		     (readl(priv->base + CAN_BUF2_ADDR) << 13) |	/* id20~13 */
+		     (readl(priv->base + CAN_BUF3_ADDR) << 5)  |	/* id12~5  */
+		    ((readl(priv->base + CAN_BUF4_ADDR) >> 3)  & 0x1f);	/* id4~0   */
 		id |= CAN_EFF_FLAG;
 
 		/* remote transmission request ? */
