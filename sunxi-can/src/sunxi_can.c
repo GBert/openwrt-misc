@@ -686,7 +686,6 @@ static int sunxican_open(struct net_device *dev)
 
 	sunxican_set_bittiming(dev);
 	sunxi_can_start(dev);
-	priv->open_time = jiffies;
 
 	netif_start_queue(dev);
 
@@ -743,7 +742,6 @@ static int sunxican_remove(struct platform_device *pdev)
 	struct resource *res;
 
 	set_reset_mode(dev);
-	clk_put(priv->clk);
 	unregister_netdev(dev);
 	iounmap(priv->base);
 
@@ -831,7 +829,6 @@ static int sunxican_probe(struct platform_device *pdev)
 	temp_irqen = BERR_IRQ_EN | ERR_PASSIVE_IRQ_EN | OR_IRQ_EN | RX_IRQ_EN;
 	writel(readl(priv->base + CAN_INTEN_ADDR) | temp_irqen,
 	       priv->base + CAN_INTEN_ADDR);
-	set_normal_mode(dev);
 
 	platform_set_drvdata(pdev, dev);
 	SET_NETDEV_DEV(dev, &pdev->dev);
