@@ -739,11 +739,17 @@ MODULE_DEVICE_TABLE(platform, sunxican_id_table);
 static int sunxican_remove(struct platform_device *pdev)
 {
 	struct net_device *dev = platform_get_drvdata(pdev);
+	struct sunxican_priv *priv = netdev_priv(dev);
+	struct resource *res;
 
 	set_reset_mode(dev);
-	unregister_candev(dev);
-	/* TODO */
-	/* netif_napi_del(&priv->napi); */
+	clk_put(priv->clk);
+	unregister_netdev(dev);
+	iounmap(priv->base);
+
+	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+	release_mem_region(res->start, resource_size(res));
+
 	free_candev(dev);
 
 	return 0;
