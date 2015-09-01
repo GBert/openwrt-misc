@@ -617,8 +617,6 @@ irqreturn_t sunxi_can_interrupt(int irq, void *dev_id)
 	uint8_t isrc, status;
 	int n = 0;
 
-	printk(KERN_INFO "sunxican: capture a interrupt\n");
-
 	/* Shared interrupts and IRQ off? */
 	if ((readl(priv->base + CAN_INT_ADDR) & 0xF) == 0x0)
 		return IRQ_NONE;
@@ -670,8 +668,6 @@ static int sunxican_open(struct net_device *dev)
 	struct sunxican_priv *priv = netdev_priv(dev);
 	int err;
 
-	printk(KERN_INFO "%s: called\n", __func__);
-
 	/* set chip into reset mode */
 	set_reset_mode(dev);
 
@@ -684,8 +680,7 @@ static int sunxican_open(struct net_device *dev)
 	if (request_irq
 	    (dev->irq, sunxi_can_interrupt, priv->irq_flags, dev->name,
 	     (void *)dev)) {
-		/* TODO */
-		printk(KERN_INFO "request_irq err:%d\n", err);
+		netdev_err(dev, "request_irq err: %d\n", err);
 		return -EAGAIN;
 	}
 
@@ -772,7 +767,6 @@ static int sunxican_probe(struct platform_device *pdev)
 	}
 
 	/* turn on clocking for CAN peripheral block */
-	printk(KERN_INFO "%s: start_clock\n", __func__);
 	err = clk_prepare_enable(clk);
 	if (err) {
 		dev_err(&pdev->dev, "could not enable clocking (apb1_can)\n");
@@ -781,8 +775,6 @@ static int sunxican_probe(struct platform_device *pdev)
 
 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	irq = platform_get_irq(pdev, 0);
-
-	printk(KERN_INFO "%s: got IRQ %d\n", __func__, irq);
 
 	if (!res || irq <= 0) {
 		dev_err(&pdev->dev, "could not get a valid irq\n");
@@ -847,9 +839,6 @@ static int sunxican_probe(struct platform_device *pdev)
 	dev_info(&pdev->dev, "device registered (base=%p, irq=%d)\n",
 		 priv->base, dev->irq);
 
-	/* TODO */
-	printk(KERN_INFO "%s: successful probed\n", __func__);
-
 	return 0;
 
 exit_free:
@@ -869,8 +858,6 @@ static int __maybe_unused sunxi_can_suspend(struct device *device)
 	struct net_device *dev = dev_get_drvdata(device);
 	struct sunxican_priv *priv = netdev_priv(dev);
 
-	printk(KERN_INFO "%s: called\n", __func__);
-
 	if (netif_running(dev)) {
 		netif_stop_queue(dev);
 		netif_device_detach(dev);
@@ -884,8 +871,6 @@ static int __maybe_unused sunxi_can_resume(struct device *device)
 {
 	struct net_device *dev = dev_get_drvdata(device);
 	struct sunxican_priv *priv = netdev_priv(dev);
-
-	printk(KERN_INFO "%s: called\n", __func__);
 
 	priv->can.state = CAN_STATE_ERROR_ACTIVE;
 	if (netif_running(dev)) {
