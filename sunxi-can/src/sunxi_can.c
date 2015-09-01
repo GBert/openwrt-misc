@@ -55,7 +55,6 @@
 #include <linux/can.h>
 #include <linux/can/dev.h>
 #include <linux/can/error.h>
-/*  #include <linux/can/led.h> */
 #include <linux/clk.h>
 #include <linux/delay.h>
 #include <linux/interrupt.h>
@@ -116,7 +115,7 @@
  */
 #define BUS_OFF_REQ		BIT(5)
 #define SELF_RCV_REQ		BIT(4)
-#define CLEAR_DOVERRUN		BIT(3)
+#define CLEAR_OR_FLAG		BIT(3)
 #define RELEASE_RBUF		BIT(2)
 #define ABORT_REQ		BIT(1)
 #define TRANS_REQ		BIT(0)
@@ -178,22 +177,14 @@
 /* interrupt enable register (r/w)
  * offset:0x0010 default:0x0000_0000
  */
-#define BERR_IRQ_EN		(0x1<<7)
-#define BERR_IRQ_DIS		(0x0<<7)
-#define ARB_LOST_IRQ_EN		(0x1<<6)
-#define ARB_LOST_IRQ_DIS	(0x0<<6)
-#define ERR_PASSIVE_IRQ_EN	(0x1<<5)
-#define ERR_PASSIVE_IRQ_DIS	(0x0<<5)
-#define WAKEUP_IRQ_EN		(0x1<<4)
-#define WAKEUP_IRQ_DIS		(0x0<<4)
-#define OR_IRQ_EN		(0x1<<3)
-#define OR_IRQ_DIS		(0x0<<3)
-#define ERR_WRN_IRQ_EN		(0x1<<2)
-#define ERR_WRN_IRQ_DIS		(0x0<<2)
-#define TX_IRQ_EN		(0x1<<1)
-#define TX_IRQ_DIS		(0x0<<1)
-#define RX_IRQ_EN		(0x1<<0)
-#define RX_IRQ_DIS		(0x0<<0)
+#define BERR_IRQ_EN		BIT(7)
+#define ARB_LOST_IRQ_EN		BIT(6)
+#define ERR_PASSIVE_IRQ_EN	BIT(5)
+#define WAKEUP_IRQ_EN		BIT(4)
+#define OR_IRQ_EN		BIT(3)
+#define ERR_WRN_IRQ_EN		BIT(2)
+#define TX_IRQ_EN		BIT(1)
+#define RX_IRQ_EN		BIT(0)
 
 /* output control */
 #define NOR_OMODE		(2)
@@ -348,9 +339,10 @@ static int sunxican_get_berr_counter(const struct net_device *dev,
 				     struct can_berr_counter *bec)
 {
 	struct sunxican_priv *priv = netdev_priv(dev);
-	bec->txerr = readl(priv->base + CAN_ERRC_ADDR) & 0x000F;
-	bec->rxerr = (readl(priv->base + CAN_ERRC_ADDR) & 0x0F00) >> 16;
-
+	u32 errors;
+	errors = readl(priv->base + CAN_ERRC_ADDR);
+	bec->txerr = errors & 0x000F;
+	bec->rxerr = (errors  >> 16) & 0x000F;
 	return 0;
 }
 
@@ -426,9 +418,9 @@ static int sunxican_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	temp = ((id >> 30) << 6) | dlc;
 	writel(temp, priv->base + CAN_BUF0_ADDR);
 	if (id & CAN_EFF_FLAG) {	/* extended frame */
-		writel(0xFF & (id >> 21), priv->base + CAN_BUF1_ADDR);	/* id28~21 */
-		writel(0xFF & (id >> 13), priv->base + CAN_BUF2_ADDR);	/* id20~13 */
-		writel(0xFF & (id >> 5),  priv->base + CAN_BUF3_ADDR);	/* id12~5  */
+		writel((id >> 21) & 0xFF, priv->base + CAN_BUF1_ADDR);	/* id28~21 */
+		writel((id >> 13) & 0xFF, priv->base + CAN_BUF2_ADDR);	/* id20~13 */
+		writel((id >> 5)  & 0xFF, priv->base + CAN_BUF3_ADDR);	/* id12~5  */
 		writel((id & 0x1F) << 3,  priv->base + CAN_BUF4_ADDR);	/* id4~0   */
 
 		for (i = 0; i < dlc; i++) {
@@ -436,7 +428,7 @@ static int sunxican_start_xmit(struct sk_buff *skb, struct net_device *dev)
 			       priv->base + (CAN_BUF5_ADDR + i * 4));
 		}
 	} else {		/* standard frame */
-		writel(0xFF & (id >> 3), priv->base + CAN_BUF1_ADDR);	/* id28~21 */
+		writel((id >> 3) & 0xFF, priv->base + CAN_BUF1_ADDR);	/* id28~21 */
 		writel((id & 0x7) << 5, priv->base + CAN_BUF2_ADDR);	/* id20~13 */
 
 		for (i = 0; i < dlc; i++) {
@@ -531,7 +523,7 @@ static int sunxi_can_err(struct net_device *dev, uint8_t isrc, uint8_t status)
 		cf->data[1] = CAN_ERR_CRTL_RX_OVERFLOW;
 		stats->rx_over_errors++;
 		stats->rx_errors++;
-		sunxi_can_write_cmdreg(priv, CLEAR_DOVERRUN);	/* clear bit */
+		sunxi_can_write_cmdreg(priv, CLEAR_OR_FLAG);	/* clear bit */
 	}
 
 	if (isrc & ERR_WRN) {
@@ -793,17 +785,20 @@ static int sunxican_probe(struct platform_device *pdev)
 	printk(KERN_INFO "%s: got IRQ %d\n", __func__, irq);
 
 	if (!res || irq <= 0) {
+		dev_err(&pdev->dev, "could not get a valid irq\n");
 		err = -ENODEV;
 		goto exit_put;
 	}
 
 	if (!request_mem_region(res->start, resource_size(res), pdev->name)) {
+		dev_err(&pdev->dev, "could not get io memory resource\n");
 		err = -EBUSY;
 		goto exit_put;
 	}
 
 	addr = ioremap_nocache(res->start, resource_size(res));
 	if (!addr) {
+		dev_err(&pdev->dev, "could not map io memory\n");
 		err = -ENOMEM;
 		goto exit_release;
 	}
@@ -811,6 +806,7 @@ static int sunxican_probe(struct platform_device *pdev)
 	dev = alloc_candev(sizeof(struct sunxican_priv), 1);
 
 	if (!dev) {
+		dev_err(&pdev->dev, "could not allocate memory for CAN device\n");
 		err = -ENOMEM;
 		goto exit_iounmap;
 	}
