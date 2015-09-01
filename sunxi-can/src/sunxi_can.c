@@ -36,6 +36,7 @@
  *        allwinner,pull = <0>;
  *      };
  *    };
+ *    ...
  *    can0: can@01c2bc00 {
  *      compatible = "allwinner,sunxican";
  *      reg = <0x01c2bc00 0x400>;
@@ -44,7 +45,9 @@
  *      clocks = <&apb1_gates 4>;
  *      #address-cells = <1>;
  *      #size-cells = <0>;
- *   };
+ *    };
+ *    ...
+ *  };
  *   
  */
 
@@ -821,15 +824,14 @@ static int sunxican_probe(struct platform_device *pdev)
 	priv->can.bittiming_const = &sunxican_bittiming_const;
 	priv->can.do_set_mode = sunxican_set_mode;
 	priv->can.do_get_berr_counter = sunxican_get_berr_counter;
-	priv->can.ctrlmode_supported = CAN_CTRLMODE_LOOPBACK |
-	    CAN_CTRLMODE_LISTENONLY | CAN_CTRLMODE_3_SAMPLES |
-	    CAN_CTRLMODE_BERR_REPORTING;
+	priv->can.ctrlmode_supported = CAN_CTRLMODE_BERR_REPORTING |
+	    CAN_CTRLMODE_LISTENONLY | CAN_CTRLMODE_LOOPBACK ;
 	priv->dev = dev;
 	priv->base = addr;
 	priv->clk = clk;
 	spin_lock_init(&priv->cmdreg_lock);
 
-	/* enable CAN interrupts */
+	/* enable CAN specific interrupts */
 	set_reset_mode(dev);
 	temp_irqen = BERR_IRQ_EN | ERR_PASSIVE_IRQ_EN | OR_IRQ_EN | RX_IRQ_EN;
 	writel(readl(priv->base + CAN_INTEN_ADDR) | temp_irqen,
