@@ -67,7 +67,7 @@
 #include <linux/platform_device.h>
 
 #define DRV_NAME "sunxi_can"
-#define DRV_MODULE_VERSION "0.91"
+#define DRV_MODULE_VERSION "0.92"
 
 /* Registers address */
 #define CAN_BASE0		0x01C2BC00
@@ -274,14 +274,12 @@ static void set_normal_mode(struct net_device *dev)
 			}
 			return;
 		}
-
 		/* set chip to normal mode */
 		writel(readl(priv->base + CAN_MSEL_ADDR) & (~RESET_MODE),
 		       priv->base + CAN_MSEL_ADDR);
 		udelay(10);
 		status = readl(priv->base + CAN_MSEL_ADDR);
 	}
-
 	netdev_err(dev, "setting controller into normal mode failed!\n");
 }
 
@@ -299,12 +297,9 @@ static void set_reset_mode(struct net_device *dev)
 		}
 
 		writel(readl(priv->base + CAN_MSEL_ADDR) | RESET_MODE, priv->base + CAN_MSEL_ADDR);	/* select reset mode */
-		/* select reset mode */
-		/* writel(RESET_MODE, priv->base, CAN_MSEL_ADDR); */
 		udelay(10);
 		status = readl(priv->base + CAN_MSEL_ADDR);
 	}
-
 	netdev_err(dev, "setting controller into reset mode failed!\n");
 }
 
@@ -378,7 +373,6 @@ static int sunxican_set_mode(struct net_device *dev, enum can_mode mode)
 	default:
 		return -EOPNOTSUPP;
 	}
-
 	return 0;
 }
 
@@ -429,7 +423,6 @@ static int sunxican_start_xmit(struct sk_buff *skb, struct net_device *dev)
 			writel(cf->data[i], priv->base + CAN_BUF3_ADDR + i * 4);
 		}
 	}
-
 	can_put_echo_skb(skb, dev, 0);
 	sunxi_can_write_cmdreg(priv, TRANS_REQ);
 
@@ -483,7 +476,6 @@ static void sunxi_can_rx(struct net_device *dev)
 				    readl(priv->base + CAN_BUF3_ADDR + i * 4);
 		}
 	}
-
 	cf->can_id = id;
 
 	/* release receive buffer */
@@ -509,7 +501,6 @@ static int sunxi_can_err(struct net_device *dev, u8 isrc, u8 status)
 	skb = alloc_can_err_skb(dev, &cf);
 	if (skb == NULL)
 		return -ENOMEM;
-
 	if (isrc & DATA_OR) {
 		/* data overrun interrupt */
 		netdev_dbg(dev, "data overrun interrupt\n");
@@ -519,7 +510,6 @@ static int sunxi_can_err(struct net_device *dev, u8 isrc, u8 status)
 		stats->rx_errors++;
 		sunxi_can_write_cmdreg(priv, CLEAR_OR_FLAG);	/* clear bit */
 	}
-
 	if (isrc & ERR_WRN) {
 		/* error warning interrupt */
 		netdev_dbg(dev, "error warning interrupt\n");
@@ -574,7 +564,6 @@ static int sunxi_can_err(struct net_device *dev, u8 isrc, u8 status)
 		cf->can_id |= CAN_ERR_LOSTARB;
 		cf->data[0] = (alc & 0x1f) >> 8;
 	}
-
 	if (state != priv->can.state && (state == CAN_STATE_ERROR_WARNING ||
 					 state == CAN_STATE_ERROR_PASSIVE)) {
 		u8 rxerr = (readl(priv->base + CAN_ERRC_ADDR) >> 16) & 0xFF;
@@ -592,7 +581,6 @@ static int sunxi_can_err(struct net_device *dev, u8 isrc, u8 status)
 		cf->data[6] = txerr;
 		cf->data[7] = rxerr;
 	}
-
 	priv->can.state = state;
 
 	netif_rx(skb);
@@ -635,7 +623,8 @@ irqreturn_t sunxi_can_interrupt(int irq, void *dev_id)
 				status = readl(priv->base + CAN_STA_ADDR);
 			}
 		}
-		if (isrc & (DATA_OR | ERR_WRN | BUS_ERR | ERR_PASSIVE | ARB_LOST)) {
+		if (isrc &
+		    (DATA_OR | ERR_WRN | BUS_ERR | ERR_PASSIVE | ARB_LOST)) {
 			/* error interrupt */
 			if (sunxi_can_err(dev, isrc, status))
 				break;
@@ -644,7 +633,6 @@ irqreturn_t sunxi_can_interrupt(int irq, void *dev_id)
 		writel(isrc, priv->base + CAN_INT_ADDR);
 		udelay(10);
 	}
-
 	if (n >= SUNXI_CAN_MAX_IRQ)
 		netdev_dbg(dev, "%d messages handled in ISR", n);
 
@@ -673,7 +661,6 @@ static int sunxican_open(struct net_device *dev)
 		netdev_err(dev, "request_irq err: %d\n", err);
 		return -EAGAIN;
 	}
-
 	sunxican_set_bittiming(dev);
 	sunxi_can_start(dev);
 
@@ -759,14 +746,12 @@ static int sunxican_probe(struct platform_device *pdev)
 		err = -ENODEV;
 		goto exit;
 	}
-
 	/* turn on clocking for CAN peripheral block */
 	err = clk_prepare_enable(clk);
 	if (err) {
 		dev_err(&pdev->dev, "could not enable clocking (apb1_can)\n");
 		goto exit;
 	}
-
 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	irq = platform_get_irq(pdev, 0);
 
@@ -775,20 +760,17 @@ static int sunxican_probe(struct platform_device *pdev)
 		err = -ENODEV;
 		goto exit_put;
 	}
-
 	if (!request_mem_region(res->start, resource_size(res), pdev->name)) {
 		dev_err(&pdev->dev, "could not get io memory resource\n");
 		err = -EBUSY;
 		goto exit_put;
 	}
-
 	addr = ioremap_nocache(res->start, resource_size(res));
 	if (!addr) {
 		dev_err(&pdev->dev, "could not map io memory\n");
 		err = -ENOMEM;
 		goto exit_release;
 	}
-
 	dev = alloc_candev(sizeof(struct sunxican_priv), 1);
 
 	if (!dev) {
@@ -830,7 +812,6 @@ static int sunxican_probe(struct platform_device *pdev)
 			DRV_NAME, err);
 		goto exit_free;
 	}
-
 	devm_can_led_init(dev);
 
 	dev_info(&pdev->dev, "device registered (base=%p, irq=%d)\n",
