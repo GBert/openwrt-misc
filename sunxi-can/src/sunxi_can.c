@@ -228,7 +228,7 @@ static const struct can_bittiming_const sunxican_bittiming_const = {
 	.brp_inc = 1,
 };
 
-static void sunxi_can_write_cmdreg(struct sunxican_priv *priv, u8 val)
+static void sunxi_can_write_cmdreg(struct sunxican_priv *priv, uint8_t val)
 {
 	unsigned long flags;
 
@@ -245,7 +245,7 @@ static void sunxi_can_write_cmdreg(struct sunxican_priv *priv, u8 val)
 static void set_normal_mode(struct net_device *dev)
 {
 	struct sunxican_priv *priv = netdev_priv(dev);
-	unsigned char status = readl(priv->base + CAN_MSEL_ADDR);
+	uint8_t status = readl(priv->base + CAN_MSEL_ADDR);
 	int i;
 
 	for (i = 0; i < 100; i++) {
@@ -287,7 +287,7 @@ static void set_normal_mode(struct net_device *dev)
 static void set_reset_mode(struct net_device *dev)
 {
 	struct sunxican_priv *priv = netdev_priv(dev);
-	uint32_t status = readl(priv->base + CAN_MSEL_ADDR);
+	uint8_t status = readl(priv->base + CAN_MSEL_ADDR);
 	int i;
 
 	for (i = 0; i < 100; i++) {
@@ -311,7 +311,7 @@ static int sunxican_set_bittiming(struct net_device *dev)
 {
 	struct sunxican_priv *priv = netdev_priv(dev);
 	struct can_bittiming *bt = &priv->can.bittiming;
-	u32 cfg;
+	uint32_t cfg;
 
 	cfg = ((bt->brp - 1) & 0x3FF) |
 	    (((bt->sjw - 1) & 0x3) << 14) |
@@ -334,7 +334,7 @@ static int sunxican_get_berr_counter(const struct net_device *dev,
 				     struct can_berr_counter *bec)
 {
 	struct sunxican_priv *priv = netdev_priv(dev);
-	u32 errors;
+	uint32_t errors;
 	errors = readl(priv->base + CAN_ERRC_ADDR);
 	bec->txerr = errors & 0x000F;
 	bec->rxerr = (errors  >> 16) & 0x000F;
@@ -394,10 +394,11 @@ static int sunxican_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	uint8_t dlc;
 	canid_t id;
 	uint32_t temp = 0;
-	uint8_t i;
+	int i;
 
 	/* wait buffer ready */
-	while (!(readl(priv->base + CAN_STA_ADDR) & TBUF_RDY)) ;
+	while (!(readl(priv->base + CAN_STA_ADDR) & TBUF_RDY))
+		usleep_range(10,100);
 
 	if (can_dropped_invalid_skb(dev, skb))
 		return NETDEV_TX_OK;
@@ -749,7 +750,7 @@ static int sunxican_probe(struct platform_device *pdev)
 	struct clk *clk;
 	void __iomem *addr;
 	int err, irq;
-	u32 temp_irqen;
+	uint32_t temp_irqen;
 	struct net_device *dev;
 	struct sunxican_priv *priv;
 
