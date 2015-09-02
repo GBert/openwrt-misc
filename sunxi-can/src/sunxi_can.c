@@ -3,14 +3,14 @@
  *
  * Copyright (C) 2013 Peter Chen
  * Copyright (C) 2015 Gerhard Bertelsmann
- *   
+ *
  * Parts of this software are based on (derived from) the SJA1000 code by:
  *   Copyright (C) 2014 Oliver Hartkopp <oliver.hartkopp@volkswagen.de>
  *   Copyright (C) 2007 Wolfgang Grandegger <wg@grandegger.com>
  *   Copyright (C) 2002-2007 Volkswagen Group Electronic Research
  *   Copyright (C) 2003 Matthias Brukner, Trajet Gmbh, Rebenring 33,
  *   38106 Braunschweig, GERMANY
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the version 2 of the GNU General Public License
  * as published by the Free Software Foundation
@@ -48,7 +48,7 @@
  *    };
  *    ...
  *  };
- *   
+ *
  */
 
 #include <linux/netdevice.h>
@@ -67,7 +67,7 @@
 #include <linux/platform_device.h>
 
 #define DRV_NAME "sunxi_can"
-#define DRV_MODULE_VERSION "0.92"
+#define DRV_MODULE_VERSION "0.93"
 
 /* Registers address */
 #define CAN_BASE0		0x01C2BC00
@@ -502,6 +502,7 @@ static int sunxi_can_err(struct net_device *dev, u8 isrc, u8 status)
 	skb = alloc_can_err_skb(dev, &cf);
 	if (skb == NULL)
 		return -ENOMEM;
+
 	if (isrc & DATA_OR) {
 		/* data overrun interrupt */
 		netdev_dbg(dev, "data overrun interrupt\n");
@@ -567,8 +568,9 @@ static int sunxi_can_err(struct net_device *dev, u8 isrc, u8 status)
 	}
 	if (state != priv->can.state && (state == CAN_STATE_ERROR_WARNING ||
 					 state == CAN_STATE_ERROR_PASSIVE)) {
-		u8 rxerr = (readl(priv->base + CAN_ERRC_ADDR) >> 16) & 0xFF;
-		u8 txerr = readl(priv->base + CAN_ERRC_ADDR) & 0xFF;
+		u32 errc = readl(priv->base + CAN_ERRC_ADDR);
+		u8 rxerr = (errc >> 16) & 0xFF;
+		u8 txerr = errc & 0xFF;
 		cf->can_id |= CAN_ERR_CRTL;
 		if (state == CAN_STATE_ERROR_WARNING) {
 			priv->can.can_stats.error_warning++;
@@ -701,7 +703,7 @@ static const struct net_device_ops sunxican_netdev_ops = {
 static const struct of_device_id sunxican_of_match[] = {
 	{.compatible = "allwinner,sunxican"},
 	{},
-}
+};
 
 MODULE_DEVICE_TABLE(of, sunxican_of_match);
 
