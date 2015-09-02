@@ -23,32 +23,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  *
- *
- * To use the driver CAN must be defined like:
- *  soc@01c00000 {
- *    ...
- *    pio: pinctrl@01c20800 {
- *      ...
- *      can0_pins_a: can0@0 {
- *        allwinner,pins = "PH20","PH21";
- *        allwinner,function = "can";
- *        allwinner,drive = <0>;
- *        allwinner,pull = <0>;
- *      };
- *    };
- *    ...
- *    can0: can@01c2bc00 {
- *      compatible = "allwinner,sunxican";
- *      reg = <0x01c2bc00 0x400>;
- *      reg-io-width = <4>;
- *      interrupts = <0 26 4>;
- *      clocks = <&apb1_gates 4>;
- *      #address-cells = <1>;
- *      #size-cells = <0>;
- *    };
- *    ...
- *  };
- *
  */
 
 #include <linux/netdevice.h>
@@ -201,20 +175,10 @@
 
 struct sunxican_priv {
 	struct can_priv can;
-	struct net_device *dev;
-	struct napi_struct napi;
-
-	int open_time;
 	struct sk_buff *echo_skb;
 	void __iomem *base;
 	struct clk *clk;
-
-	void *priv;		/* for board-specific data */
-
-	unsigned long irq_flags;	/* for request_irq() */
 	spinlock_t cmdreg_lock;	/* lock for concurrent cmd register writes */
-
-	u16 flags;		/* custom mode flags */
 };
 
 static const struct can_bittiming_const sunxican_bittiming_const = {
@@ -277,7 +241,6 @@ static void set_normal_mode(struct net_device *dev)
 		/* set chip to normal mode */
 		writel(readl(priv->base + CAN_MSEL_ADDR) & (~RESET_MODE),
 		       priv->base + CAN_MSEL_ADDR);
-		udelay(10);
 		status = readl(priv->base + CAN_MSEL_ADDR);
 	}
 	netdev_err(dev, "setting controller into normal mode failed!\n");
@@ -297,7 +260,6 @@ static void set_reset_mode(struct net_device *dev)
 		}
 		/* select reset mode */
 		writel(readl(priv->base + CAN_MSEL_ADDR) | RESET_MODE, priv->base + CAN_MSEL_ADDR);
-		udelay(10);
 		status = readl(priv->base + CAN_MSEL_ADDR);
 	}
 	netdev_err(dev, "setting controller into reset mode failed!\n");
@@ -358,11 +320,6 @@ static void sunxi_can_start(struct net_device *dev)
 
 static int sunxican_set_mode(struct net_device *dev, enum can_mode mode)
 {
-	struct sunxican_priv *priv = netdev_priv(dev);
-
-	if (!priv->open_time)
-		return -EINVAL;
-
 	switch (mode) {
 	case CAN_MODE_START:
 		sunxi_can_start(dev);
@@ -593,7 +550,7 @@ static int sunxi_can_err(struct net_device *dev, u8 isrc, u8 status)
 	return 0;
 }
 
-irqreturn_t sunxi_can_interrupt(int irq, void *dev_id)
+static irqreturn_t sunxi_can_interrupt(int irq, void *dev_id)
 {
 	struct net_device *dev = (struct net_device *)dev_id;
 	struct sunxican_priv *priv = netdev_priv(dev);
@@ -633,7 +590,6 @@ irqreturn_t sunxi_can_interrupt(int irq, void *dev_id)
 		}
 		/* clear the interrupt */
 		writel(isrc, priv->base + CAN_INT_ADDR);
-		udelay(10);
 	}
 	if (n >= SUNXI_CAN_MAX_IRQ)
 		netdev_dbg(dev, "%d messages handled in ISR", n);
@@ -641,11 +597,8 @@ irqreturn_t sunxi_can_interrupt(int irq, void *dev_id)
 	return (n) ? IRQ_HANDLED : IRQ_NONE;
 }
 
-EXPORT_SYMBOL_GPL(sunxi_can_interrupt);
-
 static int sunxican_open(struct net_device *dev)
 {
-	struct sunxican_priv *priv = netdev_priv(dev);
 	int err;
 
 	/* set chip into reset mode */
@@ -658,7 +611,7 @@ static int sunxican_open(struct net_device *dev)
 
 	/* register interrupt handler */
 	if (request_irq
-	    (dev->irq, sunxi_can_interrupt, priv->irq_flags, dev->name,
+	    (dev->irq, sunxi_can_interrupt, IRQF_TRIGGER_NONE, dev->name,
 	     (void *)dev)) {
 		netdev_err(dev, "request_irq err: %d\n", err);
 		return -EAGAIN;
@@ -686,13 +639,6 @@ static int sunxican_close(struct net_device *dev)
 
 	return 0;
 }
-
-void free_sunxicandev(struct net_device *dev)
-{
-	free_candev(dev);
-}
-
-EXPORT_SYMBOL_GPL(free_sunxicandev);
 
 static const struct net_device_ops sunxican_netdev_ops = {
 	.ndo_open = sunxican_open,
@@ -794,7 +740,6 @@ static int sunxican_probe(struct platform_device *pdev)
 	priv->can.ctrlmode_supported = CAN_CTRLMODE_BERR_REPORTING |
 	    CAN_CTRLMODE_LISTENONLY | CAN_CTRLMODE_LOOPBACK |
 	    CAN_CTRLMODE_3_SAMPLES;
-	priv->dev = dev;
 	priv->base = addr;
 	priv->clk = clk;
 	spin_lock_init(&priv->cmdreg_lock);
