@@ -295,8 +295,8 @@ static void set_reset_mode(struct net_device *dev)
 			priv->can.state = CAN_STATE_STOPPED;
 			return;
 		}
-
-		writel(readl(priv->base + CAN_MSEL_ADDR) | RESET_MODE, priv->base + CAN_MSEL_ADDR);	/* select reset mode */
+		/* select reset mode */
+		writel(readl(priv->base + CAN_MSEL_ADDR) | RESET_MODE, priv->base + CAN_MSEL_ADDR);
 		udelay(10);
 		status = readl(priv->base + CAN_MSEL_ADDR);
 	}
@@ -405,7 +405,8 @@ static int sunxican_start_xmit(struct sk_buff *skb, struct net_device *dev)
 
 	temp = ((id >> 30) << 6) | dlc;
 	writel(temp, priv->base + CAN_BUF0_ADDR);
-	if (id & CAN_EFF_FLAG) {	/* extended frame */
+	if (id & CAN_EFF_FLAG) {
+		/* extended frame */
 		writel((id >> 21) & 0xFF, priv->base + CAN_BUF1_ADDR);	/* id28~21 */
 		writel((id >> 13) & 0xFF, priv->base + CAN_BUF2_ADDR);	/* id20~13 */
 		writel((id >> 5)  & 0xFF, priv->base + CAN_BUF3_ADDR);	/* id12~5  */
@@ -415,7 +416,8 @@ static int sunxican_start_xmit(struct sk_buff *skb, struct net_device *dev)
 			writel(cf->data[i],
 			       priv->base + (CAN_BUF5_ADDR + i * 4));
 		}
-	} else {		/* standard frame */
+	} else {
+		/* standard frame */
 		writel((id >> 3) & 0xFF, priv->base + CAN_BUF1_ADDR);	/* id28~21 */
 		writel((id & 0x7) << 5, priv->base + CAN_BUF2_ADDR);	/* id20~13 */
 
@@ -543,7 +545,7 @@ static int sunxi_can_err(struct net_device *dev, u8 isrc, u8 status)
 			cf->data[2] |= CAN_ERR_PROT_UNSPEC;
 			cf->data[3] = (ecc & ERR_SEG_CODE) >> 16;
 		}
-		/* Error occurred during transmission? */
+		/* error occurred during transmission? */
 		if ((ecc & ERR_DIR) == 0)
 			cf->data[2] |= CAN_ERR_PROT_TX;
 	}
