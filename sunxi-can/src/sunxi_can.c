@@ -483,10 +483,9 @@ static void sunxi_can_rx(struct net_device *dev)
 	/* release receive buffer */
 	sunxi_can_write_cmdreg(priv, RELEASE_RBUF);
 
-	netif_rx(skb);
-
 	stats->rx_packets++;
 	stats->rx_bytes += cf->can_dlc;
+	netif_rx(skb);
 
 	can_led_event(dev, CAN_LED_EVENT_RX);
 }
@@ -585,10 +584,9 @@ static int sunxi_can_err(struct net_device *dev, u8 isrc, u8 status)
 	}
 	priv->can.state = state;
 
-	netif_rx(skb);
-
 	stats->rx_packets++;
 	stats->rx_bytes += cf->can_dlc;
+	netif_rx(skb);
 
 	return 0;
 }
