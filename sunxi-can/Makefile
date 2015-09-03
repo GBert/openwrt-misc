@@ -8,27 +8,26 @@
 include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/kernel.mk
 
-PKG_NAME:=mcp2515-banged
+PKG_NAME:=sun7i-can
 PKG_RELEASE:=1
 
 include $(INCLUDE_DIR)/package.mk
 
-define KernelPackage/mcp2515-banged
+define KernelPackage/sun7i-can
   SUBMENU:=CAN Support
-  TITLE:=MCP2515 banged module
-  DEPENDS:=@GPIO_SUPPORT +kmod-can
-  FILES:=$(PKG_BUILD_DIR)/mcp2515-banged.ko
+  TITLE:=SUNXI CAN-Bus
+  DEPENDS:=+kmod-can
+  FILES:=$(PKG_BUILD_DIR)/{sun7i_can.ko,sunxi_can.ko}
   KCONFIG:=
 endef
 
-define KernelPackage/mcp2515-banged/description
-  This module combines the CAN MCP2515 und SPI bit-banged module to test how well
-  this could work with all the Kernel overhead from the SPI modules wiped out.
-  This is bad code: it locks the CPU for tens of microseconds - don't do it this way ...
+define KernelPackage/sun7i-can/description
+  This module is tesing code for the SUNXI CAN-Bus module
+  Target: suing generic OF sja1000 kernel module
 endef
 
 EXTRA_KCONFIG:= \
-    CONFIG_MCP2515_BANGED=m \
+    CONFIG_SUN7I_CAN=m \
 
 EXTRA_CFLAGS:= \
     $(patsubst CONFIG_%, -DCONFIG_%=1, $(patsubst %=m,%,$(filter %=m,$(EXTRA_KCONFIG)))) \
@@ -50,4 +49,4 @@ define Build/Compile
 	$(MAKE) -C "$(LINUX_DIR)" $(MAKE_OPTS) modules
 endef
 
-$(eval $(call KernelPackage,mcp2515-banged))
+$(eval $(call KernelPackage,sun7i-can))

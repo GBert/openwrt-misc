@@ -30,6 +30,7 @@
  *
  */
 
+/*
 #include <linux/can/core.h>
 #include <linux/can/dev.h>
 #include <linux/can/platform/mcp251x.h>
@@ -49,6 +50,25 @@
 #include <linux/spi/spi.h>
 #include <linux/uaccess.h>
 #include <linux/regulator/consumer.h>
+*/
+
+#include <linux/can/core.h>
+#include <linux/can/dev.h>
+#include <linux/clk.h>
+#include <linux/completion.h>
+#include <linux/delay.h>
+#include <linux/device.h>
+#include <linux/freezer.h>
+#include <linux/interrupt.h>
+#include <linux/io.h>
+#include <linux/kernel.h>
+#include <linux/module.h>
+#include <linux/netdevice.h>
+#include <linux/platform_device.h>
+#include <linux/slab.h>
+#include <linux/gpio.h>
+
+
 
 /* SPI interface instruction set */
 #define INSTRUCTION_WRITE	0x02
