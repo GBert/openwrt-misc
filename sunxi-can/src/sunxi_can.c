@@ -230,7 +230,8 @@ static void set_normal_mode(struct net_device *dev)
 				writel(readl(priv->base + CAN_MSEL_ADDR) |
 				       LOOPBACK_MODE,
 				       priv->base + CAN_MSEL_ADDR);
-			} else if (priv->can.ctrlmode & CAN_CTRLMODE_LISTENONLY) {
+			} else if
+				(priv->can.ctrlmode & CAN_CTRLMODE_LISTENONLY) {
 				/* Put device into listen-only mode */
 				writel(readl(priv->base + CAN_MSEL_ADDR) |
 				       LISTEN_ONLY_MODE,
