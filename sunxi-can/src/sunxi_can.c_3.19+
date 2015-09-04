@@ -542,7 +542,7 @@ static int sunxi_can_err(struct net_device *dev, u8 isrc, u8 status)
 		rx_state = txerr <= rxerr ? state : 0;
 
 		can_change_state(dev, cf, tx_state, rx_state);
-		if(state == CAN_STATE_BUS_OFF)
+		if (state == CAN_STATE_BUS_OFF)
 			can_bus_off(dev);
 	}
 
@@ -561,8 +561,8 @@ static irqreturn_t sunxi_can_interrupt(int irq, void *dev_id)
 	u8 isrc, status;
 	int n = 0;
 
-	while ((isrc = readl(priv->base + CAN_INT_ADDR))
-	       && (n < SUNXI_CAN_MAX_IRQ)) {
+	while ((isrc = readl(priv->base + CAN_INT_ADDR)) &&
+	       (n < SUNXI_CAN_MAX_IRQ)) {
 		n++;
 		status = readl(priv->base + CAN_STA_ADDR);
 
@@ -581,7 +581,7 @@ static irqreturn_t sunxi_can_interrupt(int irq, void *dev_id)
 		if (isrc & RBUF_VLD) {
 			/* receive interrupt */
 			while (status & RBUF_RDY) {
-			/* RX buffer is not empty */
+				/* RX buffer is not empty */
 				sunxi_can_rx(dev);
 				status = readl(priv->base + CAN_STA_ADDR);
 			}
@@ -831,3 +831,4 @@ MODULE_AUTHOR("Gerhard Bertelsmann <info@gerhard-bertelsmann.de>");
 MODULE_LICENSE("Dual BSD/GPL");
 MODULE_DESCRIPTION(DRV_NAME "CAN driver for Allwinner SoCs (A10/A20)");
 MODULE_VERSION(DRV_MODULE_VERSION);
+

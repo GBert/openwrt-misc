@@ -570,8 +570,8 @@ static irqreturn_t sunxi_can_interrupt(int irq, void *dev_id)
 	u8 isrc, status;
 	int n = 0;
 
-	while ((isrc = readl(priv->base + CAN_INT_ADDR))
-	       && (n < SUNXI_CAN_MAX_IRQ)) {
+	while ((isrc = readl(priv->base + CAN_INT_ADDR)) &&
+	       (n < SUNXI_CAN_MAX_IRQ)) {
 		n++;
 		status = readl(priv->base + CAN_STA_ADDR);
 
@@ -590,7 +590,7 @@ static irqreturn_t sunxi_can_interrupt(int irq, void *dev_id)
 		if (isrc & RBUF_VLD) {
 			/* receive interrupt */
 			while (status & RBUF_RDY) {
-			/* RX buffer is not empty */
+				/* RX buffer is not empty */
 				sunxi_can_rx(dev);
 				status = readl(priv->base + CAN_STA_ADDR);
 			}
