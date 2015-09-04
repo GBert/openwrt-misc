@@ -103,6 +103,7 @@
 #define FORM_ERR		(0x01 << 22)
 #define STUFF_ERR		(0x02 << 22)
 #define OTHER_ERR		(0x03 << 22)
+#define MASK_ERR		(0x03 << 22)
 #define ERR_DIR			BIT(21)
 #define ERR_SEG_CODE		(0x1f << 16)
 #define START			(0x03 << 16)
@@ -176,7 +177,6 @@
 
 struct sunxican_priv {
 	struct can_priv can;
-	struct sk_buff *echo_skb;
 	void __iomem *base;
 	struct clk *clk;
 	spinlock_t cmdreg_lock;	/* lock for concurrent cmd register writes */
@@ -312,7 +312,7 @@ static void sunxi_can_start(struct net_device *dev)
 
 	/* set filters - we accept all */
 	writel(0x00000000, priv->base + CAN_ACPC_ADDR);
-	writel(0xffffffff, priv->base + CAN_ACPM_ADDR);
+	writel(0xFFFFFFFF, priv->base + CAN_ACPM_ADDR);
 
 	/* Clear error counters and error code capture */
 	writel(0x0, priv->base + CAN_ERRC_ADDR);
@@ -455,11 +455,20 @@ static int sunxi_can_err(struct net_device *dev, u8 isrc, u8 status)
 	struct can_frame *cf;
 	struct sk_buff *skb;
 	enum can_state state = priv->can.state;
+	enum can_state rx_state, tx_state;
+	unsigned int rxerr, txerr, errc;
 	u32 ecc, alc;
 
 	skb = alloc_can_err_skb(dev, &cf);
 	if (!skb)
 		return -ENOMEM;
+
+	errc = readl(priv->base + CAN_ERRC_ADDR);
+	rxerr = (errc >> 16) & 0xFF;
+	txerr = errc & 0xFF;
+
+	cf->data[6] = txerr;
+	cf->data[7] = rxerr;
 
 	if (isrc & DATA_OR) {
 		/* data overrun interrupt */
@@ -474,15 +483,12 @@ static int sunxi_can_err(struct net_device *dev, u8 isrc, u8 status)
 		/* error warning interrupt */
 		netdev_dbg(dev, "error warning interrupt\n");
 
-		if (status & BUS_OFF) {
+		if (status & BUS_OFF)
 			state = CAN_STATE_BUS_OFF;
-			cf->can_id |= CAN_ERR_BUSOFF;
-			can_bus_off(dev);
-		} else if (status & ERR_STA) {
+		else if (status & ERR_STA)
 			state = CAN_STATE_ERROR_WARNING;
-		} else {
+		else
 			state = CAN_STATE_ERROR_ACTIVE;
-		}
 	}
 	if (isrc & BUS_ERR) {
 		/* bus error interrupt */
@@ -494,15 +500,20 @@ static int sunxi_can_err(struct net_device *dev, u8 isrc, u8 status)
 
 		cf->can_id |= CAN_ERR_PROT | CAN_ERR_BUSERROR;
 
-		if (ecc & BIT_ERR) {
+		switch (ecc & MASK_ERR) {
+		case BIT_ERR:
 			cf->data[2] |= CAN_ERR_PROT_BIT;
-		} else if (ecc & FORM_ERR) {
+			break;
+		case FORM_ERR:
 			cf->data[2] |= CAN_ERR_PROT_FORM;
-		} else if (ecc & STUFF_ERR) {
+			break;
+		case STUFF_ERR:
 			cf->data[2] |= CAN_ERR_PROT_STUFF;
-		} else {
+			break;
+		default:
 			cf->data[2] |= CAN_ERR_PROT_UNSPEC;
 			cf->data[3] = (ecc & ERR_SEG_CODE) >> 16;
+			break;
 		}
 		/* error occurred during transmission? */
 		if ((ecc & ERR_DIR) == 0)
@@ -511,10 +522,10 @@ static int sunxi_can_err(struct net_device *dev, u8 isrc, u8 status)
 	if (isrc & ERR_PASSIVE) {
 		/* error passive interrupt */
 		netdev_dbg(dev, "error passive interrupt\n");
-		if (status & ERR_STA)
-			state = CAN_STATE_ERROR_PASSIVE;
+		if (state == CAN_STATE_ERROR_PASSIVE)
+			state = CAN_STATE_ERROR_WARNING;
 		else
-			state = CAN_STATE_ERROR_ACTIVE;
+			state = CAN_STATE_ERROR_PASSIVE;
 	}
 	if (isrc & ARB_LOST) {
 		/* arbitration lost interrupt */
@@ -527,9 +538,9 @@ static int sunxi_can_err(struct net_device *dev, u8 isrc, u8 status)
 	}
 	if (state != priv->can.state && (state == CAN_STATE_ERROR_WARNING ||
 					 state == CAN_STATE_ERROR_PASSIVE)) {
-		u32 errc = readl(priv->base + CAN_ERRC_ADDR);
-		u8 rxerr = (errc >> 16) & 0xFF;
-		u8 txerr = errc & 0xFF;
+
+		tx_state = txerr >= rxerr ? state : 0;
+		rx_state = txerr <= rxerr ? state : 0;
 
 		cf->can_id |= CAN_ERR_CRTL;
 		if (state == CAN_STATE_ERROR_WARNING) {
@@ -541,8 +552,6 @@ static int sunxi_can_err(struct net_device *dev, u8 isrc, u8 status)
 			cf->data[1] = (txerr > rxerr) ?
 			    CAN_ERR_CRTL_TX_PASSIVE : CAN_ERR_CRTL_RX_PASSIVE;
 		}
-		cf->data[6] = txerr;
-		cf->data[7] = rxerr;
 	}
 	priv->can.state = state;
 
@@ -620,7 +629,6 @@ static int sunxican_open(struct net_device *dev)
 		netdev_err(dev, "request_irq err: %d\n", err);
 		return -EAGAIN;
 	}
-	sunxican_set_bittiming(dev);
 	sunxi_can_start(dev);
 
 	can_led_event(dev, CAN_LED_EVENT_OPEN);
@@ -738,6 +746,7 @@ static int sunxican_probe(struct platform_device *pdev)
 
 	priv = netdev_priv(dev);
 	priv->can.clock.freq = clk_get_rate(clk);
+	priv->can.do_set_bittiming = sunxican_set_bittiming;
 	priv->can.bittiming_const = &sunxican_bittiming_const;
 	priv->can.do_set_mode = sunxican_set_mode;
 	priv->can.do_get_berr_counter = sunxican_get_berr_counter;

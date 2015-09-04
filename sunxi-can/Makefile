@@ -8,26 +8,26 @@
 include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/kernel.mk
 
-PKG_NAME:=sun7i-can
+PKG_NAME:=sunxi-can
 PKG_RELEASE:=1
 
 include $(INCLUDE_DIR)/package.mk
 
-define KernelPackage/sun7i-can
+define KernelPackage/sunxi-can
   SUBMENU:=CAN Support
   TITLE:=SUNXI CAN-Bus
   DEPENDS:=+kmod-can
-  FILES:=$(PKG_BUILD_DIR)/{sun7i_can.ko,sunxi_can.ko}
+  FILES:=$(PKG_BUILD_DIR)/sunxi_can.ko
   KCONFIG:=
 endef
 
-define KernelPackage/sun7i-can/description
+define KernelPackage/sunxi-can/description
   This module is tesing code for the SUNXI CAN-Bus module
   Target: suing generic OF sja1000 kernel module
 endef
 
 EXTRA_KCONFIG:= \
-    CONFIG_SUN7I_CAN=m \
+    CONFIG_SUNXI_CAN=m \
 
 EXTRA_CFLAGS:= \
     $(patsubst CONFIG_%, -DCONFIG_%=1, $(patsubst %=m,%,$(filter %=m,$(EXTRA_KCONFIG)))) \
@@ -49,4 +49,4 @@ define Build/Compile
 	$(MAKE) -C "$(LINUX_DIR)" $(MAKE_OPTS) modules
 endef
 
-$(eval $(call KernelPackage,sun7i-can))
+$(eval $(call KernelPackage,sunxi-can))
