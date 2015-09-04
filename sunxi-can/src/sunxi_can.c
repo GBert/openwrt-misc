@@ -746,13 +746,14 @@ static int sunxican_probe(struct platform_device *pdev)
 
 	priv = netdev_priv(dev);
 	priv->can.clock.freq = clk_get_rate(clk);
-	priv->can.do_set_bittiming = sunxican_set_bittiming;
 	priv->can.bittiming_const = &sunxican_bittiming_const;
+	priv->can.do_set_bittiming = sunxican_set_bittiming;
 	priv->can.do_set_mode = sunxican_set_mode;
 	priv->can.do_get_berr_counter = sunxican_get_berr_counter;
 	priv->can.ctrlmode_supported = CAN_CTRLMODE_BERR_REPORTING |
-	    CAN_CTRLMODE_LISTENONLY | CAN_CTRLMODE_LOOPBACK |
-	    CAN_CTRLMODE_3_SAMPLES;
+				       CAN_CTRLMODE_LISTENONLY |
+				       CAN_CTRLMODE_LOOPBACK |
+				       CAN_CTRLMODE_3_SAMPLES;
 	priv->base = addr;
 	priv->clk = clk;
 	spin_lock_init(&priv->cmdreg_lock);
