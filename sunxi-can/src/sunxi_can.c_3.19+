@@ -536,24 +536,15 @@ static int sunxi_can_err(struct net_device *dev, u8 isrc, u8 status)
 		cf->can_id |= CAN_ERR_LOSTARB;
 		cf->data[0] = (alc & 0x1f) >> 8;
 	}
-	if (state != priv->can.state && (state == CAN_STATE_ERROR_WARNING ||
-					 state == CAN_STATE_ERROR_PASSIVE)) {
 
+	if (state != priv->can.state) {
 		tx_state = txerr >= rxerr ? state : 0;
 		rx_state = txerr <= rxerr ? state : 0;
 
-		cf->can_id |= CAN_ERR_CRTL;
-		if (state == CAN_STATE_ERROR_WARNING) {
-			priv->can.can_stats.error_warning++;
-			cf->data[1] = (txerr > rxerr) ?
-			    CAN_ERR_CRTL_TX_WARNING : CAN_ERR_CRTL_RX_WARNING;
-		} else {
-			priv->can.can_stats.error_passive++;
-			cf->data[1] = (txerr > rxerr) ?
-			    CAN_ERR_CRTL_TX_PASSIVE : CAN_ERR_CRTL_RX_PASSIVE;
-		}
+		can_change_state(dev, cf, tx_state, rx_state);
+		if (state == CAN_STATE_BUS_OFF)
+			can_bus_off(dev);
 	}
-	priv->can.state = state;
 
 	stats->rx_packets++;
 	stats->rx_bytes += cf->can_dlc;
@@ -840,3 +831,4 @@ MODULE_AUTHOR("Gerhard Bertelsmann <info@gerhard-bertelsmann.de>");
 MODULE_LICENSE("Dual BSD/GPL");
 MODULE_DESCRIPTION(DRV_NAME "CAN driver for Allwinner SoCs (A10/A20)");
 MODULE_VERSION(DRV_MODULE_VERSION);
+
