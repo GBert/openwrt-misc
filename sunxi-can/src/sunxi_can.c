@@ -251,7 +251,7 @@ static int set_reset_mode(struct net_device *dev)
 		writel(readl(priv->base + SUNXI_REG_MSEL_ADDR) |
 		       SUNXI_RESET_MODE, priv->base + SUNXI_REG_MSEL_ADDR);
 
-	if (readl(priv->base + SUNXI_REG_MSEL_ADDR) & SUNXI_RESET_MODE) {
+	if (!readl(priv->base + SUNXI_REG_MSEL_ADDR) & SUNXI_RESET_MODE) {
 		netdev_err(dev, "setting controller into reset mode failed!\n");
 		return -ETIMEDOUT;
 	}
