@@ -455,8 +455,7 @@ static void sunxi_can_rx(struct net_device *dev)
 		id |= CAN_RTR_FLAG;
 	else
 		for (i = 0; i < cf->can_dlc; i++)
-			cf->data[i] = readl(priv->base +
-					    SUNXI_REG_BUF3_ADDR + i * 4);
+			cf->data[i] = readl(priv->base + dreg + i * 4);
 
 	cf->can_id = id;
 
