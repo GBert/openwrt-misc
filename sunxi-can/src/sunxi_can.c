@@ -376,10 +376,6 @@ static int sunxican_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	canid_t id;
 	int i;
 
-	/* throw a line if there is a transmit running */
-	if (!(readl(priv->base + SUNXI_REG_STA_ADDR) & SUNXI_STA_TBUF_RDY))
-		netdev_dbg(dev, "TX buffer busy\n");
-
 	if (can_dropped_invalid_skb(dev, skb))
 		return NETDEV_TX_OK;
 
@@ -411,6 +407,7 @@ static int sunxican_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	writel(msg_flag_n, priv->base + SUNXI_REG_BUF0_ADDR);
 
 	can_put_echo_skb(skb, dev, 0);
+
 	if (priv->can.ctrlmode & CAN_CTRLMODE_LOOPBACK)
 		sunxi_can_write_cmdreg(priv, SUNXI_CMD_SELF_RCV_REQ);
 	else
@@ -628,11 +625,6 @@ static int sunxican_open(struct net_device *dev)
 {
 	int err;
 
-	/* set chip into reset mode */
-	err = set_reset_mode(dev);
-	if (err)
-		return err;
-
 	/* common open */
 	err = open_candev(dev);
 	if (err)
@@ -659,17 +651,16 @@ static int sunxican_open(struct net_device *dev)
 static int sunxican_close(struct net_device *dev)
 {
 	struct sunxican_priv *priv = netdev_priv(dev);
-	int err;
 
 	netif_stop_queue(dev);
-	err = set_reset_mode(dev);
+	set_reset_mode(dev);
 	clk_disable_unprepare(priv->clk);
 
 	free_irq(dev->irq, dev);
 	close_candev(dev);
 	can_led_event(dev, CAN_LED_EVENT_STOP);
 
-	return err;
+	return 0;
 }
 
 static const struct net_device_ops sunxican_netdev_ops = {
@@ -698,7 +689,6 @@ static int sunxican_remove(struct platform_device *pdev)
 	struct sunxican_priv *priv = netdev_priv(dev);
 	struct resource *res;
 
-	set_reset_mode(dev);
 	unregister_netdev(dev);
 	iounmap(priv->base);
 
@@ -739,14 +729,15 @@ static int sunxican_probe(struct platform_device *pdev)
 		err = -EBUSY;
 		goto exit;
 	}
+
 	addr = ioremap_nocache(res->start, resource_size(res));
 	if (!addr) {
 		dev_err(&pdev->dev, "could not map io memory\n");
 		err = -ENOMEM;
 		goto exit_release;
 	}
-	dev = alloc_candev(sizeof(struct sunxican_priv), 1);
 
+	dev = alloc_candev(sizeof(struct sunxican_priv), 1);
 	if (!dev) {
 		dev_err(&pdev->dev,
 			"could not allocate memory for CAN device\n");
@@ -788,7 +779,6 @@ static int sunxican_probe(struct platform_device *pdev)
 	return 0;
 
 exit_free:
-	clk_disable_unprepare(priv->clk);
 	free_candev(dev);
 exit_iounmap:
 	iounmap(addr);
