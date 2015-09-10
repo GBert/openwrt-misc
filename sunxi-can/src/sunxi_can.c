@@ -426,6 +426,7 @@ static void sunxi_can_rx(struct net_device *dev)
 	struct can_frame *cf;
 	struct sk_buff *skb;
 	u8 fi;
+	u32 dreg;
 	canid_t id;
 	int i;
 
@@ -436,41 +437,29 @@ static void sunxi_can_rx(struct net_device *dev)
 
 	fi = readl(priv->base + SUNXI_REG_BUF0_ADDR);
 	cf->can_dlc = get_can_dlc(fi & 0x0F);
-	if (fi >> 7) {
-		/* extended frame format (EFF) */
+	if (fi & SUNXI_MSG_EFF_FLAG) {
+		dreg = SUNXI_REG_BUF5_ADDR;
 		id = (readl(priv->base + SUNXI_REG_BUF1_ADDR) << 21) |
 		     (readl(priv->base + SUNXI_REG_BUF2_ADDR) << 13) |
 		     (readl(priv->base + SUNXI_REG_BUF3_ADDR) << 5)  |
 		    ((readl(priv->base + SUNXI_REG_BUF4_ADDR) >> 3)  & 0x1f);
 		id |= CAN_EFF_FLAG;
-
-		/* remote transmission request ? */
-		if ((fi >> 6) & 0x1) {
-			id |= CAN_RTR_FLAG;
-		} else {
-			for (i = 0; i < cf->can_dlc; i++)
-				cf->data[i] =
-				    readl(priv->base + SUNXI_REG_BUF5_ADDR +
-					  i * 4);
-		}
 	} else {
-		/* standard frame format (SFF) */
+		dreg = SUNXI_REG_BUF3_ADDR;
 		id = (readl(priv->base + SUNXI_REG_BUF1_ADDR) << 3) |
 		    ((readl(priv->base + SUNXI_REG_BUF2_ADDR) >> 5) & 0x7);
-
-		/* remote transmission request ? */
-		if ((fi >> 6) & 0x1) {
-			id |= CAN_RTR_FLAG;
-		} else {
-			for (i = 0; i < cf->can_dlc; i++)
-				cf->data[i] =
-				    readl(priv->base + SUNXI_REG_BUF3_ADDR +
-					  i * 4);
-		}
 	}
+
+	/* remote frame ? */
+	if (fi & SUNXI_MSG_RTR_FLAG)
+		id |= CAN_RTR_FLAG;
+	else
+		for (i = 0; i < cf->can_dlc; i++)
+			cf->data[i] = readl(priv->base +
+					    SUNXI_REG_BUF3_ADDR + i * 4);
+
 	cf->can_id = id;
 
-	/* release receive buffer */
 	sunxi_can_write_cmdreg(priv, SUNXI_CMD_RELEASE_RBUF);
 
 	stats->rx_packets++;
@@ -738,14 +727,14 @@ static int sunxican_probe(struct platform_device *pdev)
 		goto exit;
 	}
 
-	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	irq = platform_get_irq(pdev, 0);
-
-	if (!res || irq <= 0) {
+	if (irq < 0) {
 		dev_err(&pdev->dev, "could not get a valid irq\n");
 		err = -ENODEV;
 		goto exit;
 	}
+
+	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	if (!request_mem_region(res->start, resource_size(res), pdev->name)) {
 		dev_err(&pdev->dev, "could not get io memory resource\n");
 		err = -EBUSY;
