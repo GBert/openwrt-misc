@@ -177,7 +177,7 @@
 
 /* max. number of interrupts handled in ISR */
 #define SUNXI_CAN_MAX_IRQ	20
-
+#define SUNXI_MODE_MAX_RETRIES	100
 struct sunxican_priv {
 	struct can_priv can;
 	void __iomem *base;
@@ -206,65 +206,59 @@ static void sunxi_can_write_cmdreg(struct sunxican_priv *priv, u8 val)
 	spin_unlock_irqrestore(&priv->cmdreg_lock, flags);
 }
 
-static void set_normal_mode(struct net_device *dev)
+static int set_normal_mode(struct net_device *dev)
 {
 	struct sunxican_priv *priv = netdev_priv(dev);
-	u8 status = readl(priv->base + SUNXI_REG_MSEL_ADDR);
-	int i;
+	int retry = SUNXI_MODE_MAX_RETRIES;
+	u32 mod_reg_val = 0;
 
-	for (i = 0; i < 100; i++) {
-		/* check reset bit */
-		if ((status & SUNXI_RESET_MODE) == 0) {
-			priv->can.state = CAN_STATE_ERROR_ACTIVE;
-			/* enable interrupts */
-			if (priv->can.ctrlmode & CAN_CTRLMODE_BERR_REPORTING) {
-				writel(0xFFFF,
-				       priv->base + SUNXI_REG_INTEN_ADDR);
-			} else {
-				writel(0xFFFF & ~SUNXI_INTEN_BERR,
-				       priv->base + SUNXI_REG_INTEN_ADDR);
-			}
-
-			if (priv->can.ctrlmode & CAN_CTRLMODE_LOOPBACK) {
-				/* Put device into loopback mode */
-				writel(readl(priv->base + SUNXI_REG_MSEL_ADDR) |
-				       SUNXI_LOOPBACK_MODE,
-				       priv->base + SUNXI_REG_MSEL_ADDR);
-			} else if (priv->can.ctrlmode &
-					 CAN_CTRLMODE_LISTENONLY) {
-				/* Put device into listen-only mode */
-				writel(readl(priv->base + SUNXI_REG_MSEL_ADDR) |
-				       SUNXI_LISTEN_ONLY_MODE,
-				       priv->base + SUNXI_REG_MSEL_ADDR);
-			}
-			return;
-		}
-		/* set chip to normal mode */
+	while (retry-- &&
+	       (readl(priv->base + SUNXI_REG_MSEL_ADDR) & SUNXI_RESET_MODE))
 		writel(readl(priv->base + SUNXI_REG_MSEL_ADDR) &
 		       (~SUNXI_RESET_MODE), priv->base + SUNXI_REG_MSEL_ADDR);
-		status = readl(priv->base + SUNXI_REG_MSEL_ADDR);
+
+	if (readl(priv->base + SUNXI_REG_MSEL_ADDR) & SUNXI_RESET_MODE) {
+		netdev_err(dev, "setting controller into normal mode failed!\n");
+		return -ETIMEDOUT;
 	}
-	netdev_err(dev, "setting controller into normal mode failed!\n");
+
+	priv->can.state = CAN_STATE_ERROR_ACTIVE;
+	/* enable interrupts */
+	if (priv->can.ctrlmode & CAN_CTRLMODE_BERR_REPORTING)
+		writel(0xFFFF, priv->base + SUNXI_REG_INTEN_ADDR);
+	else
+		writel(0xFFFF & ~SUNXI_INTEN_BERR,
+		       priv->base + SUNXI_REG_INTEN_ADDR);
+
+	mod_reg_val = readl(priv->base + SUNXI_REG_MSEL_ADDR);
+
+	if (priv->can.ctrlmode & CAN_CTRLMODE_PRESUME_ACK)
+		mod_reg_val |= SUNXI_LOOPBACK_MODE;
+	else if (priv->can.ctrlmode & CAN_CTRLMODE_LISTENONLY)
+		mod_reg_val |= SUNXI_LISTEN_ONLY_MODE;
+
+	writel(mod_reg_val, priv->base + SUNXI_REG_MSEL_ADDR);
+	return 0;
 }
 
-static void set_reset_mode(struct net_device *dev)
+static int set_reset_mode(struct net_device *dev)
 {
 	struct sunxican_priv *priv = netdev_priv(dev);
-	u8 status = readl(priv->base + SUNXI_REG_MSEL_ADDR);
-	int i;
+	int retry = SUNXI_MODE_MAX_RETRIES;
 
-	for (i = 0; i < 100; i++) {
-		/* check reset bit */
-		if (status & SUNXI_RESET_MODE) {
-			priv->can.state = CAN_STATE_STOPPED;
-			return;
-		}
-		/* select reset mode */
+	while (retry-- &&
+	       !(readl(priv->base + SUNXI_REG_MSEL_ADDR) & SUNXI_RESET_MODE))
 		writel(readl(priv->base + SUNXI_REG_MSEL_ADDR) |
 		       SUNXI_RESET_MODE, priv->base + SUNXI_REG_MSEL_ADDR);
-		status = readl(priv->base + SUNXI_REG_MSEL_ADDR);
+
+	if (readl(priv->base + SUNXI_REG_MSEL_ADDR) & SUNXI_RESET_MODE) {
+		netdev_err(dev, "setting controller into reset mode failed!\n");
+		return -ETIMEDOUT;
 	}
-	netdev_err(dev, "setting controller into reset mode failed!\n");
+
+	priv->can.state = CAN_STATE_STOPPED;
+
+	return 0;
 }
 
 static int sunxican_set_bittiming(struct net_device *dev)
