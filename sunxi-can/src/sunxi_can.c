@@ -265,6 +265,7 @@ static int sunxican_set_bittiming(struct net_device *dev)
 {
 	struct sunxican_priv *priv = netdev_priv(dev);
 	struct can_bittiming *bt = &priv->can.bittiming;
+	int err;
 	u32 cfg;
 
 	cfg = ((bt->brp - 1) & 0x3FF) |
@@ -277,11 +278,12 @@ static int sunxican_set_bittiming(struct net_device *dev)
 	netdev_info(dev, "setting BITTIMING=0x%08x\n", cfg);
 
 	/* CAN_BTIME_ADDR only writable in reset mode */
-	set_reset_mode(dev);
+	err = set_reset_mode(dev);
+	if (err)
+		return err;
 	writel(cfg, priv->base + SUNXI_REG_BTIME_ADDR);
-	set_normal_mode(dev);
 
-	return 0;
+	return set_normal_mode(dev);
 }
 
 static int sunxican_get_berr_counter(const struct net_device *dev,
@@ -353,8 +355,8 @@ static int sunxican_start_xmit(struct sk_buff *skb, struct net_device *dev)
 
 	netif_stop_queue(dev);
 
-	dlc = cf->can_dlc;
 	id = cf->can_id;
+	dlc = cf->can_dlc;
 	msg_flag_n = dlc;
 
 	if (id & CAN_RTR_FLAG)
@@ -380,8 +382,7 @@ static int sunxican_start_xmit(struct sk_buff *skb, struct net_device *dev)
 
 	can_put_echo_skb(skb, dev, 0);
 	if (priv->can.ctrlmode & CAN_CTRLMODE_LOOPBACK)
-		sunxi_can_write_cmdreg(priv, SUNXI_CMD_TRANS_REQ |
-				       SUNXI_CMD_SELF_RCV_REQ);
+		sunxi_can_write_cmdreg(priv, SUNXI_CMD_SELF_RCV_REQ);
 	else
 		sunxi_can_write_cmdreg(priv, SUNXI_CMD_TRANS_REQ);
 
@@ -410,7 +411,7 @@ static void sunxi_can_rx(struct net_device *dev)
 		id = (readl(priv->base + SUNXI_REG_BUF1_ADDR) << 21) |
 		     (readl(priv->base + SUNXI_REG_BUF2_ADDR) << 13) |
 		     (readl(priv->base + SUNXI_REG_BUF3_ADDR) << 5)  |
-		    ((readl(priv->base + SUNXI_REG_BUF4_ADDR) >> 3) & 0x1f);
+		    ((readl(priv->base + SUNXI_REG_BUF4_ADDR) >> 3)  & 0x1f);
 		id |= CAN_EFF_FLAG;
 
 		/* remote transmission request ? */
@@ -610,7 +611,9 @@ static int sunxican_open(struct net_device *dev)
 	int err;
 
 	/* set chip into reset mode */
-	set_reset_mode(dev);
+	err = set_reset_mode(dev);
+	if (err)
+		return err;
 
 	/* common open */
 	err = open_candev(dev);
@@ -637,8 +640,10 @@ static int sunxican_open(struct net_device *dev)
 
 static int sunxican_close(struct net_device *dev)
 {
+	int err;
+
 	netif_stop_queue(dev);
-	set_reset_mode(dev);
+	err = set_reset_mode(dev);
 
 	free_irq(dev->irq, (void *)dev);
 
@@ -646,7 +651,7 @@ static int sunxican_close(struct net_device *dev)
 
 	can_led_event(dev, CAN_LED_EVENT_STOP);
 
-	return 0;
+	return err;
 }
 
 static const struct net_device_ops sunxican_netdev_ops = {
