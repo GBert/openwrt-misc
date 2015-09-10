@@ -43,8 +43,7 @@
 #define DRV_NAME "sunxi_can"
 #define DRV_MODULE_VERSION "0.98"
 
-/* Registers address */
-#define SUNXI_REG_BASE0		0x01C2BC00
+/* Registers address (physical base address 0x01C2BC00) */
 #define SUNXI_REG_MSEL_ADDR	0x0000	/* CAN Mode Select */
 #define SUNXI_REG_CMD_ADDR	0x0004	/* CAN Command */
 #define SUNXI_REG_STA_ADDR	0x0008	/* CAN Status */
@@ -202,12 +201,8 @@ static void sunxi_can_write_cmdreg(struct sunxican_priv *priv, u8 val)
 {
 	unsigned long flags;
 
-	/* The command register needs some locking and time to settle
-	 * the write_reg() operation - especially on SMP systems.
-	 */
 	spin_lock_irqsave(&priv->cmdreg_lock, flags);
 	writel(val, priv->base + SUNXI_REG_CMD_ADDR);
-	readl(priv->base + SUNXI_REG_STA_ADDR);
 	spin_unlock_irqrestore(&priv->cmdreg_lock, flags);
 }
 
@@ -351,13 +346,13 @@ static int sunxican_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	struct sunxican_priv *priv = netdev_priv(dev);
 	struct can_frame *cf = (struct can_frame *)skb->data;
 	u8 dlc;
+	u32 dreg, msg_flag_n;
 	canid_t id;
-	u32 temp = 0;
 	int i;
 
-	/* wait buffer ready */
-	while (!(readl(priv->base + SUNXI_REG_STA_ADDR) & SUNXI_STA_TBUF_RDY))
-		usleep_range(10, 100);
+	/* throw a line if there is a transmit running */
+	if (!(readl(priv->base + SUNXI_REG_STA_ADDR) & SUNXI_STA_TBUF_RDY))
+		netdev_dbg(dev, "TX buffer busy\n");
 
 	if (can_dropped_invalid_skb(dev, skb))
 		return NETDEV_TX_OK;
@@ -366,36 +361,35 @@ static int sunxican_start_xmit(struct sk_buff *skb, struct net_device *dev)
 
 	dlc = cf->can_dlc;
 	id = cf->can_id;
+	msg_flag_n = dlc;
 
-	temp = dlc;
 	if (id & CAN_RTR_FLAG)
-		temp |= SUNXI_MSG_RTR_FLAG;
+		msg_flag_n |= SUNXI_MSG_RTR_FLAG;
 
 	if (id & CAN_EFF_FLAG) {
-		temp |= SUNXI_MSG_EFF_FLAG;
-		/* extended frame */
+		msg_flag_n |= SUNXI_MSG_EFF_FLAG;
+		dreg = SUNXI_REG_BUF5_ADDR;
 		writel((id >> 21) & 0xFF, priv->base + SUNXI_REG_BUF1_ADDR);
 		writel((id >> 13) & 0xFF, priv->base + SUNXI_REG_BUF2_ADDR);
 		writel((id >> 5)  & 0xFF, priv->base + SUNXI_REG_BUF3_ADDR);
 		writel((id << 3)  & 0xF8, priv->base + SUNXI_REG_BUF4_ADDR);
-
-		for (i = 0; i < dlc; i++) {
-			writel(cf->data[i],
-			       priv->base + (SUNXI_REG_BUF5_ADDR + i * 4));
-		}
 	} else {
-		/* standard frame */
+		dreg = SUNXI_REG_BUF3_ADDR;
 		writel((id >> 3) & 0xFF, priv->base + SUNXI_REG_BUF1_ADDR);
 		writel((id << 5) & 0xE0, priv->base + SUNXI_REG_BUF2_ADDR);
-
-		for (i = 0; i < dlc; i++)
-			writel(cf->data[i],
-			       priv->base + SUNXI_REG_BUF3_ADDR + i * 4);
 	}
-	writel(temp, priv->base + SUNXI_REG_BUF0_ADDR);
+
+	for (i = 0; i < dlc; i++)
+		writel(cf->data[i], priv->base + (dreg + i * 4));
+
+	writel(msg_flag_n, priv->base + SUNXI_REG_BUF0_ADDR);
 
 	can_put_echo_skb(skb, dev, 0);
-	sunxi_can_write_cmdreg(priv, SUNXI_CMD_TRANS_REQ);
+	if (priv->can.ctrlmode & CAN_CTRLMODE_LOOPBACK)
+		sunxi_can_write_cmdreg(priv, SUNXI_CMD_TRANS_REQ |
+				       SUNXI_CMD_SELF_RCV_REQ);
+	else
+		sunxi_can_write_cmdreg(priv, SUNXI_CMD_TRANS_REQ);
 
 	return NETDEV_TX_OK;
 }
@@ -833,7 +827,7 @@ static SIMPLE_DEV_PM_OPS(sunxi_can_pm_ops, sunxi_can_suspend, sunxi_can_resume);
 
 static struct platform_driver sunxi_can_driver = {
 	.driver = {
-		.owner = THIS_MODULE,
+		.name = DRV_NAME,
 		.pm = &sunxi_can_pm_ops,
 		.of_match_table = sunxican_of_match,
 	},
