@@ -320,13 +320,10 @@ static int sunxican_get_berr_counter(const struct net_device *dev,
 	u32 errors;
 	int err;
 
-	if (!priv->clk) {
-		err = clk_prepare_enable(priv->clk);
-		if (err) {
-			netdev_err(dev,
-				   "could not enable clocking (apb1_can)\n");
-			return err;
-		}
+	err = clk_prepare_enable(priv->clk);
+	if (err) {
+		netdev_err(dev, "could not enable clocking (apb1_can)\n");
+		return err;
 	}
 
 	err = clk_enable(priv->clk);
