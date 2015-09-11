@@ -320,14 +320,16 @@ static int sunxican_get_berr_counter(const struct net_device *dev,
 	u32 errors;
 	int err;
 
+# if 0
 	err = clk_enable(priv->clk);
 	if (err) {
 		netdev_err(dev, "clk_enable() failed, error %d\n", err);
 		return err;
 	}
+#endif
 
 	errors = readl(priv->base + SUNXI_REG_ERRC_ADDR);
-	clk_disable(priv->clk);
+	/* clk_disable(priv->clk); */
 	bec->txerr = errors & 0x000F;
 	bec->rxerr = (errors >> 16) & 0x000F;
 	return 0;
@@ -709,13 +711,6 @@ static const struct of_device_id sunxican_of_match[] = {
 
 MODULE_DEVICE_TABLE(of, sunxican_of_match);
 
-static const struct platform_device_id sunxican_id_table[] = {
-	{.name = "sunxican"},
-	{},
-};
-
-MODULE_DEVICE_TABLE(platform, sunxican_id_table);
-
 static int sunxican_remove(struct platform_device *pdev)
 {
 	struct net_device *dev = platform_get_drvdata(pdev);
@@ -888,7 +883,6 @@ static struct platform_driver sunxi_can_driver = {
 	},
 	.probe = sunxican_probe,
 	.remove = sunxican_remove,
-	.id_table = sunxican_id_table,
 };
 
 module_platform_driver(sunxi_can_driver);
