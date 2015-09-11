@@ -3,6 +3,7 @@
  *
  * Copyright (C) 2013 Peter Chen
  * Copyright (C) 2015 Gerhard Bertelsmann
+ * All rights reserved.
  *
  * Parts of this software are based on (derived from) the SJA1000 code by:
  *   Copyright (C) 2014 Oliver Hartkopp <oliver.hartkopp@volkswagen.de>
@@ -320,22 +321,25 @@ static int sunxican_get_berr_counter(const struct net_device *dev,
 	u32 errors;
 	int err;
 
-	err = clk_prepare_enable(priv->clk);
-	if (err) {
-		netdev_err(dev, "could not enable clocking (apb1_can)\n");
-		return err;
-	}
-
-	err = clk_enable(priv->clk);
-	if (err) {
-		netdev_err(dev, "clk_enable() failed, error %d\n", err);
-		return err;
-	}
+	if (priv->can.state == CAN_STATE_STOPPED) {
+		err = clk_prepare_enable(priv->clk);
+		if (err) {
+			netdev_err(dev, "could not enable clock (apb1_can)\n");
+			return err;
+		}
+		err = clk_enable(priv->clk);
+		if (err) {
+			netdev_err(dev, "clk_enable() failed, error %d\n", err);
+			return err;
+		}
+	};
 
 	errors = readl(priv->base + SUNXI_REG_ERRC_ADDR);
-	clk_disable(priv->clk);
-	bec->txerr = errors & 0x000F;
-	bec->rxerr = (errors >> 16) & 0x000F;
+	if (priv->can.state == CAN_STATE_STOPPED)
+		clk_disable(priv->clk);
+
+	bec->txerr = errors & 0xFF;
+	bec->rxerr = (errors >> 16) & 0xFF;
 	return 0;
 }
 
