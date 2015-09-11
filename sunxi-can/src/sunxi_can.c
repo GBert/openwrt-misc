@@ -612,11 +612,12 @@ static irqreturn_t sunxi_can_interrupt(int irq, void *dev_id)
 			if (sunxi_can_err(dev, isrc, status))
 				break;
 		}
-		/* clear the interrupt */
+		/* clear interrupts */
 		writel(isrc, priv->base + SUNXI_REG_INT_ADDR);
+		readl(priv->base + SUNXI_REG_INT_ADDR);
 	}
 	if (n >= SUNXI_CAN_MAX_IRQ)
-		netdev_dbg(dev, "%d messages handled in ISR", n);
+		netdev_dbg(dev, "0x%x messages handled in ISR", n);
 
 	return (n) ? IRQ_HANDLED : IRQ_NONE;
 }
@@ -804,8 +805,8 @@ static int __maybe_unused sunxi_can_suspend(struct device *device)
 	if (err)
 		return err;
 
-	mode = readl(priv->base + SUNXI_REG_MSEL_ADDR) | SUNXI_SLEEP_MODE;
-	writel(mode, priv->base + SUNXI_REG_MSEL_ADDR);
+	mode = readl(priv->base + SUNXI_REG_MSEL_ADDR);
+	writel(mode | SUNXI_SLEEP_MODE, priv->base + SUNXI_REG_MSEL_ADDR);
 
 	priv->can.state = CAN_STATE_SLEEPING;
 
@@ -830,8 +831,8 @@ static int __maybe_unused sunxi_can_resume(struct device *device)
 	if (err)
 		return err;
 
-	mode = readl(priv->base + SUNXI_REG_MSEL_ADDR) & ~(SUNXI_SLEEP_MODE);
-	writel(mode, priv->base + SUNXI_REG_MSEL_ADDR);
+	mode = readl(priv->base + SUNXI_REG_MSEL_ADDR);
+	writel(mode & ~(SUNXI_SLEEP_MODE), priv->base + SUNXI_REG_MSEL_ADDR);
 	err = set_normal_mode(dev);
 	if (err)
 		return err;
