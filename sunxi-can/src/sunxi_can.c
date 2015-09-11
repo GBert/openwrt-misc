@@ -234,13 +234,20 @@ static int set_normal_mode(struct net_device *dev)
 	int retry = SUNXI_MODE_MAX_RETRIES;
 	u32 mod_reg_val = 0;
 
+	do {
+		mod_reg_val = readl(priv->base + SUNXI_REG_MSEL_ADDR);
+		mod_reg_val &= ~SUNXI_MSEL_RESET_MODE;
+		writel(mod_reg_val, priv->base + SUNXI_REG_MSEL_ADDR);
+	} while (retry-- && (mod_reg_val & SUNXI_MSEL_RESET_MODE));
+
+#if 0
 	while (retry-- &&
 	       (readl(priv->base + SUNXI_REG_MSEL_ADDR) &
 		      SUNXI_MSEL_RESET_MODE))
 		writel(readl(priv->base + SUNXI_REG_MSEL_ADDR) &
 		       (~SUNXI_MSEL_RESET_MODE),
 			priv->base + SUNXI_REG_MSEL_ADDR);
-
+#endif
 	if (readl(priv->base + SUNXI_REG_MSEL_ADDR) & SUNXI_MSEL_RESET_MODE) {
 		netdev_err(dev,
 			   "setting controller into normal mode failed!\n");
@@ -270,13 +277,21 @@ static int set_reset_mode(struct net_device *dev)
 {
 	struct sunxican_priv *priv = netdev_priv(dev);
 	int retry = SUNXI_MODE_MAX_RETRIES;
+	u32 mod_reg_val = 0;
 
+	do {
+		mod_reg_val = readl(priv->base + SUNXI_REG_MSEL_ADDR);
+		mod_reg_val |= SUNXI_MSEL_RESET_MODE;
+		writel(mod_reg_val, priv->base + SUNXI_REG_MSEL_ADDR);
+	} while (retry-- && !(mod_reg_val & SUNXI_MSEL_RESET_MODE));
+
+#if 0
 	while (retry-- &&
 	       !(readl(priv->base + SUNXI_REG_MSEL_ADDR) &
 		 SUNXI_MSEL_RESET_MODE))
 		writel(readl(priv->base + SUNXI_REG_MSEL_ADDR) |
 		       SUNXI_MSEL_RESET_MODE, priv->base + SUNXI_REG_MSEL_ADDR);
-
+#endif
 	if (!(readl(priv->base + SUNXI_REG_MSEL_ADDR) &
 	      SUNXI_MSEL_RESET_MODE)) {
 		netdev_err(dev, "setting controller into reset mode failed!\n");
@@ -320,11 +335,11 @@ static int sunxican_get_berr_counter(const struct net_device *dev,
 	u32 errors;
 	int err;
 
-        err = clk_prepare_enable(priv->clk);
-        if (err) {
-                netdev_err(dev, "could not enable clocking (apb1_can)\n");
-                goto exit;
-        }
+	err = clk_prepare_enable(priv->clk);
+	if (err) {
+		netdev_err(dev, "could not enable clocking (apb1_can)\n");
+		return err;
+	}
 
 	err = clk_enable(priv->clk);
 	if (err) {
