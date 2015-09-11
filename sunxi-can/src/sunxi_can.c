@@ -792,13 +792,24 @@ static int __maybe_unused sunxi_can_suspend(struct device *device)
 {
 	struct net_device *dev = dev_get_drvdata(device);
 	struct sunxican_priv *priv = netdev_priv(dev);
+	u32 mode;
+	int err;
 
 	if (netif_running(dev)) {
 		netif_stop_queue(dev);
 		netif_device_detach(dev);
 	}
+
+	err = set_reset_mode(dev);
+	if (err)
+		return err;
+
+	mode = readl(priv->base + SUNXI_REG_MSEL_ADDR) | SUNXI_SLEEP_MODE;
+	writel(mode, priv->base + SUNXI_REG_MSEL_ADDR);
+
 	priv->can.state = CAN_STATE_SLEEPING;
 
+	clk_disable(priv->clk);
 	return 0;
 }
 
@@ -806,6 +817,24 @@ static int __maybe_unused sunxi_can_resume(struct device *device)
 {
 	struct net_device *dev = dev_get_drvdata(device);
 	struct sunxican_priv *priv = netdev_priv(dev);
+	u32 mode;
+	int err;
+
+	err = clk_enable(priv->clk);
+	if (err) {
+	netdev_err(dev, "clk_enable() failed, error %d\n", err);
+		return err;
+	}
+
+	err = set_reset_mode(dev);
+	if (err)
+		return err;
+
+	mode = readl(priv->base + SUNXI_REG_MSEL_ADDR) & ~(SUNXI_SLEEP_MODE);
+	writel(mode, priv->base + SUNXI_REG_MSEL_ADDR);
+	err = set_normal_mode(dev);
+	if (err)
+		return err;
 
 	priv->can.state = CAN_STATE_ERROR_ACTIVE;
 	if (netif_running(dev)) {
