@@ -11,17 +11,38 @@
  *   Copyright (C) 2003 Matthias Brukner, Trajet Gmbh, Rebenring 33,
  *   38106 Braunschweig, GERMANY
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the version 2 of the GNU General Public License
- * as published by the Free Software Foundation
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of Volkswagen nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * Alternatively, provided that this notice is retained in full, this
+ * software may be distributed under the terms of the GNU General
+ * Public License ("GPL") version 2, in which case the provisions of the
+ * GPL apply INSTEAD OF those given above.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, see <http://www.gnu.org/licenses/>.
+ * The provided data structures and external interfaces from this code
+ * are not restricted to be used by modules with a GPL compatible license.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
  *
  */
 
@@ -41,7 +62,7 @@
 #include <linux/platform_device.h>
 
 #define DRV_NAME "sunxi_can"
-#define DRV_MODULE_VERSION "0.98"
+#define DRV_MODULE_VERSION "0.99"
 
 /* Registers address (physical base address 0x01C2BC00) */
 #define SUNXI_REG_MSEL_ADDR	0x0000	/* CAN Mode Select */
@@ -77,13 +98,13 @@
 /* mode select register (r/w)
  * offset:0x0000 default:0x0000_0001
  */
-#define SUNXI_SLEEP_MODE	(0x01 << 4)	/* write in reset mode */
-#define SUNXI_WAKE_UP		(0x00 << 4)
-#define SUNXI_SINGLE_FILTER	(0x01 << 3)	/* write in reset mode */
-#define SUNXI_DUAL_FILTERS	(0x00 << 3)
-#define SUNXI_LOOPBACK_MODE	BIT(2)
-#define SUNXI_LISTEN_ONLY_MODE	BIT(1)
-#define SUNXI_RESET_MODE	BIT(0)
+#define SUNXI_MSEL_SLEEP_MODE	(0x01 << 4)	    /* write in reset mode */
+#define SUNXI_MSEL_WAKE_UP	(0x00 << 4)
+#define SUNXI_MSEL_SINGLE_FILTER	(0x01 << 3) /* write in reset mode */
+#define SUNXI_MSEL_DUAL_FILTERS	(0x00 << 3)
+#define SUNXI_MSEL_LOOPBACK_MODE	BIT(2)
+#define SUNXI_MSEL_LISTEN_ONLY_MODE	BIT(1)
+#define SUNXI_MSEL_RESET_MODE	BIT(0)
 
 /* command register (w)
  * offset:0x0004 default:0x0000_0000
@@ -178,6 +199,7 @@
 /* max. number of interrupts handled in ISR */
 #define SUNXI_CAN_MAX_IRQ	20
 #define SUNXI_MODE_MAX_RETRIES	100
+
 struct sunxican_priv {
 	struct can_priv can;
 	void __iomem *base;
@@ -213,11 +235,13 @@ static int set_normal_mode(struct net_device *dev)
 	u32 mod_reg_val = 0;
 
 	while (retry-- &&
-	       (readl(priv->base + SUNXI_REG_MSEL_ADDR) & SUNXI_RESET_MODE))
+	       (readl(priv->base + SUNXI_REG_MSEL_ADDR) &
+		      SUNXI_MSEL_RESET_MODE))
 		writel(readl(priv->base + SUNXI_REG_MSEL_ADDR) &
-		       (~SUNXI_RESET_MODE), priv->base + SUNXI_REG_MSEL_ADDR);
+		       (~SUNXI_MSEL_RESET_MODE),
+			priv->base + SUNXI_REG_MSEL_ADDR);
 
-	if (readl(priv->base + SUNXI_REG_MSEL_ADDR) & SUNXI_RESET_MODE) {
+	if (readl(priv->base + SUNXI_REG_MSEL_ADDR) & SUNXI_MSEL_RESET_MODE) {
 		netdev_err(dev,
 			   "setting controller into normal mode failed!\n");
 		return -ETIMEDOUT;
@@ -234,9 +258,9 @@ static int set_normal_mode(struct net_device *dev)
 	mod_reg_val = readl(priv->base + SUNXI_REG_MSEL_ADDR);
 
 	if (priv->can.ctrlmode & CAN_CTRLMODE_PRESUME_ACK)
-		mod_reg_val |= SUNXI_LOOPBACK_MODE;
+		mod_reg_val |= SUNXI_MSEL_LOOPBACK_MODE;
 	else if (priv->can.ctrlmode & CAN_CTRLMODE_LISTENONLY)
-		mod_reg_val |= SUNXI_LISTEN_ONLY_MODE;
+		mod_reg_val |= SUNXI_MSEL_LISTEN_ONLY_MODE;
 
 	writel(mod_reg_val, priv->base + SUNXI_REG_MSEL_ADDR);
 	return 0;
@@ -248,11 +272,13 @@ static int set_reset_mode(struct net_device *dev)
 	int retry = SUNXI_MODE_MAX_RETRIES;
 
 	while (retry-- &&
-	       !(readl(priv->base + SUNXI_REG_MSEL_ADDR) & SUNXI_RESET_MODE))
+	       !(readl(priv->base + SUNXI_REG_MSEL_ADDR) &
+		 SUNXI_MSEL_RESET_MODE))
 		writel(readl(priv->base + SUNXI_REG_MSEL_ADDR) |
-		       SUNXI_RESET_MODE, priv->base + SUNXI_REG_MSEL_ADDR);
+		       SUNXI_MSEL_RESET_MODE, priv->base + SUNXI_REG_MSEL_ADDR);
 
-	if (!(readl(priv->base + SUNXI_REG_MSEL_ADDR) & SUNXI_RESET_MODE)) {
+	if (!(readl(priv->base + SUNXI_REG_MSEL_ADDR) &
+	      SUNXI_MSEL_RESET_MODE)) {
 		netdev_err(dev, "setting controller into reset mode failed!\n");
 		return -ETIMEDOUT;
 	}
@@ -292,8 +318,16 @@ static int sunxican_get_berr_counter(const struct net_device *dev,
 {
 	struct sunxican_priv *priv = netdev_priv(dev);
 	u32 errors;
+	int err;
+
+	err = clk_enable(priv->clk);
+	if (err) {
+		netdev_err(dev, "clk_enable() failed, error %d\n", err);
+		return err;
+	}
 
 	errors = readl(priv->base + SUNXI_REG_ERRC_ADDR);
+	clk_disable(priv->clk);
 	bec->txerr = errors & 0x000F;
 	bec->rxerr = (errors >> 16) & 0x000F;
 	return 0;
@@ -333,8 +367,6 @@ static int sunxi_can_start(struct net_device *dev)
 	if (err)
 		return err;
 
-	/* leave reset mode */
-	set_normal_mode(dev);
 	return 0;
 
 exit:
@@ -677,13 +709,6 @@ static const struct of_device_id sunxican_of_match[] = {
 
 MODULE_DEVICE_TABLE(of, sunxican_of_match);
 
-static const struct platform_device_id sunxican_id_table[] = {
-	{.name = "sunxican"},
-	{},
-};
-
-MODULE_DEVICE_TABLE(platform, sunxican_id_table);
-
 static int sunxican_remove(struct platform_device *pdev)
 {
 	struct net_device *dev = platform_get_drvdata(pdev);
@@ -806,7 +831,7 @@ static int __maybe_unused sunxi_can_suspend(struct device *device)
 		return err;
 
 	mode = readl(priv->base + SUNXI_REG_MSEL_ADDR);
-	writel(mode | SUNXI_SLEEP_MODE, priv->base + SUNXI_REG_MSEL_ADDR);
+	writel(mode | SUNXI_MSEL_SLEEP_MODE, priv->base + SUNXI_REG_MSEL_ADDR);
 
 	priv->can.state = CAN_STATE_SLEEPING;
 
@@ -823,7 +848,7 @@ static int __maybe_unused sunxi_can_resume(struct device *device)
 
 	err = clk_enable(priv->clk);
 	if (err) {
-	netdev_err(dev, "clk_enable() failed, error %d\n", err);
+		netdev_err(dev, "clk_enable() failed, error %d\n", err);
 		return err;
 	}
 
@@ -832,7 +857,8 @@ static int __maybe_unused sunxi_can_resume(struct device *device)
 		return err;
 
 	mode = readl(priv->base + SUNXI_REG_MSEL_ADDR);
-	writel(mode & ~(SUNXI_SLEEP_MODE), priv->base + SUNXI_REG_MSEL_ADDR);
+	writel(mode & ~(SUNXI_MSEL_SLEEP_MODE),
+	       priv->base + SUNXI_REG_MSEL_ADDR);
 	err = set_normal_mode(dev);
 	if (err)
 		return err;
@@ -855,13 +881,12 @@ static struct platform_driver sunxi_can_driver = {
 	},
 	.probe = sunxican_probe,
 	.remove = sunxican_remove,
-	.id_table = sunxican_id_table,
 };
 
 module_platform_driver(sunxi_can_driver);
 
 MODULE_AUTHOR("Peter Chen <xingkongcp@gmail.com>");
 MODULE_AUTHOR("Gerhard Bertelsmann <info@gerhard-bertelsmann.de>");
-MODULE_LICENSE("GPL");
+MODULE_LICENSE("Dual BSD/GPL");
 MODULE_DESCRIPTION(DRV_NAME "CAN driver for Allwinner SoCs (A10/A20)");
 MODULE_VERSION(DRV_MODULE_VERSION);
