@@ -709,6 +709,13 @@ static const struct of_device_id sunxican_of_match[] = {
 
 MODULE_DEVICE_TABLE(of, sunxican_of_match);
 
+static const struct platform_device_id sunxican_id_table[] = {
+	{.name = "sunxican"},
+	{},
+};
+
+MODULE_DEVICE_TABLE(platform, sunxican_id_table);
+
 static int sunxican_remove(struct platform_device *pdev)
 {
 	struct net_device *dev = platform_get_drvdata(pdev);
@@ -881,6 +888,7 @@ static struct platform_driver sunxi_can_driver = {
 	},
 	.probe = sunxican_probe,
 	.remove = sunxican_remove,
+	.id_table = sunxican_id_table,
 };
 
 module_platform_driver(sunxi_can_driver);
