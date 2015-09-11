@@ -617,7 +617,7 @@ static irqreturn_t sunxi_can_interrupt(int irq, void *dev_id)
 		readl(priv->base + SUNXI_REG_INT_ADDR);
 	}
 	if (n >= SUNXI_CAN_MAX_IRQ)
-		netdev_dbg(dev, "0x%x messages handled in ISR", n);
+		netdev_dbg(dev, "%d messages handled in ISR", n);
 
 	return (n) ? IRQ_HANDLED : IRQ_NONE;
 }
