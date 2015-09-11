@@ -320,16 +320,20 @@ static int sunxican_get_berr_counter(const struct net_device *dev,
 	u32 errors;
 	int err;
 
-# if 0
+        err = clk_prepare_enable(priv->clk);
+        if (err) {
+                netdev_err(dev, "could not enable clocking (apb1_can)\n");
+                goto exit;
+        }
+
 	err = clk_enable(priv->clk);
 	if (err) {
 		netdev_err(dev, "clk_enable() failed, error %d\n", err);
 		return err;
 	}
-#endif
 
 	errors = readl(priv->base + SUNXI_REG_ERRC_ADDR);
-	/* clk_disable(priv->clk); */
+	clk_disable(priv->clk);
 	bec->txerr = errors & 0x000F;
 	bec->rxerr = (errors >> 16) & 0x000F;
 	return 0;
