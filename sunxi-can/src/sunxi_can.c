@@ -321,25 +321,19 @@ static int sunxican_get_berr_counter(const struct net_device *dev,
 	u32 errors;
 	int err;
 
-	if (priv->can.state == CAN_STATE_STOPPED) {
-		err = clk_prepare_enable(priv->clk);
-		if (err) {
-			netdev_err(dev, "could not enable clock (apb1_can)\n");
-			return err;
-		}
-		err = clk_enable(priv->clk);
-		if (err) {
-			netdev_err(dev, "clk_enable() failed, error %d\n", err);
-			return err;
-		}
-	};
+	err = clk_prepare_enable(priv->clk);
+	if (err) {
+		netdev_err(dev, "could not enable clock\n");
+		return err;
+	}
 
 	errors = readl(priv->base + SUNXI_REG_ERRC_ADDR);
-	if (priv->can.state == CAN_STATE_STOPPED)
-		clk_disable(priv->clk);
 
 	bec->txerr = errors & 0xFF;
 	bec->rxerr = (errors >> 16) & 0xFF;
+
+	clk_disable_unprepare(priv->clk);
+
 	return 0;
 }
 
@@ -374,6 +368,7 @@ static int sunxi_can_start(struct net_device *dev)
 	       priv->base + SUNXI_REG_INTEN_ADDR);
 
 	err = sunxican_set_bittiming(dev);
+
 	if (err)
 		return err;
 
@@ -722,15 +717,8 @@ MODULE_DEVICE_TABLE(of, sunxican_of_match);
 static int sunxican_remove(struct platform_device *pdev)
 {
 	struct net_device *dev = platform_get_drvdata(pdev);
-	struct sunxican_priv *priv = netdev_priv(dev);
-	struct resource *res;
 
 	unregister_netdev(dev);
-	iounmap(priv->base);
-
-	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-	release_mem_region(res->start, resource_size(res));
-
 	free_candev(dev);
 
 	return 0;
@@ -738,14 +726,14 @@ static int sunxican_remove(struct platform_device *pdev)
 
 static int sunxican_probe(struct platform_device *pdev)
 {
-	struct resource *res;
+	struct resource *mem;
 	struct clk *clk;
 	void __iomem *addr;
 	int err, irq;
 	struct net_device *dev;
 	struct sunxican_priv *priv;
 
-	clk = clk_get(&pdev->dev, "apb1_can");
+	clk = devm_clk_get(&pdev->dev, "apb1_can");
 	if (IS_ERR(clk)) {
 		dev_err(&pdev->dev, "no clock defined\n");
 		err = -ENODEV;
@@ -759,18 +747,11 @@ static int sunxican_probe(struct platform_device *pdev)
 		goto exit;
 	}
 
-	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-	if (!request_mem_region(res->start, resource_size(res), pdev->name)) {
-		dev_err(&pdev->dev, "could not get io memory resource\n");
+	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+	addr = devm_ioremap_resource(&pdev->dev, mem);
+	if (IS_ERR(addr)) {
 		err = -EBUSY;
 		goto exit;
-	}
-
-	addr = ioremap_nocache(res->start, resource_size(res));
-	if (!addr) {
-		dev_err(&pdev->dev, "could not map io memory\n");
-		err = -ENOMEM;
-		goto exit_release;
 	}
 
 	dev = alloc_candev(sizeof(struct sunxican_priv), 1);
@@ -778,7 +759,7 @@ static int sunxican_probe(struct platform_device *pdev)
 		dev_err(&pdev->dev,
 			"could not allocate memory for CAN device\n");
 		err = -ENOMEM;
-		goto exit_iounmap;
+		goto exit;
 	}
 
 	dev->netdev_ops = &sunxican_netdev_ops;
@@ -816,10 +797,6 @@ static int sunxican_probe(struct platform_device *pdev)
 
 exit_free:
 	free_candev(dev);
-exit_iounmap:
-	iounmap(addr);
-exit_release:
-	release_mem_region(res->start, resource_size(res));
 exit:
 	return err;
 }
