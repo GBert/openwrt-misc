@@ -98,13 +98,13 @@
 /* mode select register (r/w)
  * offset:0x0000 default:0x0000_0001
  */
-#define SUNXI_MSEL_SLEEP_MODE	(0x01 << 4)	    /* write in reset mode */
-#define SUNXI_MSEL_WAKE_UP	(0x00 << 4)
+#define SUNXI_MSEL_SLEEP_MODE		(0x01 << 4) /* write in reset mode */
+#define SUNXI_MSEL_WAKE_UP		(0x00 << 4)
 #define SUNXI_MSEL_SINGLE_FILTER	(0x01 << 3) /* write in reset mode */
-#define SUNXI_MSEL_DUAL_FILTERS	(0x00 << 3)
+#define SUNXI_MSEL_DUAL_FILTERS		(0x00 << 3)
 #define SUNXI_MSEL_LOOPBACK_MODE	BIT(2)
 #define SUNXI_MSEL_LISTEN_ONLY_MODE	BIT(1)
-#define SUNXI_MSEL_RESET_MODE	BIT(0)
+#define SUNXI_MSEL_RESET_MODE		BIT(0)
 
 /* command register (w)
  * offset:0x0004 default:0x0000_0000
@@ -246,22 +246,6 @@ static int set_normal_mode(struct net_device *dev)
 		return -ETIMEDOUT;
 	}
 
-	priv->can.state = CAN_STATE_ERROR_ACTIVE;
-	/* enable interrupts */
-	if (priv->can.ctrlmode & CAN_CTRLMODE_BERR_REPORTING)
-		writel(0xFFFF, priv->base + SUNXI_REG_INTEN_ADDR);
-	else
-		writel(0xFFFF & ~SUNXI_INTEN_BERR,
-		       priv->base + SUNXI_REG_INTEN_ADDR);
-
-	mod_reg_val = readl(priv->base + SUNXI_REG_MSEL_ADDR);
-
-	if (priv->can.ctrlmode & CAN_CTRLMODE_PRESUME_ACK)
-		mod_reg_val |= SUNXI_MSEL_LOOPBACK_MODE;
-	else if (priv->can.ctrlmode & CAN_CTRLMODE_LISTENONLY)
-		mod_reg_val |= SUNXI_MSEL_LISTEN_ONLY_MODE;
-
-	writel(mod_reg_val, priv->base + SUNXI_REG_MSEL_ADDR);
 	return 0;
 }
 
@@ -283,8 +267,6 @@ static int set_reset_mode(struct net_device *dev)
 		return -ETIMEDOUT;
 	}
 
-	priv->can.state = CAN_STATE_STOPPED;
-
 	return 0;
 }
 
@@ -292,7 +274,6 @@ static int sunxican_set_bittiming(struct net_device *dev)
 {
 	struct sunxican_priv *priv = netdev_priv(dev);
 	struct can_bittiming *bt = &priv->can.bittiming;
-	int err;
 	u32 cfg;
 
 	cfg = ((bt->brp - 1) & 0x3FF) |
@@ -302,15 +283,11 @@ static int sunxican_set_bittiming(struct net_device *dev)
 	if (priv->can.ctrlmode & CAN_CTRLMODE_3_SAMPLES)
 		cfg |= 0x800000;
 
+	// netdev_dbg(dev, "setting BITTIMING=0x%08x\n", cfg);
 	netdev_info(dev, "setting BITTIMING=0x%08x\n", cfg);
-
-	/* CAN_BTIME_ADDR only writable in reset mode */
-	err = set_reset_mode(dev);
-	if (err)
-		return err;
 	writel(cfg, priv->base + SUNXI_REG_BTIME_ADDR);
 
-	return set_normal_mode(dev);
+	return 0;
 }
 
 static int sunxican_get_berr_counter(const struct net_device *dev,
@@ -340,11 +317,14 @@ static int sunxi_can_start(struct net_device *dev)
 {
 	struct sunxican_priv *priv = netdev_priv(dev);
 	int err;
-	u32 temp_irqen;
+	u32 mod_reg_val;
 
-	/* leave reset mode */
-	if (priv->can.state != CAN_STATE_STOPPED)
-		set_reset_mode(dev);
+	/* we need to enter the reset mode */
+	err = set_reset_mode(dev);
+	if (err) {
+		netdev_err(dev, "could not enter reset mode\n");
+		return err;
+	}
 
 	/* set filters - we accept all */
 	writel(0x00000000, priv->base + SUNXI_REG_ACPC_ADDR);
@@ -353,15 +333,53 @@ static int sunxi_can_start(struct net_device *dev)
 	/* Clear error counters and error code capture */
 	writel(0, priv->base + SUNXI_REG_ERRC_ADDR);
 
-	/* enable CAN specific interrupts */
-	temp_irqen = SUNXI_INTEN_BERR | SUNXI_INTEN_ERR_PASSIVE |
-		     SUNXI_INTEN_OR | SUNXI_INTEN_RX;
-	writel(readl(priv->base + SUNXI_REG_INTEN_ADDR) | temp_irqen,
-	       priv->base + SUNXI_REG_INTEN_ADDR);
+	/* enable interrupts */
+	if (priv->can.ctrlmode & CAN_CTRLMODE_BERR_REPORTING)
+		writel(0xFF, priv->base + SUNXI_REG_INTEN_ADDR);
+	else
+		writel(0xFF & ~SUNXI_INTEN_BERR,
+		       priv->base + SUNXI_REG_INTEN_ADDR);
+
+	mod_reg_val = readl(priv->base + SUNXI_REG_MSEL_ADDR);
+
+	if (priv->can.ctrlmode & CAN_CTRLMODE_PRESUME_ACK)
+		mod_reg_val |= SUNXI_MSEL_LOOPBACK_MODE;
+	else if (priv->can.ctrlmode & CAN_CTRLMODE_LISTENONLY)
+		mod_reg_val |= SUNXI_MSEL_LISTEN_ONLY_MODE;
+
+	writel(mod_reg_val, priv->base + SUNXI_REG_MSEL_ADDR);
 
 	err = sunxican_set_bittiming(dev);
 	if (err)
 		return err;
+
+	/* we are ready to enter the normal mode */
+	err = set_normal_mode(dev);
+	if (err) {
+		netdev_err(dev, "could not enter enter mode\n");
+		return err;
+	}
+
+	priv->can.state = CAN_STATE_ERROR_ACTIVE;
+
+	return 0;
+}
+
+static int sunxi_can_stop(struct net_device *dev)
+{
+	struct sunxican_priv *priv = netdev_priv(dev);
+	int err;
+
+	priv->can.state = CAN_STATE_STOPPED;
+	/* we need to enter reset mode */
+	err = set_normal_mode(dev);
+	if (err) {
+		netdev_err(dev, "could not enter reset mode\n");
+		return err;
+	}
+
+	/* disable all interrupts */
+	writel(0, priv->base + SUNXI_REG_INTEN_ADDR);
 
 	return 0;
 }
@@ -697,7 +715,7 @@ static int sunxican_close(struct net_device *dev)
 	struct sunxican_priv *priv = netdev_priv(dev);
 
 	netif_stop_queue(dev);
-	set_reset_mode(dev);
+	sunxi_can_stop(dev);
 	clk_disable_unprepare(priv->clk);
 
 	free_irq(dev->irq, dev);
@@ -714,7 +732,7 @@ static const struct net_device_ops sunxican_netdev_ops = {
 };
 
 static const struct of_device_id sunxican_of_match[] = {
-	{.compatible = "allwinner,sunxican"},
+	{.compatible = "allwinner,sun4ican"},
 	{},
 };
 
@@ -780,6 +798,7 @@ static int sunxican_probe(struct platform_device *pdev)
 	priv->can.ctrlmode_supported = CAN_CTRLMODE_BERR_REPORTING |
 				       CAN_CTRLMODE_LISTENONLY |
 				       CAN_CTRLMODE_LOOPBACK |
+				       CAN_CTRLMODE_PRESUME_ACK |
 				       CAN_CTRLMODE_3_SAMPLES;
 	priv->base = addr;
 	priv->clk = clk;
