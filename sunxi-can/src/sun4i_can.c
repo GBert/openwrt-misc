@@ -270,6 +270,7 @@ static int set_reset_mode(struct net_device *dev)
 	return 0;
 }
 
+/* bittiming is called in reset_mode only */
 static int sunxican_set_bittiming(struct net_device *dev)
 {
 	struct sunxican_priv *priv = netdev_priv(dev);
@@ -283,7 +284,6 @@ static int sunxican_set_bittiming(struct net_device *dev)
 	if (priv->can.ctrlmode & CAN_CTRLMODE_3_SAMPLES)
 		cfg |= 0x800000;
 
-	// netdev_dbg(dev, "setting BITTIMING=0x%08x\n", cfg);
 	netdev_info(dev, "setting BITTIMING=0x%08x\n", cfg);
 	writel(cfg, priv->base + SUNXI_REG_BTIME_ADDR);
 
@@ -340,13 +340,12 @@ static int sunxi_can_start(struct net_device *dev)
 		writel(0xFF & ~SUNXI_INTEN_BERR,
 		       priv->base + SUNXI_REG_INTEN_ADDR);
 
+	/* enter the selected mode */
 	mod_reg_val = readl(priv->base + SUNXI_REG_MSEL_ADDR);
-
 	if (priv->can.ctrlmode & CAN_CTRLMODE_PRESUME_ACK)
 		mod_reg_val |= SUNXI_MSEL_LOOPBACK_MODE;
 	else if (priv->can.ctrlmode & CAN_CTRLMODE_LISTENONLY)
 		mod_reg_val |= SUNXI_MSEL_LISTEN_ONLY_MODE;
-
 	writel(mod_reg_val, priv->base + SUNXI_REG_MSEL_ADDR);
 
 	err = sunxican_set_bittiming(dev);
@@ -356,7 +355,7 @@ static int sunxi_can_start(struct net_device *dev)
 	/* we are ready to enter the normal mode */
 	err = set_normal_mode(dev);
 	if (err) {
-		netdev_err(dev, "could not enter enter mode\n");
+		netdev_err(dev, "could not enter normal mode\n");
 		return err;
 	}
 
@@ -519,22 +518,25 @@ static int sunxi_can_err(struct net_device *dev, u8 isrc, u8 status)
 	unsigned int rxerr, txerr, errc;
 	u32 ecc, alc;
 
+	/* we can't skip if alloc fail because we want the stats anyhow */
 	skb = alloc_can_err_skb(dev, &cf);
-	if (!skb)
-		return -ENOMEM;
 
 	errc = readl(priv->base + SUNXI_REG_ERRC_ADDR);
 	rxerr = (errc >> 16) & 0xFF;
 	txerr = errc & 0xFF;
 
-	cf->data[6] = txerr;
-	cf->data[7] = rxerr;
+	if (skb) {
+		cf->data[6] = txerr;
+		cf->data[7] = rxerr;
+	}
 
 	if (isrc & SUNXI_INT_DATA_OR) {
 		/* data overrun interrupt */
 		netdev_dbg(dev, "data overrun interrupt\n");
-		cf->can_id |= CAN_ERR_CRTL;
-		cf->data[1] = CAN_ERR_CRTL_RX_OVERFLOW;
+		if (likely(skb)) {
+			cf->can_id |= CAN_ERR_CRTL;
+			cf->data[1] = CAN_ERR_CRTL_RX_OVERFLOW;
+		}
 		stats->rx_over_errors++;
 		stats->rx_errors++;
 		/* clear bit */
@@ -557,28 +559,31 @@ static int sunxi_can_err(struct net_device *dev, u8 isrc, u8 status)
 		priv->can.can_stats.bus_error++;
 		stats->rx_errors++;
 
-		ecc = readl(priv->base + SUNXI_REG_STA_ADDR);
+		if (likely(skb)) {
+			ecc = readl(priv->base + SUNXI_REG_STA_ADDR);
 
-		cf->can_id |= CAN_ERR_PROT | CAN_ERR_BUSERROR;
+			cf->can_id |= CAN_ERR_PROT | CAN_ERR_BUSERROR;
 
-		switch (ecc & SUNXI_STA_MASK_ERR) {
-		case SUNXI_STA_BIT_ERR:
-			cf->data[2] |= CAN_ERR_PROT_BIT;
-			break;
-		case SUNXI_STA_FORM_ERR:
-			cf->data[2] |= CAN_ERR_PROT_FORM;
-			break;
-		case SUNXI_STA_STUFF_ERR:
-			cf->data[2] |= CAN_ERR_PROT_STUFF;
-			break;
-		default:
-			cf->data[2] |= CAN_ERR_PROT_UNSPEC;
-			cf->data[3] = (ecc & SUNXI_STA_ERR_SEG_CODE) >> 16;
-			break;
+			switch (ecc & SUNXI_STA_MASK_ERR) {
+			case SUNXI_STA_BIT_ERR:
+				cf->data[2] |= CAN_ERR_PROT_BIT;
+				break;
+			case SUNXI_STA_FORM_ERR:
+				cf->data[2] |= CAN_ERR_PROT_FORM;
+				break;
+			case SUNXI_STA_STUFF_ERR:
+				cf->data[2] |= CAN_ERR_PROT_STUFF;
+				break;
+			default:
+				cf->data[2] |= CAN_ERR_PROT_UNSPEC;
+				cf->data[3] = (ecc & SUNXI_STA_ERR_SEG_CODE)
+					       >> 16;
+				break;
+			}
+			/* error occurred during transmission? */
+			if ((ecc & SUNXI_STA_ERR_DIR) == 0)
+				cf->data[2] |= CAN_ERR_PROT_TX;
 		}
-		/* error occurred during transmission? */
-		if ((ecc & SUNXI_STA_ERR_DIR) == 0)
-			cf->data[2] |= CAN_ERR_PROT_TX;
 	}
 	if (isrc & SUNXI_INT_ERR_PASSIVE) {
 		/* error passive interrupt */
@@ -594,22 +599,31 @@ static int sunxi_can_err(struct net_device *dev, u8 isrc, u8 status)
 		alc = readl(priv->base + SUNXI_REG_STA_ADDR);
 		priv->can.can_stats.arbitration_lost++;
 		stats->tx_errors++;
-		cf->can_id |= CAN_ERR_LOSTARB;
-		cf->data[0] = (alc & 0x1f) >> 8;
+		if (likely(skb)) {
+			cf->can_id |= CAN_ERR_LOSTARB;
+			cf->data[0] = (alc & 0x1f) >> 8;
+		}
 	}
 
 	if (state != priv->can.state) {
 		tx_state = txerr >= rxerr ? state : 0;
 		rx_state = txerr <= rxerr ? state : 0;
 
-		can_change_state(dev, cf, tx_state, rx_state);
+		if (likely(skb))
+			can_change_state(dev, cf, tx_state, rx_state);
+		else
+			priv->can.state = state;
 		if (state == CAN_STATE_BUS_OFF)
 			can_bus_off(dev);
 	}
 
-	stats->rx_packets++;
-	stats->rx_bytes += cf->can_dlc;
-	netif_rx(skb);
+	if (likely(skb)) {
+		stats->rx_packets++;
+		stats->rx_bytes += cf->can_dlc;
+		netif_rx(skb);
+	} else {
+		return -ENOMEM;
+	}
 
 	return 0;
 }
@@ -653,7 +667,7 @@ static irqreturn_t sunxi_can_interrupt(int irq, void *dev_id)
 		     SUNXI_INT_ERR_PASSIVE | SUNXI_INT_ARB_LOST)) {
 			/* error interrupt */
 			if (sunxi_can_err(dev, isrc, status))
-				break;
+				netdev_err(dev, "can't allocate buffer - clearing pending interrupts\n");
 		}
 		/* clear interrupts */
 		writel(isrc, priv->base + SUNXI_REG_INT_ADDR);
