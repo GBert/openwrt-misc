@@ -27,7 +27,7 @@ define KernelPackage/sunxi-can/description
 endef
 
 EXTRA_KCONFIG:= \
-    CONFIG_SUNXI_CAN=m \
+    CONFIG_SUN4I_CAN=m \
 
 EXTRA_CFLAGS:= \
     $(patsubst CONFIG_%, -DCONFIG_%=1, $(patsubst %=m,%,$(filter %=m,$(EXTRA_KCONFIG)))) \
