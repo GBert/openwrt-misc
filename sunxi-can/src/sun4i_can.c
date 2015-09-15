@@ -188,7 +188,7 @@
 #define SUN4I_ERR_INTRANS	(0x0 << 5)
 
 /* filter mode */
-#define SINXI_FILTER_CLOSE	0
+#define SUN4I_FILTER_CLOSE	0
 #define SUN4I_SINGLE_FLTER_MODE	1
 #define SUN4I_DUAL_FILTER_MODE	2
 
@@ -764,6 +764,7 @@ static int sun4ican_remove(struct platform_device *pdev)
 
 static int sun4ican_probe(struct platform_device *pdev)
 {
+	struct device_node *np = pdev->dev.of_node;
 	struct resource *mem;
 	struct clk *clk;
 	void __iomem *addr;
@@ -771,12 +772,19 @@ static int sun4ican_probe(struct platform_device *pdev)
 	struct net_device *dev;
 	struct sun4ican_priv *priv;
 
+	clk = of_clk_get(np, 0);
+	if (IS_ERR(clk)) {
+		dev_err(&pdev->dev, "unable to request clock\n");
+		return PTR_ERR(clk);
+	}
+#if 0
 	clk = devm_clk_get(&pdev->dev, "apb1_can");
 	if (IS_ERR(clk)) {
 		dev_err(&pdev->dev, "no clock defined\n");
 		err = -ENODEV;
 		goto exit;
 	}
+#endif
 
 	irq = platform_get_irq(pdev, 0);
 	if (irq < 0) {
