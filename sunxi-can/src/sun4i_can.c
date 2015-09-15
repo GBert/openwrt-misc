@@ -775,16 +775,9 @@ static int sun4ican_probe(struct platform_device *pdev)
 	clk = of_clk_get(np, 0);
 	if (IS_ERR(clk)) {
 		dev_err(&pdev->dev, "unable to request clock\n");
-		return PTR_ERR(clk);
-	}
-#if 0
-	clk = devm_clk_get(&pdev->dev, "apb1_can");
-	if (IS_ERR(clk)) {
-		dev_err(&pdev->dev, "no clock defined\n");
 		err = -ENODEV;
 		goto exit;
 	}
-#endif
 
 	irq = platform_get_irq(pdev, 0);
 	if (irq < 0) {
