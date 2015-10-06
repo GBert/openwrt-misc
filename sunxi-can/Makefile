@@ -17,7 +17,7 @@ define KernelPackage/sunxi-can
   SUBMENU:=CAN Support
   TITLE:=SUNXI CAN-Bus
   DEPENDS:=+kmod-can
-  FILES:=$(PKG_BUILD_DIR)/sunxi_can.ko
+  FILES:=$(PKG_BUILD_DIR)/sun4i_can.ko
   KCONFIG:=
 endef
 

@@ -601,7 +601,7 @@ static int sun4i_can_err(struct net_device *dev, u8 isrc, u8 status)
 		stats->tx_errors++;
 		if (likely(skb)) {
 			cf->can_id |= CAN_ERR_LOSTARB;
-			cf->data[0] = (alc & 0x1f) >> 8;
+			cf->data[0] = (alc >> 8) & 0x1f;
 		}
 	}
 
@@ -690,8 +690,7 @@ static int sun4ican_open(struct net_device *dev)
 		return err;
 
 	/* register interrupt handler */
-	err = request_irq(dev->irq, sun4i_can_interrupt, IRQF_TRIGGER_NONE,
-			  dev->name, dev);
+	err = request_irq(dev->irq, sun4i_can_interrupt, 0, dev->name, dev);
 	if (err) {
 		netdev_err(dev, "request_irq err: %d\n", err);
 		goto exit_irq;
@@ -855,4 +854,4 @@ module_platform_driver(sun4i_can_driver);
 MODULE_AUTHOR("Peter Chen <xingkongcp@gmail.com>");
 MODULE_AUTHOR("Gerhard Bertelsmann <info@gerhard-bertelsmann.de>");
 MODULE_LICENSE("Dual BSD/GPL");
-MODULE_DESCRIPTION(DRV_NAME "CAN driver for Allwinner SoCs (A10/A20)");
+MODULE_DESCRIPTION("CAN driver for Allwinner SoCs (A10/A20)");
