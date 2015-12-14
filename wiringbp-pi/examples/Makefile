@@ -22,15 +22,17 @@
 #    along with wiringPi.  If not, see <http://www.gnu.org/licenses/>.
 #################################################################################
 
+DESTDIR=
+PREFIX=
 
 #DEBUG	= -g -O0
-DEBUG	= -O3
+DEBUG	= -O2
 CC	= gcc
-INCLUDE	= -I/usr/local/include
+INCLUDE	= -I$(DESTDIR)$(PREFIX)/include
 CFLAGS	= $(DEBUG) -Wall $(INCLUDE) -Winline -pipe
 
-LDFLAGS	= -L/usr/local/lib
-LDLIBS    = -lwiringPi -lwiringPiDev -lpthread -lm
+LDFLAGS	= -L$(DESTDIR)$(PREFIX)/lib -L../wiringPi -L../devLib
+LDLIBS	= -lwiringPi -lwiringPiDev -lpthread -lm
 
 # Should not alter anything below this line
 ###############################################################################
@@ -73,8 +75,8 @@ blink12:	blink12.o
 	@$(CC) -o $@ blink12.o $(LDFLAGS) $(LDLIBS)
 
 speed:	speed.o
-	@echo [link]
-	@$(CC) -o $@ speed.o $(LDFLAGS) $(LDLIBS)
+	echo [link]
+	$(CC) -o $@ speed.o $(LDFLAGS) $(LDLIBS)
 
 lcd:	lcd.o
 	@echo [link]
@@ -150,7 +152,7 @@ piglow:	piglow.o
 
 
 .c.o:
-	@echo [CC] $<
+	@echo [Compile] $<
 	@$(CC) -c $(CFLAGS) $< -o $@
 
 clean:

@@ -67,29 +67,29 @@ int main (void)
 
   printf ("\nNative wiringPi method: (%8d iterations)\n", FAST_COUNT) ;
   wiringPiSetup () ;
-  pinMode (0, OUTPUT) ;
-  speedTest (0, FAST_COUNT) ;
+  pinMode (7, OUTPUT) ;
+  speedTest (7, FAST_COUNT) ;
 
 // GPIO
 
   printf ("\nNative GPIO method: (%8d iterations)\n", FAST_COUNT) ;
   wiringPiSetupGpio () ;
-  pinMode (17, OUTPUT) ;
-  speedTest (17, FAST_COUNT) ;
+  pinMode (7, OUTPUT) ;
+  speedTest (7, FAST_COUNT) ;
 
 // Phys
 
   printf ("\nPhysical pin GPIO method: (%8d iterations)\n", FAST_COUNT) ;
   wiringPiSetupPhys () ;
-  pinMode (11, OUTPUT) ;
-  speedTest (11, FAST_COUNT) ;
+  pinMode (7, OUTPUT) ;
+  speedTest (7, FAST_COUNT) ;
 
 // Switch to SYS mode:
 
-  system ("/usr/local/bin/gpio export 17 out") ;
+  system ("/usr/bin/gpio export 7 out") ;
   printf ("\n/sys/class/gpio method: (%8d iterations)\n", SLOW_COUNT) ;
   wiringPiSetupSys () ;
-  speedTest (17, SLOW_COUNT) ;
+  speedTest (7, SLOW_COUNT) ;
 
   return 0 ;
 }
