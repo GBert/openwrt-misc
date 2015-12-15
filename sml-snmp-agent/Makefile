@@ -23,7 +23,7 @@ define Package/$(PKG_NAME)
   CATEGORY:=Utilities
   TITLE:= SNMP Agent for EDL21 power meter
   URL:=http://lnxpps.de/openwrt/hame-mpra5/
-  DEPENDS:= +pthread
+  DEPENDS:=+libpthread
 endef
 
 define Build/Prepare
@@ -32,7 +32,7 @@ endef
 
 define Build/Compile
 	$(MAKE)	-C $(PKG_BUILD_DIR)/sml $(TARGET_CONFIGURE_OPTS) \
-		CFLAGS="$(TARGET_CFLAGS) $(TARGET_CPPFLAGS) -I$(PKG_BUILD_DIR)/sml/include -D_NO_UUID_LIB"
+		CFLAGS="$(TARGET_CFLAGS) $(TARGET_CPPFLAGS) -I$(PKG_BUILD_DIR)/sml/include -fPIC -D_NO_UUID_LIB"
 	$(MAKE)	-C $(PKG_BUILD_DIR) $(TARGET_CONFIGURE_OPTS) \
 		CFLAGS="$(TARGET_CFLAGS) $(TARGET_CPPFLAGS) -I$(PKG_BUILD_DIR)/sml/include -L$(PKG_BUILD_DIR)/sml/lib"
 endef
