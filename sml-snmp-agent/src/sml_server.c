@@ -242,7 +242,7 @@ void transport_receiver(unsigned char *buffer, size_t buffer_len) {
 }
 
 void *reader_thread(void *fd) {
-    sml_transport_listen((int)fd, &transport_receiver);
+    sml_transport_listen(*(int*)fd, &transport_receiver);
     return 0;
 }
 
@@ -260,8 +260,8 @@ int main(int argc, char **argv) {
     int fd = serial_port_open(device);
     if (fd > 0) {
 	/* listen on the serial device, this call is blocking */
-	pthread_create(&thread_reader, NULL, reader_thread, (void *)fd);
-	pthread_create(&thread_snmp, NULL, snmp_agent, (void *)snmp_port);
+	pthread_create(&thread_reader, NULL, reader_thread, &fd);
+	pthread_create(&thread_snmp, NULL, snmp_agent, &snmp_port);
 	/* sml_transport_listen(fd, &transport_receiver); */
 	pthread_join(thread_reader, NULL);
 	pthread_join(thread_snmp, NULL);
