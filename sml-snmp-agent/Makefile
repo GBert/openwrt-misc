@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=sml_snmp_agent
-PKG_VERSION:=2.0
+PKG_VERSION:=1.0
 
 PKG_SOURCE_MIRROR:=0 
 PKG_SOURCE_VERSION:=$(PKG_REV)
