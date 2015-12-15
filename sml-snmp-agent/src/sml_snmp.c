@@ -108,9 +108,9 @@ void debugg(unsigned char *packet, int length) {
 void process_varbind_list(struct varbind_list_rx *varbind_list) {
     int i, timeticks;
     time_t t;
-    printf("Try to lock mutex ...\n");
+    /* printf("Try to lock mutex ...\n"); */
     pthread_mutex_lock(&value_mutex);
-    printf("Locked mutex ...\n");
+    /* printf("Locked mutex ...\n"); */
     for (i = 0; i < varbind_list->varbind_idx; i++) {
 
 	if (!strcmp((char *)&oid[0][0], (char *)varbind_list->varbind_list[i]->oid)) {
@@ -196,7 +196,6 @@ void *snmp_agent(void *snmp_port) {
 		disp_varbind(varbind);
 		process_varbind_list(varbind_list);
 		disp_varbind_list_rx(varbind_list);
-
 		struct varbind_list_tx *varbind_list_to_send = create_varbind_list_tx(varbind_list);
 		struct snmp_pdu_tx *snmp_pdu_tx = create_snmp_pdu_tx(0xa2, snmp_pdu->request_id, 0x00, 0x00, varbind_list_to_send);
 		struct snmp_message_tx *snmp_msg_tx = create_snmp_message_tx(snmp_msg->community, snmp_pdu_tx);

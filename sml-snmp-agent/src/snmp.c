@@ -446,8 +446,7 @@ struct varbind_list_rx *create_varbind_list_rx(unsigned char *varbindings) {
 						   (varbind_list->varbind_idx) * sizeof(struct varbind *));
 		    varbind_list->varbind_list[(varbind_list->varbind_idx) - 1] =
 			(struct varbind *)calloc(1, sizeof(struct varbind));
-		    varbind_list->varbind_list[(varbind_list->varbind_idx) - 1]->oid =
-			decode_oid(&varbindings[0], &pointer);
+		    varbind_list->varbind_list[(varbind_list->varbind_idx) - 1]->oid = decode_oid(&varbindings[0], &pointer);
 		}
 		switch (varbindings[pointer]) {
 		case 0x02:
@@ -472,8 +471,7 @@ struct varbind_list_rx *create_varbind_list_rx(unsigned char *varbindings) {
 		    break;
 		case 0x06:
 		    varbind_list->varbind_list[(varbind_list->varbind_idx) - 1]->data_type = varbindings[pointer];
-		    varbind_list->varbind_list[(varbind_list->varbind_idx) - 1]->value =
-			decode_oid(&varbindings[0], &pointer);
+		    varbind_list->varbind_list[(varbind_list->varbind_idx) - 1]->value = decode_oid(&varbindings[0], &pointer);
 		    break;
 		default:
 		    break;
@@ -515,6 +513,7 @@ void disp_varbind_list_rx(struct varbind_list_rx *varbind_list) {
 void clr_varbind_list_rx(struct varbind_list_rx *varbind_list) {
     unsigned int i;
     for (i = (varbind_list->varbind_idx); i > 0; i--) {
+	free(varbind_list->varbind_list[i - 1]->oid);
 	free(varbind_list->varbind_list[i - 1]->value);
 	free(varbind_list->varbind_list[i - 1]);
     }
