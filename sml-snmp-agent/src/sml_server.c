@@ -1,20 +1,11 @@
-// Copyright 2011 Juri Glass, Mathias Runge, Nadim El Sayed
-// DAI-Labor, TU-Berlin
-//
-// This file is part of libSML.
-//
-// libSML is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// libSML is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with libSML.  If not, see <http://www.gnu.org/licenses/>.
+/* ----------------------------------------------------------------------------
+ * "THE BEER-WARE LICENSE" (Revision 42):
+ * <info@gerhard-bertelsmann.de> wrote this file. As long as you retain this
+ * notice you can do whatever you want with this stuff. If we meet some day,
+ * and you think this stuff is worth it, you can buy me a beer in return
+ * Gerhard Bertelsmann
+ * ----------------------------------------------------------------------------
+ */
 
 #include <stdio.h>
 #include <fcntl.h>
@@ -30,14 +21,16 @@
 #include <sys/types.h>
 #include <math.h>
 #include <pthread.h>
+#include <libgen.h>
 #include "snmp.h"
 
 #include <sml/sml_file.h>
 #include <sml/sml_transport.h>
 
-#define SML_BUFFER_LEN 8096
-#define SNMP_PORT 1161
-#define MAXLINE 128
+#define SML_BUFFER_LEN	8096
+#define SNMP_PORT	1161
+#define MAX_STRING_LEN	32
+#define MAXLINE		128
 
 pthread_mutex_t value_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -49,6 +42,14 @@ const char obis_tarif2[] = { 0x01, 0x00, 0x01, 0x08, 0x02 };
 unsigned int counter_tarif0;
 unsigned int counter_tarif1;
 unsigned int counter_tarif2;
+
+void print_usage(char *prg) {
+    fprintf(stderr, "\nUsage: %s -p <snmp_port> -i <interface> [f]\n", prg);
+    fprintf(stderr, "   Version 1.0\n\n");
+    fprintf(stderr, "         -p <port>           SNMP port - default 161\n");
+    fprintf(stderr, "         -i <interface>      serial interface - default /dev/ttyUSB0\n");
+    fprintf(stderr, "         -f                  running in foreground\n\n");
+}
 
 void print_hex(unsigned char c) {
     unsigned char hex = c;
@@ -190,17 +191,17 @@ void transport_receiver(unsigned char *buffer, size_t buffer_len) {
 
 		/* apply scaler */
 		value *= pow(10, scaler);
-		// printf("Value: %f\n",value);
+		/* printf("Value: %f\n",value); */
 
-		/* get time */
-		// if (entry->val_time) { // TODO handle SML_TIME_SEC_INDEX
-		//      time.tv_sec = *entry->val_time->data.timestamp;
-		//        time.tv_usec = 0;
-		//        time_mode = 2;
-		// } else if (time_mode == 0) {
-		//        gettimeofday(&time, NULL);
-		//        time_mode = 3;
-		//}
+		/* get time
+		 if (entry->val_time) { // TODO handle SML_TIME_SEC_INDEX
+		      time.tv_sec = *entry->val_time->data.timestamp;
+		        time.tv_usec = 0;
+		        time_mode = 2;
+		 } else if (time_mode == 0) {
+		        gettimeofday(&time, NULL);
+		        time_mode = 3;
+		} */
 		gettimeofday(&time, NULL);
 
 		pthread_mutex_lock(&value_mutex);
@@ -218,7 +219,7 @@ void transport_receiver(unsigned char *buffer, size_t buffer_len) {
 		}
 		pthread_mutex_unlock(&value_mutex);
 
-		// printf("%lu.%lu (%i)\t%.2f %s\n", time.tv_sec, time.tv_usec, time_mode, value, dlms_get_unit(unit));
+		/* printf("%lu.%lu (%i)\t%.2f %s\n", time.tv_sec, time.tv_usec, time_mode, value, dlms_get_unit(unit)); */
 		print_octet_str(entry->obj_name);
 		printf("%lu.%lu (%i)\t%.2f\n", time.tv_sec, time.tv_usec, time_mode, value);
 
@@ -227,7 +228,7 @@ void transport_receiver(unsigned char *buffer, size_t buffer_len) {
 	}
 	/* iterating through linked list */
 	for (m = 0; m < n && entry != NULL; m++) {
-//                      meter_sml_parse(entry, &rds[m]);
+	    /*  meter_sml_parse(entry, &rds[m]); */
 	    printf(" -> entry %d\n", m);
 	    entry = entry->next;
 	}
@@ -242,14 +243,47 @@ void transport_receiver(unsigned char *buffer, size_t buffer_len) {
 }
 
 void *reader_thread(void *fd) {
-    sml_transport_listen(*(int*)fd, &transport_receiver);
+    sml_transport_listen(*(int *)fd, &transport_receiver);
     return 0;
 }
 
 int main(int argc, char **argv) {
-    char *device = "/dev/ttyUSB0";
-    int snmp_port = SNMP_PORT;
-    //thread_data *thread_reader_data;
+    pid_t pid;
+    int snmp_port, opt, foreground;
+    char device[MAX_STRING_LEN];
+
+    foreground = 0;
+    snmp_port = 16;
+    bzero(device, sizeof(device));
+    strcpy(device, "/dev/ttyUSB0");
+
+    while ((opt = getopt(argc, argv, "p:i:fh?")) != -1) {
+	switch (opt) {
+	case 'p':
+	    snmp_port = strtoul(optarg, (char **)NULL, 10);
+	    break;
+	case 'f':
+	    foreground = 1;
+	    break;
+	case 'i':
+	    if (strlen(optarg) < MAX_STRING_LEN) {
+		bzero(device, MAX_STRING_LEN);
+		strcpy(device, optarg);
+	    } else {
+		fprintf(stderr, "device name to long\n");
+		exit(1);
+	    }
+	    break;
+	case 'h':
+	case '?':
+	    print_usage(basename(argv[0]));
+	    exit(0);
+	default:
+	    fprintf(stderr, "Unknown option %c\n", opt);
+	    print_usage(basename(argv[0]));
+	    exit(1);
+	}
+    }
 
     pthread_t thread_reader;
     pthread_t thread_snmp;
@@ -262,10 +296,20 @@ int main(int argc, char **argv) {
 	/* listen on the serial device, this call is blocking */
 	pthread_create(&thread_reader, NULL, reader_thread, &fd);
 	pthread_create(&thread_snmp, NULL, snmp_agent, &snmp_port);
-	/* sml_transport_listen(fd, &transport_receiver); */
+	if (!foreground) {
+	    pid = fork();
+	    if (pid < 0)
+		exit(EXIT_FAILURE);
+	    if (pid > 0) {
+		printf("Going into background ...\n");
+		exit(EXIT_SUCCESS);
+	    }
+	}
 	pthread_join(thread_reader, NULL);
 	pthread_join(thread_snmp, NULL);
+    } else {
+	fprintf(stderr, "can't open %s\n", device);
+	exit(1);
     }
-    close(fd);
     return 0;
 }
