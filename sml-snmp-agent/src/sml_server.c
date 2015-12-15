@@ -133,6 +133,8 @@ void transport_receiver(unsigned char *buffer, size_t buffer_len) {
 	sml_message *message = file->messages[i];
 
 	printf("++++ %s: got SML message 1\n", __func__);
+	printf("++++ %s: message tag 0x%02x\n", __func__, *message->message_body->tag);
+	printf("++++ %s: got SML message 1_\n", __func__);
 
 	if (*message->message_body->tag == SML_MESSAGE_GET_LIST_RESPONSE) {
 	    printf("++++ %s: got SML message 1a\n", __func__);
