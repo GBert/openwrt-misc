@@ -135,11 +135,14 @@ void transport_receiver(unsigned char *buffer, size_t buffer_len) {
 	printf("++++ %s: got SML message 1\n", __func__);
 
 	if (*message->message_body->tag == SML_MESSAGE_GET_LIST_RESPONSE) {
+	    printf("++++ %s: got SML message 1a\n", __func__);
 	    body = (sml_get_list_response *) message->message_body->data;
+	    printf("++++ %s: got SML message 1b\n", __func__);
 	    // printf("new message from: %*s\n", body->server_id->len, body->server_id->str);
 	    entry = body->val_list;
 	    printf("SML Message\n");
 
+	    printf("++++ %s: got SML message 1c\n", __func__);
 	    int time_mode = 1;
 	    if (body->act_sensor_time) {
 		time.tv_sec = *body->act_sensor_time->data.timestamp;
