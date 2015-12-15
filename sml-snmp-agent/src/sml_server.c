@@ -119,7 +119,7 @@ void transport_receiver(unsigned char *buffer, size_t buffer_len) {
     short i;
     //unsigned char message_buffer[SML_BUFFER_LEN];
     sml_get_list_response *body;
-    sml_list *entry;
+    sml_list *entry = NULL;
     int m = 0, n = 10;
     struct timeval time;
 
