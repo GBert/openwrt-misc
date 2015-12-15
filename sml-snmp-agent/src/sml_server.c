@@ -120,7 +120,7 @@ void transport_receiver(unsigned char *buffer, size_t buffer_len) {
     //unsigned char message_buffer[SML_BUFFER_LEN];
     sml_get_list_response *body;
     sml_list *entry;
-    size_t m = 0, n = 10;
+    int m = 0, n = 10;
     struct timeval time;
 
     // the buffer contains the whole message, with transport escape sequences.
@@ -247,11 +247,10 @@ void *reader_thread(void *fd) {
 }
 
 int main(int argc, char **argv) {
-    // this example assumes that a EDL21 meter sending SML messages via a
-    // serial device. Adjust as needed.
     char *device = "/dev/ttyUSB0";
     int snmp_port = SNMP_PORT;
     //thread_data *thread_reader_data;
+
     pthread_t thread_reader;
     pthread_t thread_snmp;
     pthread_attr_t attr;

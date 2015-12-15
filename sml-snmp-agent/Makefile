@@ -22,7 +22,7 @@ define Package/$(PKG_NAME)
   SECTION:=utils
   CATEGORY:=Utilities
   TITLE:= SNMP Agent for EDL21 power meter
-  URL:=http://lnxpps.de/openwrt
+  URL:=http://lnxpps.de/openwrt/hame-mpra5/
   DEPENDS:= +pthread
 endef
 
@@ -40,6 +40,8 @@ endef
 define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/sml_server $(1)/usr/bin
+	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_BIN) ./files/sml_server.init $(1)/etc/init.d/sml_server
 endef
 
 $(eval $(call BuildPackage,$(PKG_NAME)))
