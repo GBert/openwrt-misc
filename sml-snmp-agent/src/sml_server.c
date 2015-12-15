@@ -233,6 +233,7 @@ void transport_receiver(unsigned char *buffer, size_t buffer_len) {
 	    }
 
 	}
+	printf("++++ %s: got SML message end\n", __func__);
 	/* iterating through linked list */
 	for (m = 0; m < n && entry != NULL; m++) {
 //                      meter_sml_parse(entry, &rds[m]);
