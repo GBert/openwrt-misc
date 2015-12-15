@@ -1,5 +1,5 @@
 UNAME := $(shell uname)
-CFLAGS +=  -D_REENTRANT -I../sml/include/ 
+CFLAGS +=  -D_REENTRANT -g -Wall -pedantic -std=gnu99 -I../sml/include/ 
 OBJS = snmp.o sml_snmp.o sml_server.o
 LIBSML = ../sml/lib/libsml.a
 
