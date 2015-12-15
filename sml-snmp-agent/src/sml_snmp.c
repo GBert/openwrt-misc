@@ -47,7 +47,6 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <pthread.h>
 #include "snmp.h"
 
-// globals
 extern pthread_mutex_t value_mutex;
 extern unsigned int counter_tarif0;
 extern unsigned int counter_tarif1;
@@ -66,7 +65,6 @@ char description[] = "volkszaehler.org / DAI Labor Berlin / Frauenhofer FOKUS";
 char MasterName[] = "libSML Masteragent";
 char MasterLocation[] = "Stromkasten";
 unsigned int NumberOfAgents = 1;
-//functions
 
 void debugg(unsigned char *packet, int length) {
     int position = 0;
@@ -74,6 +72,7 @@ void debugg(unsigned char *packet, int length) {
     int i;
     char displayNumb[width];
     char displayChar[width];
+
     while (position < length) {
 	for (i = 0; i < width; i++) {
 	    displayNumb[i] = 0x00;
@@ -93,7 +92,7 @@ void debugg(unsigned char *packet, int length) {
 	    }
 	}
 	for (i = 0; i < (width); i++) {
-	    printf("%02X", displayNumb[i]);
+	    printf("%02x", (unsigned char)displayNumb[i]);
 	    if (i < (width - 1)) {
 		printf(" ");
 	    }
@@ -197,10 +196,11 @@ void *snmp_agent(void *snmp_port) {
 		disp_varbind(varbind);
 		process_varbind_list(varbind_list);
 		disp_varbind_list_rx(varbind_list);
+
 		struct varbind_list_tx *varbind_list_to_send = create_varbind_list_tx(varbind_list);
-		struct snmp_pdu_tx *snmp_pdu_tx =
-		    create_snmp_pdu_tx(0xa2, snmp_pdu->request_id, 0x00, 0x00, varbind_list_to_send);
+		struct snmp_pdu_tx *snmp_pdu_tx = create_snmp_pdu_tx(0xa2, snmp_pdu->request_id, 0x00, 0x00, varbind_list_to_send);
 		struct snmp_message_tx *snmp_msg_tx = create_snmp_message_tx(snmp_msg->community, snmp_pdu_tx);
+
 		sendPacket(client_addr.sin_addr, ntohs(client_addr.sin_port), sock, snmp_msg_tx);
 		clr_snmp_message_tx(snmp_msg_tx);
 		clr_snmp_pdu_tx(snmp_pdu_tx);

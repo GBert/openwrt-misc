@@ -111,7 +111,7 @@ unsigned char *decode_string(unsigned char *array, unsigned int *pointer) {
 unsigned char *decode_oid(unsigned char *array, unsigned int *pointer) {
     unsigned char *string = NULL;
     unsigned char *buffer = (unsigned char *)calloc(100, sizeof(unsigned char));
-    unsigned char *number = (unsigned char *)calloc(6, sizeof(unsigned char));
+    unsigned char *number = (unsigned char *)calloc(8, sizeof(unsigned char));
     unsigned int oid_node, oid_node_long = 0;
 
     *pointer = *pointer + 1;
@@ -526,7 +526,7 @@ struct varbind *create_varbind(unsigned char *oid, unsigned char data_type, void
 {
     struct varbind *varbind = NULL;
     varbind = (struct varbind *)calloc(1, sizeof(struct varbind));
-    varbind->oid = (unsigned char *)calloc(1, strlen((char *)oid));
+    varbind->oid = (unsigned char *)calloc(1, strlen((char *)oid)+1);
     strcpy((char *)varbind->oid, (char *)oid);
     varbind->data_type = data_type;
     switch (data_type) {
