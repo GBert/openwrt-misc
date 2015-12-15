@@ -132,6 +132,8 @@ void transport_receiver(unsigned char *buffer, size_t buffer_len) {
     for (i = 0; i < file->messages_len; i++) {
 	sml_message *message = file->messages[i];
 
+	printf("++++ %s: got SML message 1\n", __func__);
+
 	if (*message->message_body->tag == SML_MESSAGE_GET_LIST_RESPONSE) {
 	    body = (sml_get_list_response *) message->message_body->data;
 	    // printf("new message from: %*s\n", body->server_id->len, body->server_id->str);
@@ -151,6 +153,7 @@ void transport_receiver(unsigned char *buffer, size_t buffer_len) {
 		time_mode = -1;
 		printf("sensor time: %lu.%lu, %i\n", time.tv_sec, time.tv_usec, *body->act_sensor_time->tag);
 	    }
+	    printf("++++ %s: got SML message 2\n", __func__);
 	    for (entry = body->val_list; entry != NULL; entry = entry->next) {	/* linked list */
 		//int unit = (entry->unit) ? *entry->unit : 0;
 		int scaler = (entry->scaler) ? *entry->scaler : 1;
@@ -203,6 +206,7 @@ void transport_receiver(unsigned char *buffer, size_t buffer_len) {
 		//}
 		gettimeofday(&time, NULL);
 
+		printf("++++ %s: got SML message 3\n", __func__);
 		pthread_mutex_lock(&value_mutex);
 		if (!memcmp(entry->obj_name->str, obis_tarif0, sizeof(obis_tarif0))) {
 		    counter_tarif0 = (int)(value + 0.5);
@@ -218,6 +222,7 @@ void transport_receiver(unsigned char *buffer, size_t buffer_len) {
 		}
 		pthread_mutex_unlock(&value_mutex);
 
+		printf("++++ %s: got SML message 4\n", __func__);
 		// printf("%lu.%lu (%i)\t%.2f %s\n", time.tv_sec, time.tv_usec, time_mode, value, dlms_get_unit(unit));
 		print_octet_str(entry->obj_name);
 		printf("%lu.%lu (%i)\t%.2f\n", time.tv_sec, time.tv_usec, time_mode, value);
