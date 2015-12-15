@@ -113,6 +113,7 @@ unsigned char *decode_oid(unsigned char *array, unsigned int *pointer) {
     unsigned char *buffer = (unsigned char *)calloc(100, sizeof(unsigned char));
     unsigned char *number = (unsigned char *)calloc(6, sizeof(unsigned char));
     unsigned int oid_node, oid_node_long = 0;
+
     *pointer = *pointer + 1;
     unsigned char length = array[*pointer];
     *pointer = *pointer + 1;

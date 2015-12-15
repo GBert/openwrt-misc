@@ -36,7 +36,7 @@
 #include <sml/sml_transport.h>
 
 #define SML_BUFFER_LEN 8096
-#define SNMP_PORT 161
+#define SNMP_PORT 1161
 #define MAXLINE 128
 
 pthread_mutex_t value_mutex = PTHREAD_MUTEX_INITIALIZER;
