@@ -61,22 +61,22 @@ int decode_integer(unsigned char *array, unsigned int *pointer)
 
     switch (array[++*pointer]) {
     case 0x01:
-	buffer = array[++*pointer];
+	buffer  = array[++*pointer];
 	break;
     case 0x02:
-	buffer = 0 | array[++*pointer];
+	buffer  = array[++*pointer];
 	buffer <<= 8;
 	buffer |= array[++*pointer];
 	break;
     case 0x03:
-	buffer = 0 | array[++*pointer];
+	buffer  = array[++*pointer];
 	buffer <<= 8;
 	buffer |= array[++*pointer];
 	buffer <<= 8;
 	buffer |= array[++*pointer];
 	break;
     case 0x04:
-	buffer = 0 | array[++*pointer];
+	buffer  = array[++*pointer];
 	buffer <<= 8;
 	buffer |= array[++*pointer];
 	buffer <<= 8;
@@ -85,7 +85,7 @@ int decode_integer(unsigned char *array, unsigned int *pointer)
 	buffer |= array[++*pointer];
 	break;
     default:
-	buffer = 04;
+	buffer = 4;
 	break;
     }
     ++*pointer;
