@@ -40,7 +40,8 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 extern void debugg(unsigned char *, int);
 
-unsigned char oid_item_length(unsigned int value) {
+unsigned char oid_item_length(unsigned int value)
+{
     if (!(value & 0xffffff80)) {	// 2 ^  7
 	return 1;
     } else if (!(value & 0xffffc000)) {	// 2 ^ 14
@@ -54,7 +55,8 @@ unsigned char oid_item_length(unsigned int value) {
     }
 }
 
-int decode_integer(unsigned char *array, unsigned int *pointer) {
+int decode_integer(unsigned char *array, unsigned int *pointer)
+{
     unsigned int buffer;
 
     switch (array[++*pointer]) {
@@ -90,14 +92,16 @@ int decode_integer(unsigned char *array, unsigned int *pointer) {
     return buffer;
 }
 
-unsigned char *decode_string(unsigned char *array, unsigned int *pointer) {
+unsigned char *decode_string(unsigned char *array, unsigned int *pointer)
+{
     unsigned char *string = (unsigned char *)calloc(1, (array[++*pointer]) + 1);
     memcpy(string, &array[*pointer + 1], array[*pointer]);
     *pointer = *pointer + array[*pointer] + 1;
     return string;
 }
 
-unsigned char *decode_oid(unsigned char *array, unsigned int *pointer) {
+unsigned char *decode_oid(unsigned char *array, unsigned int *pointer)
+{
     unsigned char *string = NULL;
     unsigned char *buffer = (unsigned char *)calloc(100, sizeof(unsigned char));
     unsigned char *number = (unsigned char *)calloc(8, sizeof(unsigned char));
@@ -135,7 +139,8 @@ unsigned char *decode_oid(unsigned char *array, unsigned int *pointer) {
     return string;
 }
 
-unsigned char *encode_oid(unsigned char *array) {
+unsigned char *encode_oid(unsigned char *array)
+{
     unsigned char *oid = NULL;
     unsigned char *buffer = (unsigned char *)calloc(1, strlen((char *)array) + 1);
     unsigned char *number = (unsigned char *)calloc(6, sizeof(unsigned char));
@@ -176,7 +181,8 @@ unsigned char *encode_oid(unsigned char *array) {
     return oid;
 }
 
-unsigned char *encode_string(unsigned char *array) {
+unsigned char *encode_string(unsigned char *array)
+{
     unsigned char *string = (unsigned char *)calloc(1, strlen((char *)array) + 2);
 
     memcpy(&string[2], array, strlen((char *)array));
@@ -185,7 +191,8 @@ unsigned char *encode_string(unsigned char *array) {
     return string;
 }
 
-unsigned char *encode_integer(unsigned int value) {
+unsigned char *encode_integer(unsigned int value)
+{
     unsigned char *integer_string = NULL;
 
     if (value > 65535) {
@@ -211,7 +218,8 @@ unsigned char *encode_integer(unsigned int value) {
     return integer_string;
 }
 
-unsigned char *encode_integer_by_length(unsigned int value, unsigned char length, unsigned char typ) {
+unsigned char *encode_integer_by_length(unsigned int value, unsigned char length, unsigned char typ)
+{
     unsigned char *integer_string = NULL;
 
     if (length > 2) {
@@ -237,7 +245,8 @@ unsigned char *encode_integer_by_length(unsigned int value, unsigned char length
     return integer_string;
 }
 
-unsigned char *return_pdu_type_string(unsigned char pdu_type) {
+unsigned char *return_pdu_type_string(unsigned char pdu_type)
+{
     char *pdu_type_string = NULL;
     char GetRequest[] = { 'G', 'e', 't', 'R', 'e', 'q', 'u', 'e', 's', 't', '\0' };
     char GetResponse[] = { 'G', 'e', 't', 'R', 'e', 's', 'p', 'o', 'n', 's', 'e', '\0' };
@@ -270,7 +279,8 @@ unsigned char *return_pdu_type_string(unsigned char pdu_type) {
     return (unsigned char *)pdu_type_string;
 }
 
-unsigned char *return_data_type_string(unsigned char data_type) {
+unsigned char *return_data_type_string(unsigned char data_type)
+{
     char *data_type_string = NULL;
     char Integer[] = { 'I', 'n', 't', 'e', 'g', 'e', 'r', '\0' };
     char OctetString[] = { 'O', 'c', 't', 'e', 't', 0x20, 'S', 't', 'r', 'i', 'n', 'g', '\0' };
@@ -310,7 +320,8 @@ unsigned char *return_data_type_string(unsigned char data_type) {
     return (unsigned char *)data_type_string;
 }
 
-void disp_snmp_message_rx(struct snmp_message_rx *snmp_msg) {
+void disp_snmp_message_rx(struct snmp_message_rx *snmp_msg)
+{
     printf("***SNMP MESSAGE***\n");
     printf("SNMP Message Length: %i\n", snmp_msg->snmp_message_length);
     printf("SNMP Version: %d\n", snmp_msg->version);
@@ -319,13 +330,15 @@ void disp_snmp_message_rx(struct snmp_message_rx *snmp_msg) {
     debugg(snmp_msg->snmp_pdu, snmp_msg->snmp_pdu_length + 2);
 }
 
-void clr_snmp_message_rx(struct snmp_message_rx *snmp_msg) {
+void clr_snmp_message_rx(struct snmp_message_rx *snmp_msg)
+{
     free(snmp_msg->snmp_pdu);
     free(snmp_msg->community);
     free(snmp_msg);
 }
 
-struct snmp_message_rx *create_snmp_message_rx(unsigned char *udp_received) {
+struct snmp_message_rx *create_snmp_message_rx(unsigned char *udp_received)
+{
     unsigned int pointer = 0;
     unsigned int buffer = 0;
     struct snmp_message_rx *snmp_msg = NULL;
@@ -361,12 +374,14 @@ struct snmp_message_rx *create_snmp_message_rx(unsigned char *udp_received) {
     return snmp_msg;
 }
 
-void clr_snmp_pdu_rx(struct snmp_pdu_rx *snmp_pdu) {
+void clr_snmp_pdu_rx(struct snmp_pdu_rx *snmp_pdu)
+{
     free(snmp_pdu->varbindings);
     free(snmp_pdu);
 }
 
-struct snmp_pdu_rx *create_snmp_pdu_rx(unsigned char *pdu) {
+struct snmp_pdu_rx *create_snmp_pdu_rx(unsigned char *pdu)
+{
     unsigned int pointer = 0;
     struct snmp_pdu_rx *snmp_pdu = NULL;
 
@@ -397,7 +412,8 @@ struct snmp_pdu_rx *create_snmp_pdu_rx(unsigned char *pdu) {
     return snmp_pdu;
 }
 
-void disp_snmp_pdu_rx(struct snmp_pdu_rx *snmp_pdu) {
+void disp_snmp_pdu_rx(struct snmp_pdu_rx *snmp_pdu)
+{
     unsigned char *pdu_type = return_pdu_type_string(snmp_pdu->snmp_pdu_type);
 
     printf("***SNMP PDU***\n");
@@ -411,7 +427,8 @@ void disp_snmp_pdu_rx(struct snmp_pdu_rx *snmp_pdu) {
     free(pdu_type);
 }
 
-struct varbind_list_rx *create_varbind_list_rx(unsigned char *varbindings) {
+struct varbind_list_rx *create_varbind_list_rx(unsigned char *varbindings)
+{
     unsigned int pointer = 0;
     int length = 0;
     struct varbind_list_rx *varbind_list = NULL;
@@ -470,7 +487,8 @@ struct varbind_list_rx *create_varbind_list_rx(unsigned char *varbindings) {
     return varbind_list;
 }
 
-void disp_varbind_list_rx(struct varbind_list_rx *varbind_list) {
+void disp_varbind_list_rx(struct varbind_list_rx *varbind_list)
+{
     unsigned int i;
     printf("***Varbind List***\n");
     printf("Varbind List Length: %i\n", varbind_list->varbind_list_length);
@@ -498,7 +516,8 @@ void disp_varbind_list_rx(struct varbind_list_rx *varbind_list) {
     }
 }
 
-void clr_varbind_list_rx(struct varbind_list_rx *varbind_list) {
+void clr_varbind_list_rx(struct varbind_list_rx *varbind_list)
+{
     unsigned int i;
     for (i = (varbind_list->varbind_idx); i > 0; i--) {
 	free(varbind_list->varbind_list[i - 1]->oid);
@@ -513,7 +532,7 @@ struct varbind *create_varbind(unsigned char *oid, unsigned char data_type, void
 {
     struct varbind *varbind = NULL;
     varbind = (struct varbind *)calloc(1, sizeof(struct varbind));
-    varbind->oid = (unsigned char *)calloc(1, strlen((char *)oid)+1);
+    varbind->oid = (unsigned char *)calloc(1, strlen((char *)oid) + 1);
     strcpy((char *)varbind->oid, (char *)oid);
     varbind->data_type = data_type;
     switch (data_type) {
@@ -542,7 +561,8 @@ struct varbind *create_varbind(unsigned char *oid, unsigned char data_type, void
     return varbind;
 }
 
-void update_varbind(struct varbind *varbind, unsigned char data_type, void *value) {
+void update_varbind(struct varbind *varbind, unsigned char data_type, void *value)
+{
     free(varbind->value);
     varbind->data_type = data_type;
     switch (data_type) {
@@ -570,7 +590,8 @@ void update_varbind(struct varbind *varbind, unsigned char data_type, void *valu
     }
 }
 
-void disp_varbind(struct varbind *varbind) {
+void disp_varbind(struct varbind *varbind)
+{
     unsigned char *data_type = return_data_type_string(varbind->data_type);
     printf("***Varbind***\n");
     printf("OID: %s\n", varbind->oid);
@@ -597,13 +618,15 @@ void disp_varbind(struct varbind *varbind) {
     free(data_type);
 }
 
-void clr_varbind(struct varbind *varbind) {
+void clr_varbind(struct varbind *varbind)
+{
     free(varbind->value);
     free(varbind->oid);
     free(varbind);
 }
 
-struct varbind_list_tx *create_varbind_list_tx(struct varbind_list_rx *varbinds_to_send) {
+struct varbind_list_tx *create_varbind_list_tx(struct varbind_list_rx *varbinds_to_send)
+{
     struct varbind_list_tx *varbind_list = (struct varbind_list_tx *)calloc(1, sizeof(struct varbind_list_tx));
     unsigned int i;
     unsigned int pointer = 4;
@@ -691,13 +714,15 @@ struct varbind_list_tx *create_varbind_list_tx(struct varbind_list_rx *varbinds_
     return varbind_list;
 }
 
-void clr_varbind_list_tx(struct varbind_list_tx *varbind_list) {
+void clr_varbind_list_tx(struct varbind_list_tx *varbind_list)
+{
     free(varbind_list->varbind_list);
     free(varbind_list);
 }
 
 struct snmp_pdu_tx *create_snmp_pdu_tx(unsigned char pdu_type, unsigned int request_id, unsigned char error,
-				       unsigned char error_index, struct varbind_list_tx *varbind_list) {
+				       unsigned char error_index, struct varbind_list_tx *varbind_list)
+{
     struct snmp_pdu_tx *snmp_pdu = (struct snmp_pdu_tx *)calloc(1, sizeof(struct snmp_pdu_tx));
     unsigned int pointer = 2;
     unsigned char *pdu_buffer = (unsigned char *)calloc(300, sizeof(unsigned char));
@@ -726,12 +751,14 @@ struct snmp_pdu_tx *create_snmp_pdu_tx(unsigned char pdu_type, unsigned int requ
     return snmp_pdu;
 }
 
-void clr_snmp_pdu_tx(struct snmp_pdu_tx *snmp_pdu) {
+void clr_snmp_pdu_tx(struct snmp_pdu_tx *snmp_pdu)
+{
     free(snmp_pdu->snmp_pdu);
     free(snmp_pdu);
 }
 
-struct snmp_message_tx *create_snmp_message_tx(unsigned char *community, struct snmp_pdu_tx *snmp_pdu) {
+struct snmp_message_tx *create_snmp_message_tx(unsigned char *community, struct snmp_pdu_tx *snmp_pdu)
+{
     struct snmp_message_tx *snmp_msg = (struct snmp_message_tx *)calloc(1, sizeof(struct snmp_message_tx));
     unsigned int pointer = 2;
     unsigned char *snmp_msg_buffer = (unsigned char *)calloc(500, sizeof(unsigned char));
@@ -756,7 +783,8 @@ struct snmp_message_tx *create_snmp_message_tx(unsigned char *community, struct 
     return snmp_msg;
 }
 
-void clr_snmp_message_tx(struct snmp_message_tx *snmp_msg) {
+void clr_snmp_message_tx(struct snmp_message_tx *snmp_msg)
+{
     free(snmp_msg->snmp_message);
     free(snmp_msg);
 }
