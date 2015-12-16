@@ -3,7 +3,7 @@ EDL21 Power Meter Interface
 
 This repo contains a software project for a EDL21 power meter interface with SNMP support
 
-!["Power Meter"](https://github.com/GBert/openwrt-misc/blob/master/sml-snmp-agent/pictures/libehz-leser.jpg)
+!["Power Meter"](https://github.com/GBert/openwrt-misc/blob/master/sml-snmp-agent/pictures/IMG_7578_s.JPG)
 
 My setup is working with a HAME A5 which is quite similar to https://wiki.openwrt.org/toh/unbranded/a5-v11 
 
