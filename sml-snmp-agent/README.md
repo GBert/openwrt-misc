@@ -11,7 +11,7 @@ Only a simple adapter board is needed:
 
 and some software for building a SNMP-Agent. This will enable to feed e.g. Cacti:
 
-!["Cacti"](https://github.com/GBert/openwrt-misc/blob/master/sml-snmp-agent/pictures/adapter.png)
+!["Cacti"](https://github.com/GBert/openwrt-misc/blob/master/sml-snmp-agent/pictures/cacti.png)
  
 ### Status
 
