@@ -14,7 +14,7 @@ and some software for building a SNMP-Agent. This will enable to feed Cacti e.g.
 !["Cacti"](https://github.com/GBert/openwrt-misc/blob/master/sml-snmp-agent/pictures/cacti.png)
 
 My setup is working with a HAME A5 which is quite similar to https://wiki.openwrt.org/toh/unbranded/a5-v11
-The A5-V11 seems to be the better choice as of today: it has 32MByte RAM instead of 16Mbyte
+The A5-V11 (available for less than 7 Euro) seems to be the better choice as of today: it has 32MByte RAM instead of 16Mbyte
 ### Status
 
 - working, but needs to daemonize externally
