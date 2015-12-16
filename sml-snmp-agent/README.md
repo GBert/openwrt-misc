@@ -3,7 +3,7 @@ EDL21 power meter Interface
 
 This repo contains a project of a EDL21 power meter interface with SNMP
 
-!["Adapter"](/pictures/adapter.png) 
+!["Adapter"](https://github.com/GBert/openwrt-misc/blob/master/sml-snmp-agent/pictures/adapter.png) 
 
 ### Status
 
