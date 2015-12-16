@@ -44,8 +44,4 @@ define Package/$(PKG_NAME)/install
 	$(INSTALL_BIN) ./files/sml_server.init $(1)/etc/init.d/sml_server
 endef
 
-define Package/$(PKG_NAME)/postinst
-
-endef
-
 $(eval $(call BuildPackage,$(PKG_NAME)))

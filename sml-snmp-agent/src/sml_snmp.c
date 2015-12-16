@@ -108,9 +108,7 @@ void debugg(unsigned char *packet, int length) {
 void process_varbind_list(struct varbind_list_rx *varbind_list) {
     int i, timeticks;
     time_t t;
-    /* printf("Try to lock mutex ...\n"); */
     pthread_mutex_lock(&value_mutex);
-    /* printf("Locked mutex ...\n"); */
     for (i = 0; i < varbind_list->varbind_idx; i++) {
 
 	if (!strcmp((char *)&oid[0][0], (char *)varbind_list->varbind_list[i]->oid)) {
@@ -143,19 +141,21 @@ void process_varbind_list(struct varbind_list_rx *varbind_list) {
 	    update_varbind(varbind_list->varbind_list[i], 0x02, &counter_tarif2);
 	}
     }
-    printf("Try to unlock mutex ...\n");
     pthread_mutex_unlock(&value_mutex);
-    printf("Unlocked mutex ...\n");
 }
 
 void sendPacket(struct in_addr host, short port, int sock, struct snmp_message_tx *snmp_msg) {
+    int s;
     struct sockaddr_in server_addr;
+
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(port);
     server_addr.sin_addr = host;
     bzero(&(server_addr.sin_zero), 8);
-    sendto(sock, snmp_msg->snmp_message, snmp_msg->snmp_message_len, 0, (struct sockaddr *)&server_addr, sizeof(struct sockaddr));
-    //printf("\nsend snmp-message to %s , %d \n",inet_ntoa(server_addr.sin_addr),ntohs(server_addr.sin_port));
+    s = sendto(sock, snmp_msg->snmp_message, snmp_msg->snmp_message_len, 0, (struct sockaddr *)&server_addr, sizeof(struct sockaddr));
+    if (s != snmp_msg->snmp_message_len)
+	fprintf(stderr, "%s: error sending UDP data; %s\n", __func__, strerror(errno));
+
     debugg(snmp_msg->snmp_message, snmp_msg->snmp_message_len);
 }
 
@@ -164,18 +164,19 @@ void *snmp_agent(void *snmp_port) {
     int sock;
     int bytes_read;
     socklen_t addr_len;
-    char recv_data[1024];
+    char recv_data[2048];
     struct sockaddr_in server_addr, client_addr;
-    if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
-	perror("Socket");
+    sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sock < 0) {
+	fprintf(stderr, "creating SNMP socket error: %s\n", strerror(errno));
 	exit(1);
     }
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(161);
     server_addr.sin_addr.s_addr = INADDR_ANY;
     bzero(&(server_addr.sin_zero), 8);
-    if (bind(sock, (struct sockaddr *)&server_addr, sizeof(struct sockaddr)) == -1) {
-	perror("Bind");
+    if (bind(sock, (struct sockaddr *)&server_addr, sizeof(struct sockaddr)) < 0) {
+	fprintf(stderr, "binding SNMP(%d) socket error: %s\n", ntohs(server_addr.sin_port), strerror(errno));
 	exit(1);
     }
     addr_len = sizeof(struct sockaddr);
