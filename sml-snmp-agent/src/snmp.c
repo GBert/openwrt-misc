@@ -56,53 +56,42 @@ unsigned char oid_item_length(unsigned int value) {
 
 int decode_integer(unsigned char *array, unsigned int *pointer) {
     unsigned int buffer;
-    *pointer = *pointer + 1;
-    switch (array[*pointer]) {
+
+    switch (array[++*pointer]) {
     case 0x01:
-	*pointer = *pointer + 1;
-	buffer = array[*pointer];
+	buffer = array[++*pointer];
 	break;
     case 0x02:
-	*pointer = *pointer + 1;
-	buffer = 0 | array[*pointer];
+	buffer = 0 | array[++*pointer];
 	buffer <<= 8;
-	*pointer = *pointer + 1;
-	buffer |= array[*pointer];
+	buffer |= array[++*pointer];
 	break;
     case 0x03:
-	*pointer = *pointer + 1;
-	buffer = 0 | array[*pointer];
+	buffer = 0 | array[++*pointer];
 	buffer <<= 8;
-	*pointer = *pointer + 1;
-	buffer |= array[*pointer];
+	buffer |= array[++*pointer];
 	buffer <<= 8;
-	*pointer = *pointer + 1;
-	buffer |= array[*pointer];
+	buffer |= array[++*pointer];
 	break;
     case 0x04:
-	*pointer = *pointer + 1;
-	buffer = 0 | array[*pointer];
+	buffer = 0 | array[++*pointer];
 	buffer <<= 8;
-	*pointer = *pointer + 1;
-	buffer |= array[*pointer];
+	buffer |= array[++*pointer];
 	buffer <<= 8;
-	*pointer = *pointer + 1;
-	buffer |= array[*pointer];
+	buffer |= array[++*pointer];
 	buffer <<= 8;
-	*pointer = *pointer + 1;
-	buffer |= array[*pointer];
+	buffer |= array[++*pointer];
 	break;
     default:
 	buffer = 04;
 	break;
     }
-    *pointer = *pointer + 1;
+    ++*pointer;
     return buffer;
 }
 
 unsigned char *decode_string(unsigned char *array, unsigned int *pointer) {
-    *pointer = *pointer + 1;
-    unsigned char *string = (unsigned char *)calloc(1, (array[*pointer]) + 1);
+    unsigned char *string = (unsigned char *)calloc(1, (array[++*pointer]) + 1);
     memcpy(string, &array[*pointer + 1], array[*pointer]);
     *pointer = *pointer + array[*pointer] + 1;
     return string;
@@ -114,15 +103,13 @@ unsigned char *decode_oid(unsigned char *array, unsigned int *pointer) {
     unsigned char *number = (unsigned char *)calloc(8, sizeof(unsigned char));
     unsigned int oid_node, oid_node_long = 0;
 
-    *pointer = *pointer + 1;
-    unsigned char length = array[*pointer];
-    *pointer = *pointer + 1;
-    if (array[*pointer] == 0x2b) {
+    unsigned char length = array[++*pointer];
+    if (array[++*pointer] == 0x2b) {
 	strcat((char *)buffer, "1.3");
     }
     length--;
     while (length) {
-	*pointer = *pointer + 1;
+	++*pointer;
 	oid_node = array[*pointer];
 	if (oid_node & 0x80) {
 	    oid_node_long |= oid_node & 0x7f;
@@ -142,7 +129,7 @@ unsigned char *decode_oid(unsigned char *array, unsigned int *pointer) {
     }
     string = (unsigned char *)calloc(1, strlen((char *)buffer) + 1);
     strcpy((char *)string, (char *)buffer);
-    *pointer = *pointer + 1;
+    ++*pointer;
     free(buffer);
     free(number);
     return string;
@@ -156,6 +143,7 @@ unsigned char *encode_oid(unsigned char *array) {
     unsigned char *oid_buffer = (unsigned char *)calloc(1, strlen((char *)array) + 1);
     unsigned int value = 0;
     char *saveptr;
+
     strcpy((char *)buffer, (char *)array);
     char *part;
 
@@ -428,18 +416,18 @@ struct varbind_list_rx *create_varbind_list_rx(unsigned char *varbindings) {
     int length = 0;
     struct varbind_list_rx *varbind_list = NULL;
 
-    if ((varbindings[pointer] == 0x30)) {
+    if (varbindings[pointer] == 0x30) {
 	varbind_list = (struct varbind_list_rx *)calloc(1, sizeof(struct varbind_list_rx));
 	varbind_list->varbind_idx = 0;
 	pointer++;
 	varbind_list->varbind_list_length = varbindings[pointer];
 	pointer++;
 	while (length < varbind_list->varbind_list_length) {
-	    if ((varbindings[pointer] == 0x30)) {
+	    if (varbindings[pointer] == 0x30) {
 		pointer++;
 		length += ((varbindings[pointer]) + 2);
 		pointer++;
-		if ((varbindings[pointer] == 0x06)) {
+		if (varbindings[pointer] == 0x06) {
 		    varbind_list->varbind_idx++;
 		    varbind_list->varbind_list =
 			(struct varbind **)realloc(varbind_list->varbind_list,
