@@ -21,9 +21,9 @@ The software is a simple SNMPv1-Agent with EDL21 support. I've created a Cacti t
 - working but lacking some error handling
 
 ### Howto integrate
-'''
+```
 cd <openwrt_dir>
-'''
+```
 ### Notice
 
 The A5-V11 (available for less than 7 Euro) seems to be the better choice as of today: it has 32MByte RAM instead of 16Mbyte.
