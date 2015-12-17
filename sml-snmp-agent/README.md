@@ -23,6 +23,11 @@ The software is a simple SNMPv1-Agent with EDL21 support. I've created a Cacti t
 ### Howto integrate
 ```
 cd <openwrt_dir>
+echo 'src-git openwrtmisc https://github.com/GBert/openwrt-misc' >> feeds.conf.default
+scripts/feeds update -a
+scripts/feeds install sml_snmp_agent
+make menuconfig
+# mark the sml_snmp_agent under Utilities 
 ```
 ### Notice
 
