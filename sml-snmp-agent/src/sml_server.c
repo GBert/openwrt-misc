@@ -312,10 +312,16 @@ int main(int argc, char **argv) {
 	    if (pid > 0)
 		exit(EXIT_SUCCESS);
 	}
-	pthread_create(&thread_reader, NULL, reader_thread, &edl21_thread_data);
-	pthread_create(&thread_snmp, NULL, snmp_agent, &snmp_thread_data);
+	if (pthread_create(&thread_reader, NULL, reader_thread, &edl21_thread_data))
+	    exit(1);
+	if (pthread_create(&thread_snmp, NULL, snmp_agent, &snmp_thread_data)) {
+	    pthread_cancel(thread_reader);
+	    exit(1);
+	}
 	pthread_join(thread_reader, NULL);
+	exit(1);
 	pthread_join(thread_snmp, NULL);
+	exit(1);
     } else {
 	fprintf(stderr, "can't open %s\n", device);
 	exit(1);
