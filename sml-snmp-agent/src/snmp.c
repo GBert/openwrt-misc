@@ -598,19 +598,13 @@ void disp_varbind(struct varbind *varbind)
     printf("Data Type: %i (%s)\n", varbind->data_type, data_type);
     switch (varbind->data_type) {
     case 0x02:
+    case 0x05:
+    case 0x43:
 	printf("Value: %i\n", *(unsigned int *)varbind->value);
 	break;
     case 0x04:
-	printf("Value: %s\n", (unsigned char *)varbind->value);
-	break;
-    case 0x05:
-	printf("Value: %i\n", *(unsigned int *)varbind->value);
-	break;
     case 0x06:
 	printf("Value: %s\n", (unsigned char *)varbind->value);
-	break;
-    case 0x43:
-	printf("Value: %i\n", *(unsigned int *)varbind->value);
 	break;
     default:
 	break;

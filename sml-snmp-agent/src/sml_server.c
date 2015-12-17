@@ -294,8 +294,6 @@ int main(int argc, char **argv) {
     int fd = serial_port_open(device);
     if (fd > 0) {
 	/* listen on the serial device, this call is blocking */
-	pthread_create(&thread_reader, NULL, reader_thread, &fd);
-	pthread_create(&thread_snmp, NULL, snmp_agent, &snmp_port);
 	if (!foreground) {
 	    pid = fork();
 	    if (pid < 0)
@@ -305,6 +303,8 @@ int main(int argc, char **argv) {
 		exit(EXIT_SUCCESS);
 	    }
 	}
+	pthread_create(&thread_reader, NULL, reader_thread, &fd);
+	pthread_create(&thread_snmp, NULL, snmp_agent, &snmp_port);
 	pthread_join(thread_reader, NULL);
 	pthread_join(thread_snmp, NULL);
     } else {
