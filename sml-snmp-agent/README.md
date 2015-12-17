@@ -3,21 +3,22 @@ EDL21 Power Meter Interface
 
 This repo contains a software project for a EDL21 power meter interface with SNMP support
 
-!["Power Meter"](https://github.com/GBert/openwrt-misc/blob/master/sml-snmp-agent/pictures/libehz-leser.jpg)
+[!["Power Meter 1"](https://github.com/GBert/openwrt-misc/blob/master/sml-snmp-agent/pictures/IMG_7573_s.JPG)](https://raw.githubusercontent.com/GBert/openwrt-misc/master/sml-snmp-agent/pictures/IMG_7573.JPG)
+[!["Power Meter 2"](https://github.com/GBert/openwrt-misc/blob/master/sml-snmp-agent/pictures/IMG_7578_s.JPG)](https://raw.githubusercontent.com/GBert/openwrt-misc/master/sml-snmp-agent/pictures/IMG_7578.JPG)
 
 My setup is working with a HAME A5 which is quite similar to https://wiki.openwrt.org/toh/unbranded/a5-v11 
 
-My router has connected a sub 2 Euro USB2Serail board and a simple adapter:
+The router reads with a cheap USB2Serial board and a simple intrared adapter the EDL21 stream from the power meter:
 
 !["Adapter"](https://github.com/GBert/openwrt-misc/blob/master/sml-snmp-agent/pictures/adapter.png)
 
-The software found here builds a SNMPv1-Agent. I created a Cacti template and use the router as data device:
+The software is a simple SNMPv1-Agent with EDL21 support. I've created a Cacti template and use the setup as a data source:
 
 !["Cacti"](https://github.com/GBert/openwrt-misc/blob/master/sml-snmp-agent/pictures/cacti.png)
 
 ### Status
 
-- working, but needs to daemonize externally
+- working, but needs to be daemonized with nohup - will be fixed some day
 
 ### Notice
 
