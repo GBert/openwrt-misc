@@ -18,7 +18,7 @@ The software is a simple SNMPv1-Agent with EDL21 support. I've created a Cacti t
 
 ### Status
 
-- working, but needs to be daemonized with nohup - will be fixed some day
+- working but lacking some error handling
 
 ### Notice
 

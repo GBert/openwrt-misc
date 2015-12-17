@@ -46,11 +46,14 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <time.h>
 #include <pthread.h>
 #include "snmp.h"
+#include "sml_server.h"
 
 extern pthread_mutex_t value_mutex;
 extern unsigned int counter_tarif0;
 extern unsigned int counter_tarif1;
 extern unsigned int counter_tarif2;
+
+extern int verbose;
 
 char community_read[] = "public";
 char community_write[] = "private";
@@ -129,15 +132,18 @@ void process_varbind_list(struct varbind_list_rx *varbind_list) {
 	}
 
 	if (!strcmp((char *)&oid[5][0], (char *)varbind_list->varbind_list[i]->oid)) {
-	    printf("SNMP Request Counter Tarif 0: %d\n", counter_tarif0);
+	    if (verbose)
+		printf("SNMP Request Counter Tarif 0: %d\n", counter_tarif0);
 	    update_varbind(varbind_list->varbind_list[i], 0x02, &counter_tarif0);
 	}
 	if (!strcmp((char *)&oid[6][0], (char *)varbind_list->varbind_list[i]->oid)) {
-	    printf("SNMP Request Counter Tarif 1: %d\n", counter_tarif1);
+	    if (verbose)
+		printf("SNMP Request Counter Tarif 1: %d\n", counter_tarif1);
 	    update_varbind(varbind_list->varbind_list[i], 0x02, &counter_tarif1);
 	}
 	if (!strcmp((char *)&oid[7][0], (char *)varbind_list->varbind_list[i]->oid)) {
-	    printf("SNMP Request Counter Tarif 2: %d\n", counter_tarif2);
+	    if (verbose)
+		printf("SNMP Request Counter Tarif 2: %d\n", counter_tarif2);
 	    update_varbind(varbind_list->varbind_list[i], 0x02, &counter_tarif2);
 	}
     }
@@ -155,30 +161,35 @@ void sendPacket(struct in_addr host, short port, int sock, struct snmp_message_t
     s = sendto(sock, snmp_msg->snmp_message, snmp_msg->snmp_message_len, 0, (struct sockaddr *)&server_addr, sizeof(struct sockaddr));
     if (s != snmp_msg->snmp_message_len)
 	fprintf(stderr, "%s: error sending UDP data; %s\n", __func__, strerror(errno));
-
-    debugg(snmp_msg->snmp_message, snmp_msg->snmp_message_len);
+    if (verbose)
+	debugg(snmp_msg->snmp_message, snmp_msg->snmp_message_len);
 }
 
-void *snmp_agent(void *snmp_port) {
+void *snmp_agent(void *threadarg) {
     time(&startup_time);
     int sock;
     int bytes_read;
     socklen_t addr_len;
     char recv_data[2048];
     struct sockaddr_in server_addr, client_addr;
+    struct snmp_data *data;
+    data = (struct snmp_data *) threadarg;
+
     sock = socket(AF_INET, SOCK_DGRAM, 0);
     if (sock < 0) {
 	fprintf(stderr, "creating SNMP socket error: %s\n", strerror(errno));
-	exit(1);
+	pthread_exit((void *) threadarg);
     }
+
     server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(161);
+    server_addr.sin_port = htons(data->snmp_port);
     server_addr.sin_addr.s_addr = INADDR_ANY;
     bzero(&(server_addr.sin_zero), 8);
     if (bind(sock, (struct sockaddr *)&server_addr, sizeof(struct sockaddr)) < 0) {
 	fprintf(stderr, "binding SNMP(%d) socket error: %s\n", ntohs(server_addr.sin_port), strerror(errno));
-	exit(1);
+	pthread_exit((void *) threadarg);
     }
+
     addr_len = sizeof(struct sockaddr);
     fflush(stdout);
     while (1) {
@@ -186,17 +197,25 @@ void *snmp_agent(void *snmp_port) {
 	recv_data[bytes_read] = '\0';
 	struct snmp_message_rx *snmp_msg = create_snmp_message_rx((unsigned char *)&recv_data[0]);
 	if (snmp_msg != NULL) {
-	    disp_snmp_message_rx(snmp_msg);
+	    if (verbose)
+		disp_snmp_message_rx(snmp_msg);
 	    struct snmp_pdu_rx *snmp_pdu = create_snmp_pdu_rx(snmp_msg->snmp_pdu);
 	    if (snmp_pdu != NULL) {
-		disp_snmp_pdu_rx(snmp_pdu);
+		if (verbose)
+		    disp_snmp_pdu_rx(snmp_pdu);
 		struct varbind_list_rx *varbind_list = create_varbind_list_rx(snmp_pdu->varbindings);
-		disp_varbind_list_rx(varbind_list);
+		if (verbose)
+		    disp_varbind_list_rx(varbind_list);
+
 		unsigned int a = 5;	//testing
 		struct varbind *varbind = create_varbind(varbind_list->varbind_list[0]->oid, 0x02, &a);
-		disp_varbind(varbind);
+		if (verbose)
+		    disp_varbind(varbind);
+
 		process_varbind_list(varbind_list);
-		disp_varbind_list_rx(varbind_list);
+		if (verbose)
+		    disp_varbind_list_rx(varbind_list);
+
 		struct varbind_list_tx *varbind_list_to_send = create_varbind_list_tx(varbind_list);
 		struct snmp_pdu_tx *snmp_pdu_tx = create_snmp_pdu_tx(0xa2, snmp_pdu->request_id, 0x00, 0x00, varbind_list_to_send);
 		struct snmp_message_tx *snmp_msg_tx = create_snmp_message_tx(snmp_msg->community, snmp_pdu_tx);

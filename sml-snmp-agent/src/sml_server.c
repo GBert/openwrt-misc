@@ -23,12 +23,13 @@
 #include <pthread.h>
 #include <libgen.h>
 #include "snmp.h"
+#include "sml_server.h"
 
 #include <sml/sml_file.h>
 #include <sml/sml_transport.h>
 
 #define SML_BUFFER_LEN	8096
-#define SNMP_PORT	1161
+#define SNMP_PORT	161
 #define MAX_STRING_LEN	32
 #define MAXLINE		128
 
@@ -43,9 +44,11 @@ unsigned int counter_tarif0;
 unsigned int counter_tarif1;
 unsigned int counter_tarif2;
 
+int verbose = 0;
+
 void print_usage(char *prg) {
     fprintf(stderr, "\nUsage: %s -p <snmp_port> -i <interface> [f]\n", prg);
-    fprintf(stderr, "   Version 1.0\n\n");
+    fprintf(stderr, "   Version 1.1\n\n");
     fprintf(stderr, "         -p <port>           SNMP port - default 161\n");
     fprintf(stderr, "         -i <interface>      serial interface - default /dev/ttyUSB0\n");
     fprintf(stderr, "         -f                  running in foreground\n\n");
@@ -137,20 +140,21 @@ void transport_receiver(unsigned char *buffer, size_t buffer_len) {
 	    body = (sml_get_list_response *) message->message_body->data;
 	    // printf("new message from: %*s\n", body->server_id->len, body->server_id->str);
 	    entry = body->val_list;
-	    printf("SML Message\n");
 
 	    int time_mode = 1;
 	    if (body->act_sensor_time) {
 		time.tv_sec = *body->act_sensor_time->data.timestamp;
 		time.tv_usec = 0;
 		time_mode = 1;
-		printf("sensor time: %lu.%lu, %i\n", time.tv_sec, time.tv_usec, *body->act_sensor_time->tag);
+		if (verbose)
+		    printf("sensor time: %lu.%lu, %i\n", time.tv_sec, time.tv_usec, *body->act_sensor_time->tag);
 	    }
 	    if (body->act_gateway_time) {
 		time.tv_sec = *body->act_sensor_time->data.timestamp;
 		time.tv_usec = 0;
 		time_mode = -1;
-		printf("sensor time: %lu.%lu, %i\n", time.tv_sec, time.tv_usec, *body->act_sensor_time->tag);
+		if (verbose)
+		    printf("sensor time: %lu.%lu, %i\n", time.tv_sec, time.tv_usec, *body->act_sensor_time->tag);
 	    }
 	    for (entry = body->val_list; entry != NULL; entry = entry->next) {	/* linked list */
 		//int unit = (entry->unit) ? *entry->unit : 0;
@@ -207,24 +211,27 @@ void transport_receiver(unsigned char *buffer, size_t buffer_len) {
 		pthread_mutex_lock(&value_mutex);
 		if (!memcmp(entry->obj_name->str, obis_tarif0, sizeof(obis_tarif0))) {
 		    counter_tarif0 = (int)(value + 0.5);
-		    printf("CT0:%d\n", counter_tarif0);
+		    if (verbose)
+			printf("CT0:%d\n", counter_tarif0);
 		}
 		if (!memcmp(entry->obj_name->str, obis_tarif1, sizeof(obis_tarif1))) {
 		    counter_tarif1 = (int)(value + 0.5);
-		    printf("CT1:%d\n", counter_tarif1);
+		    if (verbose)
+			printf("CT1:%d\n", counter_tarif1);
 		}
 		if (!memcmp(entry->obj_name->str, obis_tarif2, sizeof(obis_tarif2))) {
 		    counter_tarif2 = (int)(value + 0.5);
-		    printf("CT2:%d\n", counter_tarif2);
+		    if (verbose)
+			printf("CT2:%d\n", counter_tarif2);
 		}
 		pthread_mutex_unlock(&value_mutex);
 
 		/* printf("%lu.%lu (%i)\t%.2f %s\n", time.tv_sec, time.tv_usec, time_mode, value, dlms_get_unit(unit)); */
-		print_octet_str(entry->obj_name);
-		printf("%lu.%lu (%i)\t%.2f\n", time.tv_sec, time.tv_usec, time_mode, value);
-
+		if (verbose) {
+		    print_octet_str(entry->obj_name);
+		    printf("%lu.%lu (%i)\t%.2f\n", time.tv_sec, time.tv_usec, time_mode, value);
+		}
 	    }
-
 	}
 	/* iterating through linked list */
 	for (m = 0; m < n && entry != NULL; m++) {
@@ -232,35 +239,39 @@ void transport_receiver(unsigned char *buffer, size_t buffer_len) {
 	    printf(" -> entry %d\n", m);
 	    entry = entry->next;
 	}
-
     }
 
-    // this prints some information about the file
-    // sml_file_print(file);
+    if (verbose)
+	sml_file_print(file);
 
-    // free the malloc'd memory
     sml_file_free(file);
 }
 
-void *reader_thread(void *fd) {
-    sml_transport_listen(*(int *)fd, &transport_receiver);
+void *reader_thread(void *threadarg) {
+    struct edl21_data *data;
+
+    data = (struct edl21_data *) threadarg;
+    sml_transport_listen(data->fd, &transport_receiver);
     return 0;
 }
 
 int main(int argc, char **argv) {
     pid_t pid;
-    int snmp_port, opt, foreground;
+    int opt, foreground;
     char device[MAX_STRING_LEN];
 
+    struct edl21_data edl21_thread_data;
+    struct snmp_data snmp_thread_data;
+
     foreground = 0;
-    snmp_port = 16;
+    snmp_thread_data.snmp_port = SNMP_PORT;
     bzero(device, sizeof(device));
     strcpy(device, "/dev/ttyUSB0");
 
     while ((opt = getopt(argc, argv, "p:i:fh?")) != -1) {
 	switch (opt) {
 	case 'p':
-	    snmp_port = strtoul(optarg, (char **)NULL, 10);
+	    snmp_thread_data.snmp_port = strtoul(optarg, (char **)NULL, 10);
 	    break;
 	case 'f':
 	    foreground = 1;
@@ -284,6 +295,7 @@ int main(int argc, char **argv) {
 	    exit(1);
 	}
     }
+    verbose = foreground;
 
     pthread_t thread_reader;
     pthread_t thread_snmp;
@@ -291,20 +303,17 @@ int main(int argc, char **argv) {
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
-    int fd = serial_port_open(device);
-    if (fd > 0) {
-	/* listen on the serial device, this call is blocking */
+    edl21_thread_data.fd = serial_port_open(device);
+    if (edl21_thread_data.fd > 0) {
 	if (!foreground) {
 	    pid = fork();
 	    if (pid < 0)
 		exit(EXIT_FAILURE);
-	    if (pid > 0) {
-		printf("Going into background ...\n");
+	    if (pid > 0)
 		exit(EXIT_SUCCESS);
-	    }
 	}
-	pthread_create(&thread_reader, NULL, reader_thread, &fd);
-	pthread_create(&thread_snmp, NULL, snmp_agent, &snmp_port);
+	pthread_create(&thread_reader, NULL, reader_thread, &edl21_thread_data);
+	pthread_create(&thread_snmp, NULL, snmp_agent, &snmp_thread_data);
 	pthread_join(thread_reader, NULL);
 	pthread_join(thread_snmp, NULL);
     } else {

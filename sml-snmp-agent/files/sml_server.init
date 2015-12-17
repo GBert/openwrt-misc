@@ -4,7 +4,7 @@
 START=77
 
 start() {
-	nohup sml_server -f -i /dev/ttyUSB0 2>&1 >/dev/null &
+	sml_server -i /dev/ttyUSB0
 }
 
 stop() {
