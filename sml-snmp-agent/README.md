@@ -29,6 +29,24 @@ scripts/feeds install sml_snmp_agent
 make menuconfig
 # mark the sml_snmp_agent under Utilities 
 ```
+#### None OpenWRT environment
+```
+git clone --depth=1 https://github.com/GBert/openwrt-misc.git
+cd openwrt-misc/sml-snmp-agent/src/sml
+make
+cd ..
+make
+mv sml_server sml-snmp-agent
+./sml-snmp-agent -h
+
+Usage: sml-snmp-agent -p <snmp_port> -i <interface> [f]
+   Version 1.1
+
+         -p <port>           SNMP port - default 161
+         -i <interface>      serial interface - default /dev/ttyUSB0
+         -f                  running in foreground
+
+```
 ### Notice
 
 The A5-V11 (available for less than 7 Euro) seems to be the better choice as of today: it has 32MByte RAM instead of 16Mbyte.
