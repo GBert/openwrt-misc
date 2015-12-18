@@ -48,7 +48,7 @@ Usage: sml-snmp-agent -p <snmp_port> -i <interface> [f]
 
 ```
 ### Usage
-Volkszaehler.org private SNMP OID 39241 is used (could be easily adapted - look@sml_snmp.c)
+Volkszaehler.org private SNMP OID 39241 is used (could be easily adapted - look at src/sml_snmp.c)
 ```
 snmpget -c public -v1 <sml-snmp-agent> 1.3.6.1.4.1.39241.1.8.0
 snmpget -c public -v1 <sml-snmp-agent> 1.3.6.1.4.1.39241.1.8.1
