@@ -774,10 +774,11 @@ void clr_snmp_pdu_tx(struct snmp_pdu_tx *snmp_pdu)
 
 struct snmp_message_tx *create_snmp_message_tx(unsigned char *community, struct snmp_pdu_tx *snmp_pdu)
 {
-    struct snmp_message_tx *snmp_msg = (struct snmp_message_tx *)calloc(1, sizeof(struct snmp_message_tx));
     unsigned int pointer = 2;
-    unsigned char *snmp_msg_buffer = (unsigned char *)calloc(500, sizeof(unsigned char));
     unsigned char *data_buffer;
+
+    struct snmp_message_tx *snmp_msg = (struct snmp_message_tx *)calloc(1, sizeof(struct snmp_message_tx));
+    unsigned char *snmp_msg_buffer = (unsigned char *)calloc(500, sizeof(unsigned char));
 
     data_buffer = encode_integer((unsigned int)0x00);
     memcpy(&snmp_msg_buffer[pointer], data_buffer, data_buffer[1] + 2);
