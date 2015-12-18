@@ -47,6 +47,13 @@ Usage: sml-snmp-agent -p <snmp_port> -i <interface> [f]
          -f                  running in foreground
 
 ```
+### Usage
+Volkszaehler.org private SNMP OID 39241 is used (could be easily adapted - look@sml_snmp.c)
+```
+snmpget -c public -v1 <sml-snmp-agent> 1.3.6.1.4.1.39241.1.8.0
+snmpget -c public -v1 <sml-snmp-agent> 1.3.6.1.4.1.39241.1.8.1
+snmpget -c public -v1 <sml-snmp-agent> 1.3.6.1.4.1.39241.1.8.2
+```
 ### Notice
 
 The A5-V11 (available for less than 7 Euro) seems to be the better choice as of today: it has 32MByte RAM instead of 16Mbyte.
