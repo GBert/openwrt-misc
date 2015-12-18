@@ -255,19 +255,19 @@ unsigned char *return_pdu_type_string(unsigned char pdu_type)
     char Error[] = { 'w', 'r', 'o', 'n', 'g', 0x20, 'P', 'D', 'U', '\0' };
 
     switch (pdu_type) {
-    case 0xa0:
+    case PDU_GET_REQ:
 	pdu_type_string = calloc(1, strlen(GetRequest) + 1);
 	strcpy(pdu_type_string, GetRequest);
 	break;
-    case 0xa1:
+    case PDU_GET_NEXT_REQ:
 	pdu_type_string = calloc(1, strlen(GetNext) + 1);
 	strcpy(pdu_type_string, GetNext);
 	break;
-    case 0xa2:
+    case PDU_GET_RESP:
 	pdu_type_string = calloc(1, strlen(GetResponse) + 1);
 	strcpy(pdu_type_string, GetResponse);
 	break;
-    case 0xa3:
+    case PDU_SET_REQ:
 	pdu_type_string = calloc(1, strlen(SetRequest) + 1);
 	strcpy(pdu_type_string, SetRequest);
 	break;
@@ -346,8 +346,23 @@ struct snmp_message_rx *create_snmp_message_rx(unsigned char *udp_received)
     if (udp_received[pointer] == 0x30) {
 	snmp_msg = (struct snmp_message_rx *)calloc(1, sizeof(struct snmp_message_rx));
 	pointer++;
-	snmp_msg->snmp_message_length = udp_received[pointer];
+
+        /* if multi-byte length */
+	if (udp_received[pointer] & 0x80) {
+	    unsigned int len_bytes = udp_received[pointer] & 0x7F;
+
+	    snmp_msg->snmp_message_length = 0;
+
+	    while (len_bytes--) {
+		pointer++;
+		snmp_msg->snmp_message_length |= udp_received[pointer] << (len_bytes * 8);
+	    }
+	} else {
+	    snmp_msg->snmp_message_length = udp_received[pointer];
+	}
+
 	pointer++;
+
 	if (udp_received[pointer] == 0x02) {
 	    buffer = decode_integer(&udp_received[0], &pointer);
 	    if (!buffer)
@@ -358,8 +373,11 @@ struct snmp_message_rx *create_snmp_message_rx(unsigned char *udp_received)
 	if (udp_received[pointer] == 0x04) {
 	    snmp_msg->community = decode_string(&udp_received[0], &pointer);
 	}
-	if ((udp_received[pointer] == 0xa0) || (udp_received[pointer] == 0xa1) || (udp_received[pointer] == 0xa2)
-	    || (udp_received[pointer] == 0xa3 || (udp_received[pointer] == 0xa5))) {
+	if ((udp_received[pointer] == PDU_GET_REQ) ||
+	    (udp_received[pointer] == PDU_GET_NEXT_REQ) ||
+	    (udp_received[pointer] == PDU_GET_RESP) ||
+	    (udp_received[pointer] == PDU_SET_REQ) ||
+	    (udp_received[pointer] == 0xa5)) {
 	    pointer++;
 	    snmp_msg->snmp_pdu_length = udp_received[pointer];
 	    snmp_msg->snmp_pdu = (unsigned char *)calloc(1, (snmp_msg->snmp_pdu_length) + 1 + 2);
@@ -385,12 +403,15 @@ struct snmp_pdu_rx *create_snmp_pdu_rx(unsigned char *pdu)
     unsigned int pointer = 0;
     struct snmp_pdu_rx *snmp_pdu = NULL;
 
-    if ((pdu[pointer] == 0xa0) || (pdu[pointer] == 0xa1) || (pdu[pointer] == 0xa2) || (pdu[pointer] == 0xa3)) {
+    if ((pdu[pointer] == PDU_GET_REQ) ||
+	(pdu[pointer] == PDU_GET_NEXT_REQ) ||
+	(pdu[pointer] == PDU_GET_RESP) ||
+	(pdu[pointer] == PDU_SET_REQ)) {
+
 	snmp_pdu = (struct snmp_pdu_rx *)calloc(1, sizeof(struct snmp_pdu_rx));
-	snmp_pdu->snmp_pdu_type = pdu[pointer];
-	pointer++;
-	snmp_pdu->snmp_pdu_length = pdu[pointer];
-	pointer++;
+	snmp_pdu->snmp_pdu_type   = pdu[pointer++];
+	snmp_pdu->snmp_pdu_length = pdu[pointer++];
+
 	if (pdu[pointer] == 0x02) {
 	    snmp_pdu->request_id = decode_integer(&pdu[0], &pointer);
 	}
@@ -454,19 +475,19 @@ struct varbind_list_rx *create_varbind_list_rx(unsigned char *varbindings)
 		    varbind_list->varbind_list[(varbind_list->varbind_idx) - 1]->oid = decode_oid(&varbindings[0], &pointer);
 		}
 		switch (varbindings[pointer]) {
-		case 0x02:
+		case PRIMV_INT:
 		    varbind_list->varbind_list[(varbind_list->varbind_idx) - 1]->data_type = varbindings[pointer];
 		    varbind_list->varbind_list[(varbind_list->varbind_idx) - 1]->value =
 			(unsigned int *)calloc(1, sizeof(unsigned int));
 		    *(unsigned int *)varbind_list->varbind_list[(varbind_list->varbind_idx) - 1]->value =
 			decode_integer(&varbindings[0], &pointer);
 		    break;
-		case 0x04:
+		case PRIMV_OCTSTR:
 		    varbind_list->varbind_list[(varbind_list->varbind_idx) - 1]->data_type = varbindings[pointer];
 		    varbind_list->varbind_list[(varbind_list->varbind_idx) - 1]->value =
 			decode_string(&varbindings[0], &pointer);
 		    break;
-		case 0x05:
+		case PRIMV_NULL:
 		    varbind_list->varbind_list[(varbind_list->varbind_idx) - 1]->data_type = varbindings[pointer];
 		    pointer++;
 		    varbind_list->varbind_list[(varbind_list->varbind_idx) - 1]->value =
@@ -474,7 +495,7 @@ struct varbind_list_rx *create_varbind_list_rx(unsigned char *varbindings)
 		    pointer++;
 		    *(unsigned int *)varbind_list->varbind_list[(varbind_list->varbind_idx) - 1]->value = 0x00;
 		    break;
-		case 0x06:
+		case PRIMV_OBJID:
 		    varbind_list->varbind_list[(varbind_list->varbind_idx) - 1]->data_type = varbindings[pointer];
 		    varbind_list->varbind_list[(varbind_list->varbind_idx) - 1]->value = decode_oid(&varbindings[0], &pointer);
 		    break;
@@ -495,19 +516,19 @@ void disp_varbind_list_rx(struct varbind_list_rx *varbind_list)
     for (i = 0; i < varbind_list->varbind_idx; i++) {
 	printf("OID: %s, ", varbind_list->varbind_list[i]->oid);
 	switch (varbind_list->varbind_list[i]->data_type) {
-	case 0x02:
+	case PRIMV_INT:
 	    printf("Data Type: Integer, Value: %d\n", *(unsigned int *)varbind_list->varbind_list[i]->value);
 	    break;
-	case 0x04:
+	case PRIMV_OCTSTR:
 	    printf("Data Type: Octet String, Value: %s\n", (unsigned char *)varbind_list->varbind_list[i]->value);
 	    break;
-	case 0x05:
+	case PRIMV_NULL:
 	    printf("Data Type: Null, Value: %d\n", *(unsigned int *)varbind_list->varbind_list[i]->value);
 	    break;
-	case 0x06:
+	case PRIMV_OBJID:
 	    printf("Data Type: Object Identifier, Value: %s\n", (unsigned char *)varbind_list->varbind_list[i]->value);
 	    break;
-	case 0x43:
+	case PRIMV_TIMTICK:
 	    printf("Data Type: Timeticks, Value: %d\n", *(unsigned int *)varbind_list->varbind_list[i]->value);
 	    break;
 	default:
@@ -536,22 +557,22 @@ struct varbind *create_varbind(unsigned char *oid, unsigned char data_type, void
     strcpy((char *)varbind->oid, (char *)oid);
     varbind->data_type = data_type;
     switch (data_type) {
-    case 0x02:
+    case PRIMV_INT:
 	varbind->value = (unsigned int *)calloc(1, sizeof(unsigned int));
 	*(unsigned int *)varbind->value = *(unsigned int *)value;
 	break;
-    case 0x04:
+    case PRIMV_OCTSTR:
 	varbind->value = (unsigned char *)calloc(1, strlen((char *)value) + 1);
 	strcpy((char *)varbind->value, (char *)value);
 	break;
-    case 0x05:
+    case PRIMV_NULL:
 	varbind->value = (unsigned int *)calloc(1, sizeof(unsigned int));
 	*(unsigned int *)varbind->value = 0x00;
 	break;
-    case 0x06:
+    case PRIMV_OBJID:
 	varbind->value = (unsigned char *)calloc(1, strlen((char *)value) + 1);
 	strcpy((char *)varbind->value, (char *)value);
-    case 0x043:
+    case PRIMV_TIMTICK:
 	varbind->value = (unsigned int *)calloc(1, sizeof(unsigned int));
 	*(unsigned int *)varbind->value = *(unsigned int *)value;
 	break;
@@ -597,13 +618,13 @@ void disp_varbind(struct varbind *varbind)
     printf("OID: %s\n", varbind->oid);
     printf("Data Type: %i (%s)\n", varbind->data_type, data_type);
     switch (varbind->data_type) {
-    case 0x02:
-    case 0x05:
-    case 0x43:
+    case PRIMV_INT:
+    case PRIMV_NULL:
+    case PRIMV_TIMTICK:
 	printf("Value: %i\n", *(unsigned int *)varbind->value);
 	break;
-    case 0x04:
-    case 0x06:
+    case PRIMV_OCTSTR:
+    case PRIMV_OBJID:
 	printf("Value: %s\n", (unsigned char *)varbind->value);
 	break;
     default:
@@ -630,7 +651,7 @@ struct varbind_list_tx *create_varbind_list_tx(struct varbind_list_rx *varbinds_
 
     for (i = 0; i < varbinds_to_send->varbind_idx; i++) {
 	switch (varbinds_to_send->varbind_list[i]->data_type) {
-	case 0x02:
+	case PRIMV_INT:
 	    data_buffer = encode_oid(varbinds_to_send->varbind_list[i]->oid);
 	    memcpy(&varbind_list_buffer[pointer], data_buffer, data_buffer[1] + 2);
 	    pointer += data_buffer[1] + 2;
@@ -643,7 +664,7 @@ struct varbind_list_tx *create_varbind_list_tx(struct varbind_list_rx *varbinds_
 	    varbind_list_buffer[len_pointer + 1] = pointer - len_pointer - 4;
 	    len_pointer = pointer - 2;
 	    break;
-	case 0x04:
+	case PRIMV_OCTSTR:
 	    data_buffer = encode_oid(varbinds_to_send->varbind_list[i]->oid);
 	    memcpy(&varbind_list_buffer[pointer], data_buffer, data_buffer[1] + 2);
 	    pointer += data_buffer[1] + 2;
@@ -656,7 +677,7 @@ struct varbind_list_tx *create_varbind_list_tx(struct varbind_list_rx *varbinds_
 	    varbind_list_buffer[len_pointer + 1] = pointer - len_pointer - 4;
 	    len_pointer = pointer - 2;
 	    break;
-	case 0x05:
+	case PRIMV_NULL:
 	    data_buffer = encode_oid(varbinds_to_send->varbind_list[i]->oid);
 	    memcpy(&varbind_list_buffer[pointer], data_buffer, data_buffer[1] + 2);
 	    pointer += data_buffer[1] + 2;
@@ -669,7 +690,7 @@ struct varbind_list_tx *create_varbind_list_tx(struct varbind_list_rx *varbinds_
 	    varbind_list_buffer[len_pointer + 1] = pointer - len_pointer - 4;
 	    len_pointer = pointer - 2;
 	    break;
-	case 0x06:
+	case PRIMV_OBJID:
 	    data_buffer = encode_oid(varbinds_to_send->varbind_list[i]->oid);
 	    memcpy(&varbind_list_buffer[pointer], data_buffer, data_buffer[1] + 2);
 	    pointer += data_buffer[1] + 2;
@@ -682,7 +703,7 @@ struct varbind_list_tx *create_varbind_list_tx(struct varbind_list_rx *varbinds_
 	    varbind_list_buffer[len_pointer + 1] = pointer - len_pointer - 4;
 	    len_pointer = pointer - 2;
 	    break;
-	case 0x43:
+	case PRIMV_TIMTICK:
 	    data_buffer = encode_oid(varbinds_to_send->varbind_list[i]->oid);
 	    memcpy(&varbind_list_buffer[pointer], data_buffer, data_buffer[1] + 2);
 	    pointer += data_buffer[1] + 2;

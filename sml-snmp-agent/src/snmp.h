@@ -34,6 +34,25 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef SNMP_H_INCLUDED
 #define SNMP_H_INCLUDED
 
+/* PDU Types */
+#define PDU_GET_REQ         0xA0
+#define PDU_GET_NEXT_REQ    0xA1
+#define PDU_GET_RESP        0xA2
+#define PDU_SET_REQ         0xA3
+#define PDU_TRAP            0xA4
+
+/* Primitive Types */
+#define PRIMV_INT           0x02
+#define PRIMV_OCTSTR        0x04
+#define PRIMV_NULL          0x05
+#define PRIMV_OBJID         0x06
+#define PRIMV_IPADDR        0x40
+#define PRIMV_COUNTR        0x41
+#define PRIMV_GAUGE         0x42
+#define PRIMV_TIMTICK       0x43
+#define PRIMV_OPAQUE        0x44
+#define PRIMV_NSAPADDR      0x45
+
 struct snmp_message_rx {
     unsigned int snmp_message_length;
     unsigned char version;

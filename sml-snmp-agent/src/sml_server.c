@@ -312,10 +312,13 @@ int main(int argc, char **argv) {
 	    if (pid > 0)
 		exit(EXIT_SUCCESS);
 	}
-	if (pthread_create(&thread_reader, NULL, reader_thread, &edl21_thread_data))
+	if (pthread_create(&thread_reader, NULL, reader_thread, &edl21_thread_data)) {
+	    pthread_exit(NULL);
 	    exit(1);
+	}
 	if (pthread_create(&thread_snmp, NULL, snmp_agent, &snmp_thread_data)) {
 	    pthread_cancel(thread_reader);
+	    pthread_exit(NULL);
 	    exit(1);
 	}
 	pthread_join(thread_reader, NULL);
