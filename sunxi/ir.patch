@@ -1,6 +1,6 @@
 --- a/target/linux/sunxi/modules.mk
 +++ b/target/linux/sunxi/modules.mk
-@@ -42,6 +42,45 @@ endef
+@@ -42,6 +42,46 @@ endef
  
  $(eval $(call KernelPackage,sunxi-ir))
  
@@ -11,7 +11,7 @@
 +    KCONFIG:= \
 +	CONFIG_MEDIA_SUPPORT=y \
 +	CONFIG_MEDIA_RC_SUPPORT=y \
-+	CONFIG_IR_DECODER=y \
++	CONFIG_RC_DECODERS=y \
 +	CONFIG_RC_CORE=m \
 +	CONFIG_LIRC=m \
 +	CONFIG_IR_NEC_DECODER=m \
@@ -34,6 +34,7 @@
 +	   $(LINUX_DIR)/drivers/media/rc/ir-sanyo-decoder.ko \
 +	   $(LINUX_DIR)/drivers/media/rc/ir-sharp-decoder.ko \
 +	   $(LINUX_DIR)/drivers/media/rc/ir-mce_kbd-decoder.ko
++	   $(LINUX_DIR)/drivers/media/rc/ir-xmp-decoder.ko
 +    AUTOLOAD:=$(call AutoLoad,50,ir-rc5-decoder)
 +endef
 +
