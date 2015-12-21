@@ -1,0 +1,48 @@
+--- a/target/linux/sunxi/modules.mk
++++ b/target/linux/sunxi/modules.mk
+@@ -42,6 +42,45 @@ endef
+ 
+ $(eval $(call KernelPackage,sunxi-ir))
+ 
++define KernelPackage/ir-decoder
++    SUBMENU:=$(OTHER_MENU)
++    TITLE:=IR decoder
++    DEPENDS:=
++    KCONFIG:= \
++	CONFIG_MEDIA_SUPPORT=y \
++	CONFIG_MEDIA_RC_SUPPORT=y \
++	CONFIG_IR_DECODER=y \
++	CONFIG_RC_CORE=m \
++	CONFIG_LIRC=m \
++	CONFIG_IR_NEC_DECODER=m \
++	CONFIG_IR_RC5_DECODER=m \
++	CONFIG_IR_RC6_DECODER=m \
++	CONFIG_IR_JVC_DECODER=m \
++	CONFIG_IR_SONY_DECODER=m \
++	CONFIG_IR_SANYO_DECODER=m \
++	CONFIG_IR_SHARP_DECODER=m \
++	CONFIG_IR_MCE_KBD_DECODER=m \
++	CONFIG_IR_LIRC_CODEC_DECODER=m \
++	CONFIG_IR_XMP_DECODER_DECODER=m
++    FILES:=$(LINUX_DIR)/drivers/media/rc/rc-core.ko \
++	   $(LINUX_DIR)/drivers/media/rc/lirc_dev.ko \
++	   $(LINUX_DIR)/drivers/media/rc/ir-nec-decoder.ko \
++	   $(LINUX_DIR)/drivers/media/rc/ir-rc5-decoder.ko \
++	   $(LINUX_DIR)/drivers/media/rc/ir-rc6-decoder.ko \
++	   $(LINUX_DIR)/drivers/media/rc/ir-jvc-decoder.ko \
++	   $(LINUX_DIR)/drivers/media/rc/ir-sony-decoder.ko \
++	   $(LINUX_DIR)/drivers/media/rc/ir-sanyo-decoder.ko \
++	   $(LINUX_DIR)/drivers/media/rc/ir-sharp-decoder.ko \
++	   $(LINUX_DIR)/drivers/media/rc/ir-mce_kbd-decoder.ko
++    AUTOLOAD:=$(call AutoLoad,50,ir-rc5-decoder)
++endef
++
++define KernelPackage/ir-decoder/description
++ Support for IR decoders
++endef
++
++$(eval $(call KernelPackage,ir-decoder))
++
+ define KernelPackage/eeprom-sunxi
+     SUBMENU:=$(OTHER_MENU)
+     TITLE:=AllWinner Security ID fuse support
