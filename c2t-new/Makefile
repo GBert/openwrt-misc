@@ -40,6 +40,8 @@ endef
 define Package/c2t-new/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/c2tool $(1)/usr/bin/
+	$(INSTALL_DIR) $(1)/root
+	$(INSTALL_BIN) ./files/c2.sh $(1)/root/
 endef
 
 $(eval $(call BuildPackage,c2t-new))
