@@ -9,6 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=gputils
 PKG_VERSION:=1.4.2
+PKG_SOURCE_URL:=@SF/gputils
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION)-${PKG_RELEASE}.tar.gz
@@ -35,15 +36,15 @@ define Build/Compile
 endef
 
 define Package/gputils/install
-	$(INSTALL_DIR) $(1)/usr/sbin
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/gpasm/gpasm $(1)/usr/sbin/
-	$(INSTALL_DIR) $(1)/root/header
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/header/p18f25k80.inc $(1)/root/header/
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/header/p18f26k80.inc $(1)/root/header/
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/header/p18f45k80.inc $(1)/root/header/
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/header/p18f46k80.inc $(1)/root/header/
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/header/p18f4580.inc $(1)/root/header/
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/header/p18f4680.inc $(1)/root/header/
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/gpasm/gpasm $(1)/usr/bin/
+	$(INSTALL_DIR) $(1)/usr/share/gputils/header
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/usr/share/gputils/header/p18f25k80.inc $(1)/root/header/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/usr/share/gputils/header/p18f26k80.inc $(1)/root/header/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/usr/share/gputils/header/p18f45k80.inc $(1)/root/header/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/usr/share/gputils/header/p18f46k80.inc $(1)/root/header/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/usr/share/gputils/header/p18f4580.inc $(1)/root/header/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/usr/share/gputils/header/p18f4680.inc $(1)/root/header/
 endef
 
 $(eval $(call BuildPackage,gputils))
