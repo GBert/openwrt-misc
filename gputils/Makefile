@@ -39,12 +39,12 @@ define Package/gputils/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/gpasm/gpasm $(1)/usr/bin/
 	$(INSTALL_DIR) $(1)/usr/share/gputils/header
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/usr/share/gputils/header/p18f25k80.inc $(1)/root/header/
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/usr/share/gputils/header/p18f26k80.inc $(1)/root/header/
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/usr/share/gputils/header/p18f45k80.inc $(1)/root/header/
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/usr/share/gputils/header/p18f46k80.inc $(1)/root/header/
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/usr/share/gputils/header/p18f4580.inc $(1)/root/header/
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/usr/share/gputils/header/p18f4680.inc $(1)/root/header/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/header/p18f25k80.inc $(1)/usr/share/gputils/header
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/header/p18f26k80.inc $(1)/usr/share/gputils/header
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/header/p18f45k80.inc $(1)/usr/share/gputils/header
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/header/p18f46k80.inc $(1)/usr/share/gputils/header
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/header/p18f4580.inc $(1)/usr/share/gputils/header
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/header/p18f4680.inc $(1)/usr/share/gputils/header
 endef
 
 $(eval $(call BuildPackage,gputils))
