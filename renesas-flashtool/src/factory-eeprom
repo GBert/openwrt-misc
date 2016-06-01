@@ -1,0 +1,12 @@
+#!/bin/sh
+
+./eeprom \
+    -invert dtr,-dtr \
+    -cbus0 txled \
+    -cbus1 rxled \
+    -cbus2 txden \
+    -cbus3 pwron \
+    -cbus4 sleep \
+    -manufacturer "FTDI" \
+    -device "FT232R USB UART" \
+    -power 90 -bus

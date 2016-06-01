@@ -1,0 +1,10 @@
+#!/bin/sh
+
+./eeprom \
+    -invert dtr \
+    -cbus0 txled \
+    -cbus1 rxled \
+    -cbus2 io \
+    -cbus3 io \
+    -cbus4 pwron \
+    -device "FT232R - R8C"

@@ -1,0 +1,66 @@
+# Copyright (C) 2008, 2010 DJ Delorie <dj@redhat.com>
+
+# This file is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation; either version 3, or (at your option) any later
+# version.
+# 
+# This file is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this file; see the file COPYING3.  If not see
+# <http://www.gnu.org/licenses/>.
+
+FTDI = ../win-ftdi
+
+CC = i686-pc-mingw32-gcc
+CFLAGS = -Wall -MMD -g -I $(FTDI)
+LDFLAGS = 
+LIBS = 
+
+FLIBS = $(FTDI)/i386/ftd2xx.lib -lpthread
+#FLIBS = $(FTDI)/ftd2xx.lib -lpthread
+
+.PHONY : all serial
+
+all : uflash.exe rx.exe
+	@true
+serial : sflash rxs
+	@true
+
+FMTS = read_elf.o read_srec.o read_ieee695.o
+COMMON = mflash.o console.o $(FMTS)
+
+RXOBJ = rx.o rxlib.o console.o $(FMTS)
+
+rx.exe : $(RXOBJ) d2xx.o
+	$(CC) $(LDFLAGS) $(RXOBJ) d2xx.o $(LIBS) $(FLIBS) -o $@ -lpthread
+
+rxs.exe : $(RXOBJ) serial.o
+	$(CC) $(LDFLAGS) $(RXOBJ) serial.o $(LIBS) -o $@ -lpthread
+
+#rxusb.exe : $(RXOBJ) rxusb.o
+#	$(CC) $(LDFLAGS) $(RXOBJ) rxusb.o $(ULIBS) -o $@ -lpthread
+
+uflash.exe : $(COMMON)  d2xx.o
+	$(CC) $(LDFLAGS) $(COMMON) d2xx.o $(LIBS) $(FLIBS) -o $@ -lpthread
+
+sflash.exe : $(COMMON) serial.o
+	$(CC) $(LDFLAGS) $(COMMON) serial.o $(LIBS) -o $@ -lpthread
+
+#eeprom.exe : eeprom.o
+#	$(CC) $(LDFLAGS) eeprom.o $(LIBS) $(LFLIBS) -o $@ -lpthread
+
+clean : tidy
+	-rm -rf uflash sflash rx rxs eeprom
+
+tidy :
+	-rm -rf *.o *~ *.d
+
+D=$(wildcard *.d)
+ifneq ($D,)
+include $D
+endif
