@@ -32,7 +32,8 @@ ULIBS = -lusb
 
 .PHONY : all serial
 
-all : uflash sflash rx rxs rxusb eeprom
+# all : uflash sflash rx rxs rxusb eeprom
+all : sflash rxs
 	@true
 serial : sflash rxs
 	@true

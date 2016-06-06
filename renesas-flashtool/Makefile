@@ -15,7 +15,7 @@ include $(INCLUDE_DIR)/package.mk
 define Package/renesas-flashtool
   SECTION:=utils
   CATEGORY:=Utilities
-  DEPENDS:=+libbftd11
+  DEPENDS:=+libftdi1
   TITLE:= Renesas Flash Tool
   MAINTAINER:=Gerhard Bertelsmann
 endef
@@ -35,16 +35,16 @@ define Build/Compile
 	make -C $(PKG_BUILD_DIR)		\
 		$(TARGET_CONFIGURE_OPTS)	\
 		CFLAGS="$(TARGET_CFLAGS) $(TARGET_CPPFLAGS)"	\
-		LIBS="$(TARGET_LDFLAGS) -llibbfd"
+		LIBS="$(TARGET_LDFLAGS) -lftdi1"
 endef
 
 define Package/renesas-flashtool/install
 	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/uflash $(1)/usr/bin/
+#	$(INSTALL_BIN) $(PKG_BUILD_DIR)/uflash $(1)/usr/bin/
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/sflash $(1)/usr/bin/
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/rx $(1)/usr/bin/
+#	$(INSTALL_BIN) $(PKG_BUILD_DIR)/rx $(1)/usr/bin/
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/rxs $(1)/usr/bin/
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/eeprom $(1)/usr/bin/
+#	$(INSTALL_BIN) $(PKG_BUILD_DIR)/eeprom $(1)/usr/bin/
 endef
 
 $(eval $(call BuildPackage,renesas-flashtool))

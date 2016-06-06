@@ -24,6 +24,7 @@
 #include <fcntl.h>
 #include <termios.h>
 #include <ctype.h>
+#include <sys/select.h>
 
 #include "serial.h"
 

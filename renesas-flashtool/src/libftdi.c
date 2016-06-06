@@ -265,7 +265,7 @@ serial_init (char *port, int baud)
       int chosen = -1;
       int num_devices;
       struct ftdi_device_list *device_info;
-      struct usb_device *u_chose = NULL;
+      struct libusb_device *u_chose = NULL;
       int again = 0;
 
       if (strlen (port) < 3)
@@ -283,7 +283,7 @@ serial_init (char *port, int baud)
       for (i=0; i<num_devices; i++)
 	{
 	  char manufacturer[200], description[200], serial[200];
-	  struct usb_device *u = device_info->dev;
+	  struct libusb_device *u = device_info->dev;
 
 	  ftdi_usb_get_strings (&handle, u, manufacturer, 200, description, 200, serial, 200);
 
