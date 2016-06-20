@@ -6,11 +6,13 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <fcntl.h>
 #include <sys/mman.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #define CAN_BASE_ADDR	0x01C2BC00
-#define CAN_MAP_LEN	0x200
+#define CAN_MAP_LEN	0x2000
 
 static int can_mem = -1;
 static int *can_map = NULL;
@@ -28,7 +30,7 @@ void print_byte_rows(int *ptr, int rows) {
 	}
 	my_ptr = my_ptr_row;
 	for (j = 0; j < 8; j++) {
-	    if (isprint(my_ptr))
+	    if (isprint(*my_ptr))
 		printf("%c", *my_ptr);
 	    else
 		putchar('.');
@@ -41,22 +43,21 @@ void print_byte_rows(int *ptr, int rows) {
 
 int sunxi_can_open(const char *device) {
     /* open /dev/mem */
-    can_mem = open(device, O_RDWR | O_SYNC);
+    can_mem = open(device, O_RDONLY);
     if (can_mem < 0) {
         printf("%s: warning: open failed [%s]\n", __func__, strerror(errno));
         can_mem = -1;
         return EXIT_FAILURE;
     }
 
-    /* Memory map GPIO */
-    can_map = mmap(NULL, CAN_MAP_LEN, PROT_READ, MAP_SHARED, can_mem, CAN_BASE_ADDR);
+    /* Memory map CAN IP */
+    can_map = mmap(NULL, CAN_MAP_LEN, PROT_READ | PROT_EXEC, MAP_SHARED, can_mem, CAN_BASE_ADDR);
     if (can_map == MAP_FAILED) {
         printf("%s: warning: mmap failed [%s]\n", __func__, strerror(errno));
         close(can_mem);
         can_mem = -1;
         return EXIT_FAILURE;
     }
-
     return can_mem;
 }
 

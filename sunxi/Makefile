@@ -17,6 +17,7 @@ define Package/sunxi_tools
   CATEGORY:=Utilities
   TITLE:=SUNXI CAN IP Dump
   MAINTAINER:=Gerhard Bertelsmann
+  DEPENDS:=
 endef
 
 define Package/sunxi_tools/description
