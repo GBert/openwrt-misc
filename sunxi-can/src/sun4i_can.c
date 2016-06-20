@@ -2,7 +2,7 @@
  * sun4i_can.c - CAN bus controller driver for Allwinner SUN4I&SUN7I based SoCs
  *
  * Copyright (C) 2013 Peter Chen
- * Copyright (C) 2015 Gerhard Bertelsmann
+ * Copyright (C) 2016 Gerhard Bertelsmann
  * All rights reserved.
  *
  * Parts of this software are based on (derived from) the SJA1000 code by:
@@ -204,6 +204,10 @@ struct sun4ican_priv {
 	struct can_priv can;
 	void __iomem *base;
 	struct clk *clk;
+	/* 8< debugging */
+	int rx_counter_new;
+	int rx_counter_old;
+	/* debugging >8 */
 	spinlock_t cmdreg_lock;	/* lock for concurrent cmd register writes */
 };
 
@@ -468,6 +472,9 @@ static void sun4i_can_rx(struct net_device *dev)
 	u32 dreg;
 	canid_t id;
 	int i;
+	/* 8< debugging */
+	u8 rx_counter, fifo_start;
+	/* debugging >8 */
 
 	/* create zero'ed CAN frame buffer */
 	skb = alloc_can_skb(dev, &cf);
@@ -476,6 +483,15 @@ static void sun4i_can_rx(struct net_device *dev)
 
 	fi = readl(priv->base + SUN4I_REG_BUF0_ADDR);
 	cf->can_dlc = get_can_dlc(fi & 0x0F);
+
+	/* 8< debugging */
+	rx_counter = readl(priv->base + SUN4I_REG_RMCNT_ADDR);
+	fifo_start = readl(priv->base + SUN4I_REG_RBUFSA_ADDR);
+	printk(KERN_INFO "RX counter old: 0x%02x  RX counter new: 0x%02x   fifo_start: 0x%02x\n",  priv->rx_counter_old, rx_counter, fifo_start);
+	priv->rx_counter_old = priv->rx_counter_new;
+	priv->rx_counter_new = rx_counter;
+	/* debugging >8 */
+
 	if (fi & SUN4I_MSG_EFF_FLAG) {
 		dreg = SUN4I_REG_BUF5_ADDR;
 		id = (readl(priv->base + SUN4I_REG_BUF1_ADDR) << 21) |
@@ -517,6 +533,9 @@ static int sun4i_can_err(struct net_device *dev, u8 isrc, u8 status)
 	enum can_state rx_state, tx_state;
 	unsigned int rxerr, txerr, errc;
 	u32 ecc, alc;
+	/* 8< debugging */
+	u8 rx_counter, fifo_start;
+	/* debugging >8 */
 
 	/* we don't skip if alloc fails because we want the stats anyhow */
 	skb = alloc_can_err_skb(dev, &cf);
@@ -536,6 +555,11 @@ static int sun4i_can_err(struct net_device *dev, u8 isrc, u8 status)
 		if (likely(skb)) {
 			cf->can_id |= CAN_ERR_CRTL;
 			cf->data[1] = CAN_ERR_CRTL_RX_OVERFLOW;
+			/* 8< debugging */
+			rx_counter = readl(priv->base + SUN4I_REG_RMCNT_ADDR);
+			fifo_start = readl(priv->base + SUN4I_REG_RBUFSA_ADDR);
+			printk(KERN_INFO "RX counter old: 0x%02x  RX counter new: 0x%02x   fifo_start: 0x%02x\n",  priv->rx_counter_old, rx_counter, fifo_start);
+			/* debugging >8 */
 		}
 		stats->rx_over_errors++;
 		stats->rx_errors++;
@@ -575,7 +599,6 @@ static int sun4i_can_err(struct net_device *dev, u8 isrc, u8 status)
 				cf->data[2] |= CAN_ERR_PROT_STUFF;
 				break;
 			default:
-				cf->data[2] |= CAN_ERR_PROT_UNSPEC;
 				cf->data[3] = (ecc & SUN4I_STA_ERR_SEG_CODE)
 					       >> 16;
 				break;
