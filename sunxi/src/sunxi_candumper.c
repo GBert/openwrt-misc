@@ -42,8 +42,15 @@ void print_byte_rows(int *ptr, int rows) {
 
 
 int sunxi_can_open(const char *device) {
+    int real_len;
+    int real_addr;
+
+    real_len = CAN_MAP_LEN;
+    real_addr = CAN_BASE_ADDR;
+
+    printf("mmap 0x%04x bytes at 0x%08x\n", real_len, real_addr);
     /* open /dev/mem */
-    can_mem = open(device, O_RDONLY);
+    can_mem = open("/dev/mem", O_RDONLY);
     if (can_mem < 0) {
         printf("%s: warning: open failed [%s]\n", __func__, strerror(errno));
         can_mem = -1;
@@ -51,7 +58,7 @@ int sunxi_can_open(const char *device) {
     }
 
     /* Memory map CAN IP */
-    can_map = mmap(NULL, CAN_MAP_LEN, PROT_READ | PROT_EXEC, MAP_SHARED, can_mem, CAN_BASE_ADDR);
+    can_map = mmap(NULL, real_len, PROT_READ, MAP_SHARED, can_mem, real_addr);
     if (can_map == MAP_FAILED) {
         printf("%s: warning: mmap failed [%s]\n", __func__, strerror(errno));
         close(can_mem);
