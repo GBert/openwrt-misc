@@ -43,6 +43,7 @@ define Package/framebuffer_llp/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/fbtest_04 $(1)/usr/bin/
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/fbtest_05 $(1)/usr/bin/
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/fbtest_06 $(1)/usr/bin/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/fbtest_07 $(1)/usr/bin/
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/fbtest_08 $(1)/usr/bin/
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/fbfire $(1)/usr/bin/
 endef

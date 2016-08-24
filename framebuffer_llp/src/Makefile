@@ -32,5 +32,5 @@ fbfire: fbfire.o
 	$(CC) $(CFLAGS) -o fbfire fbfire.o
 
 clean:
-	rm -rf *.o fbtest_01 fbtest_02 fbtest_03 fbtest_04 fbtest_05 fbtest_06 fbtest_08 fbfire
+	rm -rf *.o fbtest_01 fbtest_02 fbtest_03 fbtest_04 fbtest_05 fbtest_06 fbtest_07 fbtest_08 fbfire
 
