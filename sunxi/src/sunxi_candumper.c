@@ -11,11 +11,11 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#define CAN_BASE_ADDR	0x01C2BC00
-#define CAN_MAP_LEN	0x2000
+#define CAN_BASE_ADDR	(0x01C2BC00)
+#define CAN_MAP_LEN	(0x0200)
 
-static int can_mem = -1;
-static int *can_map = NULL;
+int can_mem;
+int *can_map;
 
 void print_byte_rows(int *ptr, int rows) {
     int i, j;

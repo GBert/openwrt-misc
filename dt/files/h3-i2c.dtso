@@ -1,0 +1,37 @@
+// Enable the i2c interface
+/dts-v1/;
+/plugin/;
+
+/ {
+    compatible = "allwinner,sun8i-h3";
+
+    fragment@0 {
+    target-path = "/aliases";
+    __overlay__ {
+            /* Path to the i2c2 controller node */
+            i2c0 = "/soc@01c00000/i2c@01c2ac00";
+            i2c1 = "/soc@01c00000/i2c@01c2b000";
+            i2c2 = "/soc@01c00000/i2c@01c2b400";
+        };
+    };
+    fragment@1 {
+        target = <&i2c0>;
+        __overlay__ {
+            status = "okay";
+        };
+    };
+    fragment@2 {
+        target = <&i2c1>;
+        __overlay__ {
+            clock-frequency = <400000>;
+//            clock-frequency = <100000>;
+            status = "okay";
+        };
+    };
+    fragment@3 {
+        target = <&i2c2>;
+        __overlay__ {
+            status = "okay";
+        };
+    };
+};
