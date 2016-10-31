@@ -1,0 +1,59 @@
+--- a/drivers/spi/spi-rt2880.c
++++ b/drivers/spi/spi-rt2880.c
+@@ -249,6 +249,7 @@ static int rt2880_spi_transfer_one(struc
+ 	const u8 *tx = xfer->tx_buf;
+ 	u8 *rx = xfer->rx_buf;
+ 	int err = 0;
++	int mcp2515_command;
+ 
+ 	/* change clock speed  */
+ 	if (unlikely(rs->speed != xfer->speed_hz)) {
+@@ -259,6 +260,48 @@ static int rt2880_spi_transfer_one(struc
+ 		rt2880_spi_write(rs, RAMIPS_SPI_CFG, reg);
+ 	}
+ 
++	/* ramips half duplex workaround for mcp2515*/
++	if (tx && rx) {
++		mcp2515_command = tx[0];
++		for (len = 0; len < xfer->len; len++) {
++			/* first byte always written */
++			if ((len == 0) || (mcp2515_command & 0x40) || (mcp2515_command == 0x05) || (mcp2515_command == 0x02)) {
++				/* spi_debug("%s: r/w w 0x%02x\n", __func__, tx[len]); */
++				rt2880_spi_write(rs, RAMIPS_SPI_DATA, tx[len]);
++				rt2880_spi_setbits(rs, RAMIPS_SPI_CTL, SPICTL_STARTWR);
++				err = rt2880_spi_wait_ready(rs, 1);
++				if (err) {
++					dev_err(&spi->dev, "TX failed, err=%d\n", err);
++					goto out;
++				}
++				*rx++=0;
++			}
++			/* mcp2515 read register instruction */
++			if ((len == 1) && (mcp2515_command == 0x03)) {
++				/* spi_debug("%s: r/w w 0x%02x\n", __func__, tx[len]); */
++				rt2880_spi_write(rs, RAMIPS_SPI_DATA, tx[len]);
++				rt2880_spi_setbits(rs, RAMIPS_SPI_CTL, SPICTL_STARTWR);
++				err = rt2880_spi_wait_ready(rs, 1);
++				if (err) {
++					dev_err(&spi->dev, "TX failed, err=%d\n", err);
++					goto out;
++				}
++				*rx++=0;
++			}
++			if ((len > 1) && !(mcp2515_command & 0x40) && !(mcp2515_command == 0x05) && !(mcp2515_command == 0x02)) {
++				rt2880_spi_setbits(rs, RAMIPS_SPI_CTL, SPICTL_STARTRD);
++				err = rt2880_spi_wait_ready(rs, 1);
++				if (err) {
++					dev_err(&spi->dev, "RX failed, err=%d\n", err);
++					goto out;
++				}
++				*rx++ = (u8) rt2880_spi_read(rs, RAMIPS_SPI_DATA);
++				/* spi_debug("%s: r/w r 0x%02x\n", __func__, rx[len]); */
++			}
++		}
++		goto out;
++	}
++
+ 	if (tx) {
+ 		len = xfer->len;
+ 		while (len-- > 0) {
