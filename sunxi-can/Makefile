@@ -17,17 +17,17 @@ define KernelPackage/sunxi-can
   SUBMENU:=CAN Support
   TITLE:=SUNXI CAN-Bus
   DEPENDS:=+kmod-can
-  FILES:=$(PKG_BUILD_DIR)/sun4i_can.ko
+  FILES:=$(PKG_BUILD_DIR)/sunxi_can.ko
   KCONFIG:=
 endef
 
 define KernelPackage/sunxi-can/description
   This module is tesing code for the SUNXI CAN-Bus module
-  Target: suing generic OF sja1000 kernel module
+  Target: Testing
 endef
 
 EXTRA_KCONFIG:= \
-    CONFIG_SUN4I_CAN=m \
+    CONFIG_SUNXI_CAN=m \
 
 EXTRA_CFLAGS:= \
     $(patsubst CONFIG_%, -DCONFIG_%=1, $(patsubst %=m,%,$(filter %=m,$(EXTRA_KCONFIG)))) \

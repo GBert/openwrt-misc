@@ -1,1 +1,1 @@
-obj-$(CONFIG_SUN4I_CAN) += sun4i_can.o
+obj-$(CONFIG_SUNXI_CAN) += sunxi_can.o

@@ -144,7 +144,7 @@ int __init test_irq_latency_init_module(void) {
    err = request_any_context_irq(
       test_data.irq,
       test_irq_latency_interrupt_handler,
-      IRQF_TRIGGER_FALLING | IRQF_DISABLED,
+      IRQF_TRIGGER_FALLING,
       DRV_NAME,
       (void*)&test_data
    );
