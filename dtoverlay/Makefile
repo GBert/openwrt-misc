@@ -32,7 +32,7 @@ define Build/Compile
 	make -C $(PKG_BUILD_DIR)		\
 		$(TARGET_CONFIGURE_OPTS)	\
 		CFLAGS="$(TARGET_CFLAGS) $(TARGET_CPPFLAGS)"	\
-		LIBS="$(TARGET_LDFLAGS)"
+		LIBS="$(TARGET_LDFLAGS) -I."
 endef
 
 define Package/dtoverlay/install

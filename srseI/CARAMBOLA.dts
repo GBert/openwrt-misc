@@ -50,21 +50,21 @@
 	clocks {
 		clk16m: clk16m{
 			compatible = "fixed-clock";
-			#clock-cells = <0>;
 			clock-frequency = <16000000>;
+			#clock-cells = <0>;
 		};
 	};
 };
 
 &spi0 {
         status = "okay";
-	can0: can@0 {
+	mcp2515can: can@0 {
 		compatible = "microchip,mcp2515";
+		spi-max-frequency = <10000000>;
 		reg = <0>;
-		clocks = <&clk16m>;
 		interrupt-parent = <&gpio0>;
 		interrupts = <14 0x2>;
-		spi-max-frequency = <10000000>;
+		clocks = <&clk16m>;
 	};
 };
 

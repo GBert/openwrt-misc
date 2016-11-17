@@ -9,7 +9,7 @@
 
 #define NR_REPEAT	1*1000*1000UL
 
-#define ATH79_SOC
+#undef ATH79_SOC
 
 #ifdef ATH79_SOC
 #define AR71XX_RESET_BASE	0x18060000
@@ -63,7 +63,7 @@ static int __init mymodule_init(void) {
         return -1;
     }
 
-    gpio_readdata_addr     = gpio_addr + GPIO_OFFS_READ;
+/*    gpio_readdata_addr     = gpio_addr + GPIO_OFFS_READ; */
     gpio_setdataout_addr   = gpio_addr + GPIO_OFFS_SET;
     gpio_cleardataout_addr = gpio_addr + GPIO_OFFS_CLEAR;
     mask = 1 << gpio;
@@ -74,19 +74,20 @@ static int __init mymodule_init(void) {
     t1 = jiffies;
     for(repeat=0;repeat<NR_REPEAT;repeat++)
     {
-        __raw_writel(mask, gpio_setdataout_addr);
-	in = __raw_readl(gpio_setdataout_addr);
-        __raw_writel(mask, gpio_cleardataout_addr);
-	in = __raw_readl(gpio_cleardataout_addr);
+        /* __raw_writel(mask, gpio_setdataout_addr); */
+	/* in = __raw_readl(gpio_cleardataout_addr); */
+        /* __raw_writel(mask, gpio_cleardataout_addr); */
+	/* in = __raw_readl(gpio_cleardataout_addr); */
 
         /*
-        iowrite32(mask, gpio_setdataout_addr);
-        iowrite32(mask, gpio_cleardataout_addr);
-        */
-        /*
+	iowrite32(mask, gpio_setdataout_addr);
+	iowrite32(mask, gpio_cleardataout_addr);
+	*/
+
+
         *(volatile unsigned long *)gpio_setdataout_addr = mask;
         *(volatile unsigned long *)gpio_cleardataout_addr = mask;
-        */
+
     }
     t2 = jiffies;
     t_diff_msec = ((long)t2 - (long)t1 ) * 1000/HZ;
