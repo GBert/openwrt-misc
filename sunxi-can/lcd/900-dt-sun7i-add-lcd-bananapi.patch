@@ -26,7 +26,7 @@
  &ir0 {
  	pinctrl-names = "default";
  	pinctrl-0 = <&ir0_rx_pins_a>;
-@@ -207,6 +226,13 @@
+@@ -207,6 +227,19 @@
  		allwinner,drive = <SUN4I_PINCTRL_10_MA>;
  		allwinner,pull = <SUN4I_PINCTRL_NO_PULL>;
  	};
@@ -36,7 +36,13 @@
 +		allwinner,function = "gpio_out";
 +		allwinner,drive = <SUN4I_PINCTRL_40_MA>;
 +		allwinner,pull = <SUN4I_PINCTRL_NO_PULL>;
-+	};
++	};	
++};
++
++&pwm {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pwm0_pins_a>, <&pwm1_pins_a>;
++	status = "okay";
  };
  
  #include "axp209.dtsi"
