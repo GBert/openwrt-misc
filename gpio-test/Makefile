@@ -27,7 +27,7 @@ define KernelPackage/gpio-test/description
 endef
 
 EXTRA_KCONFIG:= \
-    CONFIG_GPIO_TEST=m
+    CONFIG_GPIO_IRQ_TEST=m
 
 EXTRA_CFLAGS:= \
     $(patsubst CONFIG_%, -DCONFIG_%=1, $(patsubst %=m,%,$(filter %=m,$(EXTRA_KCONFIG)))) \
