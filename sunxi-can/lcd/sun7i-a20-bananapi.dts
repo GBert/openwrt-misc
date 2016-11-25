@@ -166,7 +166,7 @@
 		touchscreen-size-x = <1024>;
 		touchscreen-size-y = <600>;
 		touchscreen-inverted-x;
-		touchscreen-swapped-x-y;
+	touchscreen-swapped-x-y;
 	};
 };
 
@@ -226,13 +226,18 @@
 		allwinner,drive = <SUN4I_PINCTRL_10_MA>;
 		allwinner,pull = <SUN4I_PINCTRL_NO_PULL>;
 	};
-
 	edt_ft5x06_pins: edt_ft5x06_pins@0 {
 		allwinner,pins = "PH7", "PH9";
 		allwinner,function = "gpio_out";
 		allwinner,drive = <SUN4I_PINCTRL_40_MA>;
 		allwinner,pull = <SUN4I_PINCTRL_NO_PULL>;
-	};
+	};	
+};
+
+&pwm {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pwm0_pins_a>, <&pwm1_pins_a>;
+	status = "okay";
 };
 
 #include "axp209.dtsi"
