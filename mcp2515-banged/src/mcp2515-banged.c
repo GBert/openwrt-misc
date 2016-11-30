@@ -217,11 +217,37 @@
 #define GPIO_CS		3
 #define GPIO_INT	4
 
-static int gpios [] = {20, 19, 18, 7, 6};
+#define GPIO_START_ADDR	0x10000600
+#define GPIO_SIZE	0x40
+#define GPIO_OFFS_READ	0x20
+#define GPIO_OFFS_SET	0x2C
+#define GPIO_OFFS_CLEAR	0x30
+
+void __iomem *gpio_addr = NULL;
+void __iomem *gpio_readdata_addr = NULL;
+void __iomem *gpio_setdataout_addr = NULL;
+void __iomem *gpio_cleardataout_addr = NULL;
+
+/* static int gpios [] = {20, 19, 18, 7, 6}; */
+static int gpios [] = {6, 5, 4, 3, 14};
 static int gpio_count;
 module_param_array(gpios, int, &gpio_count, 0);
 MODULE_PARM_DESC(gpios, "used GPIOS for MISO, MOSI, CLK, CS and INT");
 
+void gpio_set(int gpio, int value) {
+	if (value)
+		*(volatile unsigned long *)gpio_setdataout_addr = 1 << gpio;
+	else
+		*(volatile unsigned long *)gpio_cleardataout_addr = 1 << gpio;
+}
+
+uint8_t gpio_get(int gpio) {
+	uint32_t val;
+	val = __raw_readl(gpio_readdata_addr);
+	if (val & ( 1 << gpio))
+		return 1;
+	return 0;
+}
 
 static const struct can_bittiming_const mcp2515_bittiming_const = {
 	.name = DEVICE_NAME,
@@ -287,7 +313,8 @@ static int mcp2515_spi_trans(struct mcp2515_priv *priv, int len) {
 	uint8_t data_in, data_out;
 	ret = 0;
 
-	gpio_set_value(gpios[GPIO_CS], 0);
+	gpio_set(gpios[GPIO_CS], 0);
+
 	/* MSB first */
 	for (i = 0; i < len; i++) {
 		data_out = priv->spi_tx_buf[i];
@@ -296,22 +323,22 @@ static int mcp2515_spi_trans(struct mcp2515_priv *priv, int len) {
 			data_in  <<= 1;
 			/* master data is valid on the rising edge */
 			if (data_out & 0x80)
-				gpio_set_value(gpios[GPIO_MOSI],1);
+				gpio_set(gpios[GPIO_MOSI],1);
 			else
-				gpio_set_value(gpios[GPIO_MOSI],0);
+				gpio_set(gpios[GPIO_MOSI],0);
 
-			gpio_set_value(gpios[GPIO_CLK], 1);
+			gpio_set(gpios[GPIO_CLK], 1);
 			data_out <<= 1;
 			/* slave data seems to be valid here */
-			if (gpio_get_value(gpios[GPIO_MISO]))
+			if (gpio_get(gpios[GPIO_MISO]))
 				data_in |= 0x01;
 
-			gpio_set_value(gpios[GPIO_CLK], 0);
+			gpio_set(gpios[GPIO_CLK], 0);
 		}
 		priv->spi_rx_buf[i] = data_in;
 	}
 	/* udelay(1); */
-	gpio_set_value(gpios[GPIO_CS], 1);
+	gpio_set(gpios[GPIO_CS], 1);
 	return ret;
 }
 
@@ -323,7 +350,7 @@ static int mcp2515_spi_rxbuf(struct mcp2515_priv *priv) {
 
 	data_out = priv->spi_tx_buf[0];
 
-	gpio_set_value(gpios[GPIO_CS], 0);
+	gpio_set(gpios[GPIO_CS], 0);
 	for (i = 0; i < SPI_TRANSFER_BUF_LEN; i++) {
 		data_in = 0;
 		for (j = 0; j < 8; j++) {
@@ -331,19 +358,19 @@ static int mcp2515_spi_rxbuf(struct mcp2515_priv *priv) {
 			if ( i < 1 ) {
 				/* master data is valid on the rising edge */
 				if (data_out & 0x80)
-					gpio_set_value(gpios[GPIO_MOSI],1);
+					gpio_set(gpios[GPIO_MOSI],1);
 				else
-					gpio_set_value(gpios[GPIO_MOSI],0);
+					gpio_set(gpios[GPIO_MOSI],0);
 				data_out <<= 1;
 			}
 
 			data_in <<= 1;
-			gpio_set_value(gpios[GPIO_CLK], 1);
+			gpio_set(gpios[GPIO_CLK], 1);
 			/* slave data ssems to be valid here */
-			if (gpio_get_value(gpios[GPIO_MISO]))
+			if (gpio_get(gpios[GPIO_MISO]))
 				data_in |= 0x01;
 
-			gpio_set_value(gpios[GPIO_CLK], 0);
+			gpio_set(gpios[GPIO_CLK], 0);
 		}
 		priv->spi_rx_buf[i] = data_in;
 		/* read DLC */
@@ -355,7 +382,7 @@ static int mcp2515_spi_rxbuf(struct mcp2515_priv *priv) {
 	}
 
 	/* udelay(1); */
-	gpio_set_value(gpios[GPIO_CS], 1);
+	gpio_set(gpios[GPIO_CS], 1);
 	return ret;
 }
 
@@ -633,9 +660,9 @@ static int mcp2515_hw_reset(struct mcp2515_priv *priv) {
 	/* Wait for oscillator startup timer after reset */
 	mdelay(MCP251X_OST_DELAY_MS);
 	
-	gpio_set_value(gpios[GPIO_CS], 0);
+	gpio_set(gpios[GPIO_CS], 0);
 	reg = mcp2515_read_reg(priv, CANSTAT);
-	gpio_set_value(gpios[GPIO_CS], 1);
+	gpio_set(gpios[GPIO_CS], 1);
 	printk(KERN_INFO "%s: CANSTAT 0x%02x\n", __func__, reg);
 	if ((reg & CANCTRL_REQOP_MASK) != CANCTRL_REQOP_CONF)
 		return -ENODEV;
@@ -905,7 +932,6 @@ static irqreturn_t mcp2515_can_ist(int irq, void *dev_id) {
 static int mcp2515_open(struct net_device *net) {
 	struct mcp2515_priv *priv = netdev_priv(net);
 
-	/* unsigned long flags = IRQF_TRIGGER_LOW; */
 	unsigned long flags = IRQF_TRIGGER_FALLING;
 	int ret;
 
@@ -1045,6 +1071,11 @@ static int mcp2515_can_probe(struct platform_device *pdev) {
 		ret = -ENOMEM;
 		goto out_gpios;
 	}
+	gpio_addr = ioremap(GPIO_START_ADDR, GPIO_SIZE);
+	gpio_readdata_addr     = gpio_addr + GPIO_OFFS_READ;
+	gpio_setdataout_addr   = gpio_addr + GPIO_OFFS_SET;
+	gpio_cleardataout_addr = gpio_addr + GPIO_OFFS_CLEAR;
+
 	printk(KERN_INFO "%s: mcp2515_hw_probe\n", __func__);
 	ret = mcp2515_hw_probe(priv);
 	if (ret)
