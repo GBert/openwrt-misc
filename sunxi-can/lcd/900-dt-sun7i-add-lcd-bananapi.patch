@@ -1,6 +1,6 @@
 --- a/arch/arm/boot/dts/sun7i-a20-bananapi.dts
 +++ b/arch/arm/boot/dts/sun7i-a20-bananapi.dts
-@@ -151,6 +151,24 @@
+@@ -151,6 +151,23 @@
  	status = "okay";
  };
  
@@ -18,7 +18,6 @@
 +		touchscreen-size-x = <1024>;
 +		touchscreen-size-y = <600>;
 +		touchscreen-inverted-x;
-+		touchscreen-swapped-x-y;
 +	};
 +};
 +
