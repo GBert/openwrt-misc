@@ -8,12 +8,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=gputils
-PKG_VERSION:=1.4.2
+PKG_VERSION:=1.5.0
 PKG_SOURCE_URL:=@SF/gputils
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION)-${PKG_RELEASE}.tar.gz
-PKG_MD5SUM:=e0d074b9d481b2419b0411938d046102
+PKG_MD5SUM:=60d4da7cd026a4e611120ed51b6da35c
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -32,7 +32,7 @@ endef
 
 define Build/Compile
 	$(MAKE) -C $(PKG_BUILD_DIR) $(TARGET_CONFIGURE_OPTS) \
-	 CFLAGS="$(TARGET_CFLAGS) $(TARGET_CPPFLAGS)"
+	 CFLAGS="$(TARGET_CFLAGS) $(TARGET_CPPFLAGS) -DGPUTILS_SVN_VERSION=1285"
 endef
 
 define Package/gputils/install
