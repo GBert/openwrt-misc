@@ -85,11 +85,11 @@ int main(int argc, char *argv[]) {
  
 	ar933x_uart_get_scale_step(UARTCLOCK, baud, &scale, &step);
 
-	printf("Uart Clock      :  %15ld\n"
-		   "Uart Baud       :  %15d\n"
-		   "-----------------------------------\n"
-		   "Uart Scale      :  %15d\n"
-		   "Uart Step       :  %15d\n", UARTCLOCK, baud, scale, step);
+	printf(	"Uart Clock      :  %15ld\n"
+		"Uart Baud       :  %15d\n"
+		"-----------------------------------\n"
+		"Uart Scale      :  %15d\n"
+		"Uart Step       :  %15d\n", UARTCLOCK, baud, scale, step);
 
 	int baud_real = ar933x_uart_get_baud(UARTCLOCK, scale, step);
 	int baud1 = ar933x_uart_get_baud(UARTCLOCK, scale, step+1);
