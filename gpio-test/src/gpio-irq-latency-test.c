@@ -161,6 +161,9 @@ int __init test_irq_latency_init_module(void) {
    test_data.timer.function = test_irq_latency_timer_handler;
    add_timer(&test_data.timer);
 
+   getnstimeofday(&test_data.gpio_time);
+   gpio_set_value(test_data.gpio_pin, 0);
+
    printk(KERN_INFO DRV_NAME " : beginning GPIO IRQ latency test (%u passes in %d seconds).\n",
       NUM_TESTS, (NUM_TESTS * TEST_INTERVAL) / HZ);
 	
