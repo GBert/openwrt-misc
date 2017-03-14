@@ -68,10 +68,7 @@ static void test_irq_latency_timer_handler(unsigned long ptr) {
                " : GPIO IRQ triggered after > 1 sec, something is fishy.\n");
             data->missed_irqs++;
          } else {
-            data->avg_nsecs = data->avg_nsecs ?
-               (unsigned long)(((unsigned long long)delta.tv_nsec +
-                  (unsigned long long)data->avg_nsecs) >> 1) :
-                  delta.tv_nsec;
+            data->avg_nsecs = (data->avg_nsecs * data->test_count + delta.tv_nsec) / (data->test_count + 1);
 	   	   
             test_ok = 1;
          }
