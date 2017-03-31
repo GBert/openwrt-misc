@@ -68,10 +68,7 @@ static void test_irq_latency_timer_handler(unsigned long ptr) {
                " : GPIO IRQ triggered after > 1 sec, something is fishy.\n");
             data->missed_irqs++;
          } else {
-            data->avg_nsecs = data->avg_nsecs ?
-               (unsigned long)(((unsigned long long)delta.tv_nsec +
-                  (unsigned long long)data->avg_nsecs) >> 1) :
-                  delta.tv_nsec;
+            data->avg_nsecs = (data->avg_nsecs * data->test_count + delta.tv_nsec) / (data->test_count + 1);
 	   	   
             test_ok = 1;
          }
@@ -160,6 +157,9 @@ int __init test_irq_latency_init_module(void) {
    test_data.timer.data = (unsigned long)&test_data;
    test_data.timer.function = test_irq_latency_timer_handler;
    add_timer(&test_data.timer);
+
+   getnstimeofday(&test_data.gpio_time);
+   gpio_set_value(test_data.gpio_pin, 0);
 
    printk(KERN_INFO DRV_NAME " : beginning GPIO IRQ latency test (%u passes in %d seconds).\n",
       NUM_TESTS, (NUM_TESTS * TEST_INTERVAL) / HZ);
