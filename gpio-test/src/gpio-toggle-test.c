@@ -26,7 +26,7 @@
 #define GPIO_OFFS_CLEAR		0x40
 #endif
 
-#ifdef RT30fX
+#ifdef RT305X
 #define GPIO_START_ADDR		0x10000600
 #define GPIO_SIZE		0x40
 #define GPIO_OFFS_SET		0x2C
