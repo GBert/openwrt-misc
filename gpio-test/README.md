@@ -8,7 +8,7 @@ simple GPIO kernel module
 
 gpio-irq-test.c
 ---------------
-simple GPIO IRQ kernel module testing 0047-GPIO-MIPS-ralink-add-gpio-driver-for-ralink-SoC.patch\_patch
+simple GPIO IRQ kernel module testing ~~0047-GPIO-MIPS-ralink-add-gpio-driver-for-ralink-SoC.patch\_patch~~ obsolet
 
 gpio-toggle-test.c
 ------------------
