@@ -44,5 +44,6 @@ simple GPIO IRQ latency test
 ~~728-MIPS-ath79-add-gpio-irq.patch~~
 ---------------------------------
 obsolet
+
 ~~adds GPIO IRQ stuff for ATH79 based SoCs like AR933x, AR934x, QCA9533~~
 
