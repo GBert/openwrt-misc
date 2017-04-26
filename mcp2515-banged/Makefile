@@ -34,6 +34,14 @@ EXTRA_CFLAGS:= \
     $(patsubst CONFIG_%, -DCONFIG_%=1, $(patsubst %=m,%,$(filter %=m,$(EXTRA_KCONFIG)))) \
     $(patsubst CONFIG_%, -DCONFIG_%=1, $(patsubst %=y,%,$(filter %=y,$(EXTRA_KCONFIG)))) \
 
+ifneq (,$(findstring mt7688,$(CONFIG_TARGET_SUBTARGET)))
+        EXTRA_CFLAGS+= -DMT7688
+endif
+
+ifneq (,$(findstring rt305x,$(CONFIG_TARGET_SUBTARGET)))
+        EXTRA_CFLAGS+= -DRT305X
+endif
+
 MAKE_OPTS:= \
     ARCH="$(LINUX_KARCH)" \
     CROSS_COMPILE="$(TARGET_CROSS)" \

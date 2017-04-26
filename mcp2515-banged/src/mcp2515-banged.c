@@ -217,11 +217,22 @@
 #define GPIO_CS		3
 #define GPIO_INT	4
 
+#ifdef MT7688
+#define GPIO_START_ADDR	0x10000600
+#define GPIO_SIZE	0xB0
+#define GPIO_OFFS_READ	0x20
+#define GPIO_OFFS_SET	0x30
+#define GPIO_OFFS_CLEAR	0x40
+#endif
+
+#ifdef RT305X
 #define GPIO_START_ADDR	0x10000600
 #define GPIO_SIZE	0x40
 #define GPIO_OFFS_READ	0x20
 #define GPIO_OFFS_SET	0x2C
 #define GPIO_OFFS_CLEAR	0x30
+#endif
+
 
 void __iomem *gpio_addr = NULL;
 void __iomem *gpio_readdata_addr = NULL;
