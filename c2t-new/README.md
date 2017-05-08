@@ -1,4 +1,4 @@
-#c2tool
+# c2tool
 
 by Dirk Eibach
 
@@ -16,7 +16,7 @@ There is a linux kernel driver (drivers/misc/c2port) for this, **but**
 
 ~~ GPIOs can be easily accessed from userspace~~ * but hurt performance
 
-##Challenge
+## Challenge
 
 The C2 Clock signal is shared with an active-low reset signal on the
 target device. Any clock pulse taking longer than 20us is interpreted as a reset
@@ -30,7 +30,7 @@ a discrete monoflop should also do.~~
 A small module is created to avoid using another GPIO and other things:
 c2t-module.
 
-##Using the module
+## Using the module
 ```
 insmod c2tool-gpio c2ck=19 c2d=20 # using GPIO 19&20
 mknod /dev/c2tool-gpio c 180 0
