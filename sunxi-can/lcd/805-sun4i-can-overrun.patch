@@ -1,5 +1,5 @@
---- a/drivers/net/can/sun4i_can.c	2016-09-30 10:20:43.000000000 +0200
-+++ b/drivers/net/can/sun4i_can.c	2016-10-02 16:57:54.707545905 +0200
+--- a/drivers/net/can/sun4i_can.c
++++ b/drivers/net/can/sun4i_can.c
 @@ -531,6 +531,7 @@
  	}
  

@@ -9,18 +9,6 @@
  		mod_reg_val |= SUN4I_MSEL_LOOPBACK_MODE;
  	else if (priv->can.ctrlmode & CAN_CTRLMODE_LISTENONLY)
  		mod_reg_val |= SUN4I_MSEL_LISTEN_ONLY_MODE;
-@@ -450,10 +450,7 @@ static int sun4ican_start_xmit(struct sk
- 
- 	can_put_echo_skb(skb, dev, 0);
- 
--	if (priv->can.ctrlmode & CAN_CTRLMODE_LOOPBACK)
--		sun4i_can_write_cmdreg(priv, SUN4I_CMD_SELF_RCV_REQ);
--	else
--		sun4i_can_write_cmdreg(priv, SUN4I_CMD_TRANS_REQ);
-+	sun4i_can_write_cmdreg(priv, SUN4I_CMD_TRANS_REQ);
- 
- 	return NETDEV_TX_OK;
- }
 @@ -821,7 +818,6 @@ static int sun4ican_probe(struct platfor
  	priv->can.ctrlmode_supported = CAN_CTRLMODE_BERR_REPORTING |
  				       CAN_CTRLMODE_LISTENONLY |
