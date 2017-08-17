@@ -1,0 +1,19 @@
+From bfe80104fb201b9e05f5275ba9d09149def5e318 Mon Sep 17 00:00:00 2001
+Message-Id: <cover.1502971879.git.info@gerhard-bertelsmann.de>
+From: Gerhard Bertelsmann <info@gerhard-bertelsmann.de>
+Date: Thu, 17 Aug 2017 14:11:19 +0200
+Subject: [PATCH 0/2] can: sun4i: bug fixes
+To: linux-can@vger.kernel.org
+
+The patchset fixes two issues for Allwinner A10/A20 CAN IP
+
+Gerhard Bertelsmann (2):
+  can: sun4i: fix overrun
+  can: sun4i: fix loopback mode
+
+ drivers/net/can/sun4i_can.c |   18 ++++++++++++++----
+ 1 file changed, 14 insertions(+), 4 deletions(-)
+
+-- 
+1.7.9.5
+

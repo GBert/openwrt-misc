@@ -24,14 +24,15 @@
  		/* clear bit */
  		sun4i_can_write_cmdreg(priv, SUN4I_CMD_CLEAR_OR_FLAG);
  	}
-@@ -653,8 +663,8 @@
+@@ -653,8 +663,9 @@
  			netif_wake_queue(dev);
  			can_led_event(dev, CAN_LED_EVENT_TX);
  		}
 -		if (isrc & SUN4I_INT_RBUF_VLD) {
 -			/* receive interrupt */
-+		if ((isrc & SUN4I_INT_RBUF_VLD) && !(isrc & SUN4I_INT_DATA_OR)) {
-+			/* receive interrupt - don't read data if overrun occured */
++		if ((isrc & SUN4I_INT_RBUF_VLD) &&
++		    !(isrc & SUN4I_INT_DATA_OR)) {
++			/* receive interrupt - don't read if overrun occurred */
  			while (status & SUN4I_STA_RBUF_RDY) {
  				/* RX buffer is not empty */
  				sun4i_can_rx(dev);
