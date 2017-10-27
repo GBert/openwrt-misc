@@ -1,12 +1,13 @@
 From 6dfb37d432c5fd27f6ec70a326f1e021b0e752b0 Mon Sep 17 00:00:00 2001
 From: Gerhard Bertelsmann <info@gerhard-bertelsmann.de>
 Date: Fri, 27 Oct 2017 14:08:45 +0200
-Subject: [PATCH] can: sun4i: fix overrun
+Subject: [PATCH v3] can: sun4i: fix overrun
 
 SUN4Is CAN IP has a 64 byte deep FIFO buffer. If the buffer is not drained
 fast enough (overrun) it's getting mangled. Already received frames are
 dropped - the data can't be restored.
 
+V3: fix compilation
 V2: no duplicate error reporting
 
 ---
@@ -23,8 +24,8 @@ index 68ef0a4..bcec511 100644
  		stats->rx_errors++;
 +
 +		/* reset the CAN IP by entering reset mode */
-+		err = set_reset_mode(dev);
-+		err = set_normal_mode(dev);
++		set_reset_mode(dev);
++		set_normal_mode(dev);
 +
  		/* clear bit */
  		sun4i_can_write_cmdreg(priv, SUN4I_CMD_CLEAR_OR_FLAG);
