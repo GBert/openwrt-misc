@@ -1,36 +1,44 @@
-From 6dfb37d432c5fd27f6ec70a326f1e021b0e752b0 Mon Sep 17 00:00:00 2001
-From: Gerhard Bertelsmann <info@gerhard-bertelsmann.de>
-Date: Fri, 27 Oct 2017 14:08:45 +0200
-Subject: [PATCH v3] can: sun4i: fix overrun
+From ed03d99d97063ccc5d15a113788aa238b99dc926 Mon Sep 17 00:00:00 2001
+From: cb2begq <info@gerhard-bertelsmann.de>
+Date: Mon, 6 Nov 2017 16:28:25 +0100
+Subject: [PATCH v4] can: sun4i: fix overrun
 
 SUN4Is CAN IP has a 64 byte deep FIFO buffer. If the buffer is not drained
 fast enough (overrun) it's getting mangled. Already received frames are
 dropped - the data can't be restored.
 
+V4: add error handling
 V3: fix compilation
 V2: no duplicate error reporting
 
+
+Signed-off-by: Gerhard Bertelsmann <info@gerhard-bertelsmann.de>
+
 ---
- drivers/net/can/sun4i_can.c |   10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ drivers/net/can/sun4i_can.c |   15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/net/can/sun4i_can.c b/drivers/net/can/sun4i_can.c
-index 68ef0a4..bcec511 100644
+index b0c8085..1d2d12e 100644
 --- a/drivers/net/can/sun4i_can.c
 +++ b/drivers/net/can/sun4i_can.c
-@@ -539,6 +539,11 @@ static int sun4i_can_err(struct net_device *dev, u8 isrc, u8 status)
+@@ -539,6 +539,15 @@ static int sun4i_can_err(struct net_device *dev, u8 isrc, u8 status)
  		}
  		stats->rx_over_errors++;
  		stats->rx_errors++;
 +
 +		/* reset the CAN IP by entering reset mode */
-+		set_reset_mode(dev);
-+		set_normal_mode(dev);
++		err = set_reset_mode(dev);
++		if (err < 0)
++			return err;
++		err = set_normal_mode(dev);
++		if (err < 0)
++			return err;
 +
  		/* clear bit */
  		sun4i_can_write_cmdreg(priv, SUN4I_CMD_CLEAR_OR_FLAG);
  	}
-@@ -653,8 +658,9 @@ static irqreturn_t sun4i_can_interrupt(int irq, void *dev_id)
+@@ -653,8 +663,9 @@ static irqreturn_t sun4i_can_interrupt(int irq, void *dev_id)
  			netif_wake_queue(dev);
  			can_led_event(dev, CAN_LED_EVENT_TX);
  		}
