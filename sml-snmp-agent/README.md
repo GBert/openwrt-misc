@@ -8,7 +8,7 @@ This repo contains a software project for a EDL21 power meter interface with SNM
 
 My setup is working with a HAME A5 which is quite similar to https://wiki.openwrt.org/toh/unbranded/a5-v11 
 
-The router reads with a cheap USB2Serial board and a simple intrared adapter the EDL21 stream from the power meter:
+The router reads with a cheap USB2Serial board and a simple infrared adapter the EDL21 stream from the power meter:
 
 !["Adapter"](https://github.com/GBert/openwrt-misc/blob/master/sml-snmp-agent/pictures/adapter.png)
 
