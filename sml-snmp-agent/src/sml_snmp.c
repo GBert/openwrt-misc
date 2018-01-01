@@ -52,6 +52,7 @@ extern pthread_mutex_t value_mutex;
 extern unsigned int counter_tarif0;
 extern unsigned int counter_tarif1;
 extern unsigned int counter_tarif2;
+extern unsigned int pmeter;
 
 extern int verbose;
 
@@ -59,9 +60,16 @@ char community_read[] = "public";
 char community_write[] = "private";
 time_t startup_time;
 
-char oid[30][30] = { "1.3.6.1.2.1.1.1.0", "1.3.6.1.2.1.1.3.0", "1.3.6.1.4.1.39241.1.1.0",
-    "1.3.6.1.4.1.39241.1.2.0", "1.3.6.1.4.1.39241.1.3.0",
-    "1.3.6.1.4.1.39241.1.8.0", "1.3.6.1.4.1.39241.1.8.1", "1.3.6.1.4.1.39241.1.8.2"
+char oid[30][30] = {
+    "1.3.6.1.2.1.1.1.0",
+    "1.3.6.1.2.1.1.3.0",
+    "1.3.6.1.4.1.39241.1.1.0",
+    "1.3.6.1.4.1.39241.1.2.0",
+    "1.3.6.1.4.1.39241.1.3.0",
+    "1.3.6.1.4.1.39241.1.8.0",
+    "1.3.6.1.4.1.39241.1.8.1",
+    "1.3.6.1.4.1.39241.1.8.2",
+    "1.3.6.1.4.1.39241.10.7.0"
 };
 
 char description[] = "volkszaehler.org / DAI Labor Berlin / Frauenhofer FOKUS";
@@ -145,6 +153,11 @@ void process_varbind_list(struct varbind_list_rx *varbind_list) {
 	    if (verbose)
 		printf("SNMP Request Counter Tarif 2: %d\n", counter_tarif2);
 	    update_varbind(varbind_list->varbind_list[i], 0x02, &counter_tarif2);
+	}
+	if (!strcmp((char *)&oid[8][0], (char *)varbind_list->varbind_list[i]->oid)) {
+	    if (verbose)
+		printf("SNMP Request Power Meter: %d\n", pmeter);
+	    update_varbind(varbind_list->varbind_list[i], 0x02, &pmeter);
 	}
     }
     pthread_mutex_unlock(&value_mutex);

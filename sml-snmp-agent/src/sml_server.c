@@ -39,10 +39,12 @@ extern void *snmp_agent(void *);
 const char obis_tarif0[] = { 0x01, 0x00, 0x01, 0x08, 0x00 };
 const char obis_tarif1[] = { 0x01, 0x00, 0x01, 0x08, 0x01 };
 const char obis_tarif2[] = { 0x01, 0x00, 0x01, 0x08, 0x02 };
+const char power_meter[] = { 0x01, 0x00, 0x10, 0x07, 0x00 };
 
 unsigned int counter_tarif0;
 unsigned int counter_tarif1;
 unsigned int counter_tarif2;
+unsigned int pmeter;
 
 int verbose = 0;
 
@@ -223,6 +225,11 @@ void transport_receiver(unsigned char *buffer, size_t buffer_len) {
 		    counter_tarif2 = (int)(value + 0.5);
 		    if (verbose)
 			printf("CT2:%d\n", counter_tarif2);
+		}
+		if (!memcmp(entry->obj_name->str, power_meter, sizeof(power_meter))) {
+		    pmeter = (int)(value + 0.5);
+		    if (verbose)
+			printf("Power:%d\n", pmeter);
 		}
 		pthread_mutex_unlock(&value_mutex);
 
