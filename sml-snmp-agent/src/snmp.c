@@ -195,7 +195,7 @@ unsigned char *encode_integer(unsigned int value)
 {
     unsigned char *integer_string = NULL;
 
-    if (value > 65535) {
+    if (value > 32767) {
 	integer_string = (unsigned char *)calloc(6, sizeof(unsigned char));
 	integer_string[0] = 0x02;
 	integer_string[1] = 0x04;
@@ -203,7 +203,7 @@ unsigned char *encode_integer(unsigned int value)
 	integer_string[3] = (unsigned char)(value >> 16);
 	integer_string[4] = (unsigned char)(value >> 8);
 	integer_string[5] = (unsigned char)(value);
-    } else if (value > 255) {
+    } else if (value > 127) {
 	integer_string = (unsigned char *)calloc(4, sizeof(unsigned char));
 	integer_string[0] = 0x02;
 	integer_string[1] = 0x02;
