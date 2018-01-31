@@ -19,9 +19,7 @@ For RPi mount the first partition of the SD-card image and copy the overlays
 to the overlay directory. Add following to the config.txt:
 ```
 core_freq=250
-kernel=ms7/zImage
-device_tree=ms7/bcm2710-rpi-3-b.dtb
-overlay_prefix=ms7/overlays/
+overlay_prefix=overlays/
 dtoverlay=mcp2517fd-can0
 dtparam=interrupt=25
 dtparam=oscillator=4000000
