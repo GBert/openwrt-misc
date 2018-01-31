@@ -1,12 +1,13 @@
 From ed03d99d97063ccc5d15a113788aa238b99dc926 Mon Sep 17 00:00:00 2001
 From: cb2begq <info@gerhard-bertelsmann.de>
 Date: Mon, 6 Nov 2017 16:28:25 +0100
-Subject: [PATCH v4] can: sun4i: fix overrun
+Subject: [PATCH v5] can: sun4i: fix overrun
 
 SUN4Is CAN IP has a 64 byte deep FIFO buffer. If the buffer is not drained
 fast enough (overrun) it's getting mangled. Already received frames are
 dropped - the data can't be restored.
 
+V5: ignore timeout error and add a comment
 V4: add error handling
 V3: fix compilation
 V2: no duplicate error reporting
@@ -15,25 +16,23 @@ V2: no duplicate error reporting
 Signed-off-by: Gerhard Bertelsmann <info@gerhard-bertelsmann.de>
 
 ---
- drivers/net/can/sun4i_can.c |   15 +++++++++++++--
+ drivers/net/can/sun4i_can.c |   12 ++++++++++--
  1 file changed, 13 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/net/can/sun4i_can.c b/drivers/net/can/sun4i_can.c
 index b0c8085..1d2d12e 100644
 --- a/drivers/net/can/sun4i_can.c
 +++ b/drivers/net/can/sun4i_can.c
-@@ -539,6 +539,15 @@ static int sun4i_can_err(struct net_device *dev, u8 isrc, u8 status)
+@@ -539,6 +539,13 @@ static int sun4i_can_err(struct net_device *dev, u8 isrc, u8 status)
  		}
  		stats->rx_over_errors++;
  		stats->rx_errors++;
 +
-+		/* reset the CAN IP by entering reset mode */
-+		err = set_reset_mode(dev);
-+		if (err < 0)
-+			return err;
-+		err = set_normal_mode(dev);
-+		if (err < 0)
-+			return err;
++		/* reset the CAN IP by entering reset mode
++		 * ignoring timeout error
++		 */
++		set_reset_mode(dev);
++		set_normal_mode(dev);
 +
  		/* clear bit */
  		sun4i_can_write_cmdreg(priv, SUN4I_CMD_CLEAR_OR_FLAG);
