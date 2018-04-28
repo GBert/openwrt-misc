@@ -54,11 +54,13 @@ define Package/gputils/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/gputils/header/p16f1705.inc $(1)/usr/share/gputils/header
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/gputils/header/p16f1709.inc $(1)/usr/share/gputils/header
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/gputils/header/p18f??k8?.inc $(1)/usr/share/gputils/header
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/gputils/header/p18f??80.inc $(1)/usr/share/gputils/header
 	$(INSTALL_DIR) $(1)/usr/share/gputils/lkr
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/gputils/lkr/16f15325_g.lkr $(1)/usr/share/gputils/lkr
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/gputils/lkr/16f1705_g.lkr $(1)/usr/share/gputils/lkr
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/gputils/lkr/16f1709_g.lkr $(1)/usr/share/gputils/lkr
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/gputils/lkr/18f??k8?_g.lkr $(1)/usr/share/gputils/lkr
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/gputils/lkr/18f??80_g.lkr $(1)/usr/share/gputils/lkr
 endef
 
 $(eval $(call BuildPackage,gputils))
