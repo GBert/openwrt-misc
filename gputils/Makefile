@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=gputils
 PKG_REV:=1312
-PKG_VERSION:=1.5.1-$(PKG_REV)
+PKG_VERSION:=1.5.2-$(PKG_REV)
 PKG_RELEASE:=1
 
 PKG_SOURCE_PROTO:=svn
