@@ -19,6 +19,7 @@
 #include <linux/fs.h>
 #include <linux/uaccess.h>
 #include <linux/cdev.h>
+#include <linux/version.h>
 
 #include "c2tool-gpio.h"
 
@@ -238,14 +239,20 @@ static long c2port_gpio_ioctl(struct file *file, unsigned int cmd, unsigned long
 		return -EINVAL;
 	}
 	if (_IOC_DIR(cmd) & _IOC_READ) {
-		if (!access_ok(VERIFY_WRITE, arg, _IOC_SIZE(cmd))) {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5,0,0)
+		if (!access_ok(VERIFY_WRITE, arg, _IOC_SIZE(cmd)))
+#else
+		if (!access_ok((void *) arg, _IOC_SIZE(cmd)))
+#endif
 			return -EFAULT;
-		}
 	}
 	if (_IOC_DIR(cmd) & _IOC_WRITE) {
-		if (!access_ok(VERIFY_READ, arg, _IOC_SIZE(cmd))) {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5,0,0)
+		if (!access_ok(VERIFY_READ, arg, _IOC_SIZE(cmd)))
+#else
+		if (!access_ok((void *) arg, _IOC_SIZE(cmd)))
+#endif
 			return -EFAULT;
-		}
 	}
 	switch (cmd) {
 	case C2PORT_RESET:
