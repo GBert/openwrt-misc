@@ -14,7 +14,7 @@ PKG_USE_MIPS16:=0
 
 include $(INCLUDE_DIR)/package.mk
 
-define KernelPackage/gpio-test
+define KernelPackage/$(PKG_NAME)
   SUBMENU:=Other modules
   TITLE:=Simple GPIO Test
   DEPENDS:=
@@ -22,7 +22,7 @@ define KernelPackage/gpio-test
   KCONFIG:=
 endef
 
-define KernelPackage/gpio-test/description
+define KernelPackage/$(PKG_NAME)/description
  Simple GPIO test suite including 'toggle speed test' and 'GPIO IRQ latency test'
 endef
 
@@ -30,8 +30,8 @@ EXTRA_KCONFIG:= \
     CONFIG_GPIO_TEST=m
 
 EXTRA_CFLAGS:= \
-    $(patsubst CONFIG_%, -DCONFIG_%=1, $(patsubst %=m,%,$(filter %=m,$(EXTRA_KCONFIG)))) \
-    $(patsubst CONFIG_%, -DCONFIG_%=1, $(patsubst %=y,%,$(filter %=y,$(EXTRA_KCONFIG)))) \
+	$(patsubst CONFIG_%, -DCONFIG_%=1, $(patsubst %=m,%,$(filter %=m,$(EXTRA_KCONFIG)))) \
+	$(patsubst CONFIG_%, -DCONFIG_%=1, $(patsubst %=y,%,$(filter %=y,$(EXTRA_KCONFIG)))) \
 
 ifneq (,$(findstring mt76x8,$(CONFIG_TARGET_SUBTARGET)))
         EXTRA_CFLAGS+= -DMT7688
@@ -50,21 +50,15 @@ ifneq (,$(findstring ar71xx,$(CONFIG_TARGET_BOARD)))
 endif
 
 MAKE_OPTS:= \
-    ARCH="$(LINUX_KARCH)" \
-    CROSS_COMPILE="$(TARGET_CROSS)" \
-    SUBDIRS="$(PKG_BUILD_DIR)" \
-    EXTRA_CFLAGS="$(EXTRA_CFLAGS)" \
-    $(EXTRA_KCONFIG)
-
-define Build/Prepare
-	mkdir -p $(PKG_BUILD_DIR)
-	$(CP) ./src/* $(PKG_BUILD_DIR)/
-endef
+	$(KERNEL_MAKE_FLAGS) \
+	M="$(PKG_BUILD_DIR)" \
+	EXTRA_CFLAGS="$(EXTRA_CFLAGS)" \
+	$(EXTRA_KCONFIG)
 
 define Build/Compile
 	$(MAKE) -C "$(LINUX_DIR)" \
-	$(MAKE_OPTS) \
-	modules
+		$(MAKE_OPTS) \
+		modules
 endef
 
-$(eval $(call KernelPackage,gpio-test))
+$(eval $(call KernelPackage,$(PKG_NAME)))
