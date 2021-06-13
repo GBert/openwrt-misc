@@ -33,10 +33,10 @@ struct flash_section_data {
 
 static void flash_section(bfd * ibfd, sec_ptr isection, void *arg)
 {
-	bfd_size_type size = bfd_section_size(ibfd, isection);
+	bfd_size_type size = bfd_section_size(isection);
 	/* bfd_vma vma = bfd_section_vma(ibfd, isection); */
-	bfd_vma lma = bfd_section_lma(ibfd, isection);
-	const char *section_name = bfd_section_name(ibfd, isection);
+	bfd_vma lma = bfd_section_lma(isection);
+	const char *section_name = bfd_section_name(isection);
 	bfd_byte *data = 0;
 	struct flash_section_data *fsdata = arg;
 	struct c2tool_state *state = fsdata->state;
