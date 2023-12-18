@@ -35,11 +35,7 @@ define Package/gputils/description
   gpasm, gplink, and gplib. It's distributed under the terms of the GNU Public License.
 endef
 
-define Build/Configure
-endef
-
 define Build/Compile
-	cd $(PKG_BUILD_DIR) && ./configure --prefix=/usr
 	$(MAKE) -C $(PKG_BUILD_DIR) $(TARGET_CONFIGURE_OPTS) \
 	 CFLAGS="$(TARGET_CFLAGS) $(TARGET_CPPFLAGS) -DGPUTILS_SVN_VERSION=$(PKG_REV)"
 endef
