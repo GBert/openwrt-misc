@@ -16,22 +16,24 @@
 // You should have received a copy of the GNU General Public License
 // along with libSML.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef _SML_TREE_H_
-#define	_SML_TREE_H_
+#ifndef SML_TREE_H_
+#define SML_TREE_H_
 
-#include "sml_shared.h"
 #include "sml_octet_string.h"
-#include "sml_value.h"
+#include "sml_shared.h"
 #include "sml_time.h"
+#include "sml_value.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define SML_PROC_PAR_VALUE_TAG_VALUE 		0x01
-#define SML_PROC_PAR_VALUE_TAG_PERIOD_ENTRY 	0x02
-#define SML_PROC_PAR_VALUE_TAG_TUPEL_ENTRY 	0x03
-#define SML_PROC_PAR_VALUE_TAG_TIME		0x04
+// clang-format off
+#define SML_PROC_PAR_VALUE_TAG_VALUE        0x01
+#define SML_PROC_PAR_VALUE_TAG_PERIOD_ENTRY 0x02
+#define SML_PROC_PAR_VALUE_TAG_TUPEL_ENTRY  0x03
+#define SML_PROC_PAR_VALUE_TAG_TIME         0x04
+// clang-format on
 
 // what a messy tupel ...
 typedef struct {
@@ -86,10 +88,10 @@ typedef struct {
 	} data;
 } sml_proc_par_value;
 
-typedef struct s_tree{
+typedef struct s_tree {
 	octet_string *parameter_name;
 	sml_proc_par_value *parameter_value; // optional
-	struct s_tree **child_list; // optional
+	struct s_tree **child_list;          // optional
 
 	int child_list_len;
 } sml_tree;
@@ -135,6 +137,4 @@ void sml_period_entry_free(sml_period_entry *period);
 }
 #endif
 
-
-#endif /* _SML_TREE_H_ */
-
+#endif /* SML_TREE_H_ */

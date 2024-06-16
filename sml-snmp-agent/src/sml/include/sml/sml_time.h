@@ -16,12 +16,11 @@
 // You should have received a copy of the GNU General Public License
 // along with libSML.  If not, see <http://www.gnu.org/licenses/>.
 
+#ifndef SML_TIME_H_
+#define SML_TIME_H_
 
-#ifndef _SML_TIME_H_
-#define	_SML_TIME_H_
-
-#include "sml_shared.h"
 #include "sml_number.h"
+#include "sml_shared.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -35,8 +34,7 @@ typedef struct {
 	union {
 		u32 *sec_index;
 		u32 *timestamp;
-	}
-	data;
+	} data;
 } sml_time;
 
 sml_time *sml_time_init();
@@ -47,6 +45,4 @@ void sml_time_free(sml_time *time);
 }
 #endif
 
-
-#endif /* _SML_TIME_H_ */
-
+#endif /* SML_TIME_H_ */

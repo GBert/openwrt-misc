@@ -1,6 +1,6 @@
 UNAME := $(shell uname)
 # CFLAGS += -I./include/ -fPIC -fno-stack-protector -g -Wall -D_NO_UUID_LIB
-CFLAGS += -I./include/ -fPIC -fno-stack-protector -Os -pipe -fno-caller-saves -Wall -D_NO_UUID_LIB
+CFLAGS += -I./include/ -fPIC -fno-stack-protector -Os -pipe -fno-caller-saves -Wall -DSML_NO_UUID_LIB
 
 # Available Flags:
 # _NO_UUID_LIB - compile without uuid lib

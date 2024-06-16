@@ -16,7 +16,6 @@
 // You should have received a copy of the GNU General Public License
 // along with libSML.  If not, see <http://www.gnu.org/licenses/>.
 
-
 #include <sml/sml_boolean.h>
 #include <stdio.h>
 
@@ -29,25 +28,28 @@ sml_boolean *sml_boolean_init(u8 b) {
 
 sml_boolean *sml_boolean_parse(sml_buffer *buf) {
 	if (sml_buf_optional_is_skipped(buf)) {
-		return 0;
+		return NULL;
 	}
 
 	if (sml_buf_get_next_type(buf) != SML_TYPE_BOOLEAN) {
 		buf->error = 1;
-		return 0;
+		return NULL;
 	}
 
 	int l = sml_buf_get_next_length(buf);
 	if (l != 1) {
 		buf->error = 1;
-		return 0;
+		return NULL;
+	}
+	if (buf->cursor >= buf->buffer_len) {
+		buf->error = 1;
+		return NULL;
 	}
 
 	if (sml_buf_get_current_byte(buf)) {
 		sml_buf_update_bytes_read(buf, 1);
 		return sml_boolean_init(SML_BOOLEAN_TRUE);
-	}
-	else {
+	} else {
 		sml_buf_update_bytes_read(buf, 1);
 		return sml_boolean_init(SML_BOOLEAN_FALSE);
 	}
@@ -62,8 +64,7 @@ void sml_boolean_write(sml_boolean *boolean, sml_buffer *buf) {
 	sml_buf_set_type_and_length(buf, SML_TYPE_BOOLEAN, 1);
 	if (*boolean == SML_BOOLEAN_FALSE) {
 		buf->buffer[buf->cursor] = SML_BOOLEAN_FALSE;
-	}
-	else {
+	} else {
 		buf->buffer[buf->cursor] = SML_BOOLEAN_TRUE;
 	}
 	buf->cursor++;
@@ -74,4 +75,3 @@ void sml_boolean_free(sml_boolean *b) {
 		free(b);
 	}
 }
-

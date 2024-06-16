@@ -1,5 +1,5 @@
 UNAME := $(shell uname)
-CFLAGS +=  -D_REENTRANT -g -Wall -pedantic -std=gnu99 -Isml/include/ 
+CFLAGS +=  -D_REENTRANT -g -Wall -pedantic -std=gnu99 -Isml/include/
 OBJS = snmp.o sml_snmp.o sml_server.o
 LIBSML = sml/lib/libsml.a
 
@@ -8,7 +8,7 @@ LIBS = -lm -lpthread
 endif
 
 sml_server : $(OBJS) $(LIBSML)
-	$(CC) $(CFLAGS) $(OBJS) $(LIBS) $(LIBSML) -o sml_server
+	$(CC) $(CFLAGS) $(OBJS) $(LIBSML) -o sml_server $(LIBS)
 
 %.o : %.c
 	$(CC) $(CFLAGS) -c $^ -o $@

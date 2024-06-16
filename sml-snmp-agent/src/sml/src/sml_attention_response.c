@@ -16,18 +16,20 @@
 // You should have received a copy of the GNU General Public License
 // along with libSML.  If not, see <http://www.gnu.org/licenses/>.
 
-
 #include <sml/sml_attention_response.h>
 #include <sml/sml_tree.h>
 
 sml_attention_response *sml_attention_response_init() {
-	sml_attention_response *msg = (sml_attention_response *) malloc(sizeof(sml_attention_response));
-	memset(msg, 0, sizeof(sml_attention_response));
+	sml_attention_response *msg = (sml_attention_response *)malloc(sizeof(sml_attention_response));
+	*msg = (sml_attention_response){.server_id = NULL,
+									.attention_number = NULL,
+									.attention_message = NULL,
+									.attention_details = NULL};
 
 	return msg;
 }
 
-sml_attention_response *sml_attention_response_parse(sml_buffer *buf){
+sml_attention_response *sml_attention_response_parse(sml_buffer *buf) {
 	sml_attention_response *msg = sml_attention_response_init();
 
 	if (sml_buf_get_next_type(buf) != SML_TYPE_LIST) {
@@ -41,22 +43,26 @@ sml_attention_response *sml_attention_response_parse(sml_buffer *buf){
 	}
 
 	msg->server_id = sml_octet_string_parse(buf);
-	if (sml_buf_has_errors(buf)) goto error;
+	if (sml_buf_has_errors(buf))
+		goto error;
 
 	msg->attention_number = sml_octet_string_parse(buf);
-	if (sml_buf_has_errors(buf)) goto error;
+	if (sml_buf_has_errors(buf))
+		goto error;
 
 	msg->attention_message = sml_octet_string_parse(buf);
-	if (sml_buf_has_errors(buf)) goto error;
+	if (sml_buf_has_errors(buf))
+		goto error;
 
 	msg->attention_details = sml_tree_parse(buf);
-	if (sml_buf_has_errors(buf)) goto error;
+	if (sml_buf_has_errors(buf))
+		goto error;
 
 	return msg;
 
-	error:
-		sml_attention_response_free(msg);
-		return 0;
+error:
+	sml_attention_response_free(msg);
+	return NULL;
 }
 
 void sml_attention_response_write(sml_attention_response *msg, sml_buffer *buf) {
@@ -68,7 +74,7 @@ void sml_attention_response_write(sml_attention_response *msg, sml_buffer *buf) 
 	sml_tree_write(msg->attention_details, buf);
 }
 
-void sml_attention_response_free(sml_attention_response *msg){
+void sml_attention_response_free(sml_attention_response *msg) {
 	if (msg) {
 		sml_octet_string_free(msg->server_id);
 		sml_octet_string_free(msg->attention_number);
@@ -78,4 +84,3 @@ void sml_attention_response_free(sml_attention_response *msg){
 		free(msg);
 	}
 }
-

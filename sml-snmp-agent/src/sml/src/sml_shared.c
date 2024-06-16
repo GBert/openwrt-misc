@@ -16,17 +16,22 @@
 // You should have received a copy of the GNU General Public License
 // along with libSML.  If not, see <http://www.gnu.org/licenses/>.
 
-
-#include <string.h>
 #include <sml/sml_shared.h>
 #include <stdio.h>
+#include <string.h>
 
 int sml_buf_get_next_length(sml_buffer *buf) {
 	int length = 0;
+
+	// current byte available?
+	if ((buf->cursor + 1) > buf->buffer_len) {
+		buf->error = 1;
+		return -1;
+	}
 	unsigned char byte = sml_buf_get_current_byte(buf);
 	int list = ((byte & SML_TYPE_FIELD) == SML_TYPE_LIST) ? 0 : -1;
 
-	for (;buf->cursor < buf->buffer_len;) {
+	for (; buf->cursor < buf->buffer_len;) {
 		byte = sml_buf_get_current_byte(buf);
 		length <<= 4;
 		length |= (byte & SML_LENGTH_FIELD);
@@ -35,11 +40,16 @@ int sml_buf_get_next_length(sml_buffer *buf) {
 			break;
 		}
 		sml_buf_update_bytes_read(buf, 1);
-		if(list) {
+		if (list) {
 			list += -1;
 		}
 	}
-	sml_buf_update_bytes_read(buf, 1);
+	if (buf->cursor < buf->buffer_len) {
+		sml_buf_update_bytes_read(buf, 1);
+	} else {
+		buf->error = 1;
+		return -1;
+	}
 
 	return length + list;
 }
@@ -60,7 +70,7 @@ void sml_buf_set_type_and_length(sml_buffer *buf, unsigned int type, unsigned in
 		// the 4 most significant bits of l (1111 0000 0000 ...)
 		unsigned int mask = 0xF0 << (8 * (sizeof(unsigned int) - 1));
 
-		// select the next 4 most significant bits with a bit set until there 
+		// select the next 4 most significant bits with a bit set until there
 		// is something
 		while (!(mask & l)) {
 			mask >>= 4;
@@ -90,30 +100,27 @@ void sml_buf_set_type_and_length(sml_buffer *buf, unsigned int type, unsigned in
 	buf->cursor++;
 }
 
-int sml_buf_has_errors(sml_buffer *buf) {
-	return buf->error != 0;
-}
+int sml_buf_has_errors(sml_buffer *buf) { return buf->error != 0; }
 
 int sml_buf_get_next_type(sml_buffer *buf) {
-	return (buf->buffer[buf->cursor] & SML_TYPE_FIELD);
+	if (buf->cursor >= buf->buffer_len) {
+		buf->error = 1;
+		return 0x100; // invalid type.
+	} else
+		return (buf->buffer[buf->cursor] & SML_TYPE_FIELD);
 }
 
-unsigned char sml_buf_get_current_byte(sml_buffer *buf) {
-	return buf->buffer[buf->cursor];
-}
+unsigned char sml_buf_get_current_byte(sml_buffer *buf) { return buf->buffer[buf->cursor]; }
 
-unsigned char *sml_buf_get_current_buf(sml_buffer *buf) {
-	return &(buf->buffer[buf->cursor]);
-}
+unsigned char *sml_buf_get_current_buf(sml_buffer *buf) { return &(buf->buffer[buf->cursor]); }
 
-void sml_buf_update_bytes_read(sml_buffer *buf, int bytes) {
-	buf->cursor += bytes;
-}
+void sml_buf_update_bytes_read(sml_buffer *buf, int bytes) { buf->cursor += bytes; }
 
 sml_buffer *sml_buffer_init(size_t length) {
-	sml_buffer *buf = (sml_buffer *) malloc(sizeof(sml_buffer));
-	memset(buf, 0, sizeof(sml_buffer));
-	buf->buffer = (unsigned char *) malloc(length);
+	sml_buffer *buf = (sml_buffer *)malloc(sizeof(sml_buffer));
+	*buf =
+		(sml_buffer){.buffer = NULL, .buffer_len = 0, .cursor = 0, .error = 0, .error_msg = NULL};
+	buf->buffer = (unsigned char *)malloc(length);
 	buf->buffer_len = length;
 	memset(buf->buffer, 0, buf->buffer_len);
 
@@ -136,7 +143,17 @@ void sml_buffer_free(sml_buffer *buf) {
 }
 
 int sml_buf_optional_is_skipped(sml_buffer *buf) {
+
+	if (buf->cursor >= buf->buffer_len) {
+		buf->error = 1;
+		return -1;
+	}
+
 	if (sml_buf_get_current_byte(buf) == SML_OPTIONAL_SKIPPED) {
+		if (buf->cursor + 1 > buf->buffer_len) {
+			buf->error = 1;
+			return -1;
+		}
 		sml_buf_update_bytes_read(buf, 1);
 
 		return 1;
@@ -145,14 +162,12 @@ int sml_buf_optional_is_skipped(sml_buffer *buf) {
 	return 0;
 }
 
-void hexdump(unsigned char *buffer, size_t buffer_len) {
-	int i;
-	for (i = 0; i < buffer_len; i++) {
-		printf("%02X ", (unsigned char) buffer[i]);
+void sml_hexdump(unsigned char *buffer, size_t buffer_len) {
+	for (size_t i = 0; i < buffer_len; i++) {
+		printf("%02X ", (unsigned char)buffer[i]);
 		if ((i + 1) % 8 == 0) {
 			printf("\n");
 		}
 	}
-	printf("\n");
+	puts("");
 }
-

@@ -16,19 +16,18 @@
 // You should have received a copy of the GNU General Public License
 // along with libSML.  If not, see <http://www.gnu.org/licenses/>.
 
-
 #include <sml/sml_status.h>
 
 sml_status *sml_status_init() {
-	sml_status *status = (sml_status *) malloc(sizeof(sml_status));
-	memset(status, 0, sizeof(sml_status));
+	sml_status *status = (sml_status *)malloc(sizeof(sml_status));
+	*status = (sml_status){.type = SML_TYPE_UNSIGNED, .data.status8 = NULL};
 
 	return status;
 }
 
 sml_status *sml_status_parse(sml_buffer *buf) {
 	if (sml_buf_optional_is_skipped(buf)) {
-		return 0;
+		return NULL;
 	}
 
 	int max = 1;
@@ -38,22 +37,22 @@ sml_status *sml_status_parse(sml_buffer *buf) {
 	sml_status *status = sml_status_init();
 	status->type = type;
 	switch (type) {
-		case SML_TYPE_UNSIGNED:
-			// get maximal size, if not all bytes are used (example: only 6 bytes for a u64)
-			while (max < ((byte & SML_LENGTH_FIELD) - 1)) {
-				max <<= 1;
-			}
+	case SML_TYPE_UNSIGNED:
+		// get maximal size, if not all bytes are used (example: only 6 bytes for a u64)
+		while (max < ((byte & SML_LENGTH_FIELD) - 1)) {
+			max <<= 1;
+		}
 
-			status->data.status8 = sml_number_parse(buf, type, max);
-			status->type |= max;
-			break;
-		default:
-			buf->error = 1;
-			break;
+		status->data.status8 = sml_number_parse(buf, type, max);
+		status->type |= max;
+		break;
+	default:
+		buf->error = 1;
+		break;
 	}
 	if (sml_buf_has_errors(buf)) {
 		sml_status_free(status);
-		return 0;
+		return NULL;
 	}
 
 	return status;
@@ -65,7 +64,7 @@ void sml_status_write(sml_status *status, sml_buffer *buf) {
 		return;
 	}
 	sml_number_write(status->data.status8, (status->type & SML_TYPE_FIELD),
-				(status->type & SML_LENGTH_FIELD), buf);
+					 (status->type & SML_LENGTH_FIELD), buf);
 }
 
 void sml_status_free(sml_status *status) {
@@ -74,4 +73,3 @@ void sml_status_free(sml_status *status) {
 		free(status);
 	}
 }
-

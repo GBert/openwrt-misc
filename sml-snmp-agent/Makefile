@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2015 OpenWrt.org
+# Copyright (C) 2025 OpenWrt.org
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=sml_snmp_agent
-PKG_VERSION:=1.0
+PKG_VERSION:=1.1
 
 PKG_SOURCE_MIRROR:=0 
 PKG_SOURCE_VERSION:=$(PKG_REV)

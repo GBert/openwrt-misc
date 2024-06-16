@@ -16,26 +16,25 @@
 // You should have received a copy of the GNU General Public License
 // along with libSML.  If not, see <http://www.gnu.org/licenses/>.
 
-
+#include <fcntl.h>
 #include <sml/sml_octet_string.h>
 #include <stdio.h>
 #include <sys/stat.h>
-#include <fcntl.h>
 #include <unistd.h>
 
-#ifndef _NO_UUID_LIB
-#include <uid/uuid.h>
+#ifndef SML_NO_UUID_LIB
+#include <uuid/uuid.h>
 #else
 #include <stdlib.h> // for rand()
 #endif
 
 uint8_t ctoi(uint8_t c);
 uint8_t c2toi(uint8_t c1, uint8_t c2);
-uint8_t c2ptoi(char* c);
+uint8_t c2ptoi(char *c);
 
 octet_string *sml_octet_string_init(unsigned char *str, int length) {
 	octet_string *s = (octet_string *)malloc(sizeof(octet_string));
-	memset(s, 0, sizeof(octet_string));
+	*s = (octet_string){.str = NULL, .len = 0};
 	if (length > 0) {
 		s->str = (unsigned char *)malloc(length);
 		memcpy(s->str, str, length);
@@ -48,7 +47,7 @@ octet_string *sml_octet_string_init(unsigned char *str, int length) {
 octet_string *sml_octet_string_init_from_hex(char *str) {
 	int i, len = strlen(str);
 	if (len % 2 != 0) {
-		return 0;
+		return NULL;
 	}
 	unsigned char bytes[len / 2];
 	for (i = 0; i < (len / 2); i++) {
@@ -68,19 +67,20 @@ void sml_octet_string_free(octet_string *str) {
 
 octet_string *sml_octet_string_parse(sml_buffer *buf) {
 	if (sml_buf_optional_is_skipped(buf)) {
-		return 0;
+		return NULL;
 	}
 
 	int l;
 	if (sml_buf_get_next_type(buf) != SML_TYPE_OCTET_STRING) {
 		buf->error = 1;
-		return 0;
+		return NULL;
 	}
 
 	l = sml_buf_get_next_length(buf);
-	if (l < 0) {
+	if (l < 0 || l >= (buf->buffer_len - buf->cursor)) { // sanity check: doesnt fit into buffer...
+		// libFuzzer fix for crash-3b12f21fdd346700ac1a10dfebba7604be8f070c
 		buf->error = 1;
-		return 0;
+		return NULL;
 	}
 
 	octet_string *str = sml_octet_string_init(sml_buf_get_current_buf(buf), l);
@@ -94,17 +94,17 @@ void sml_octet_string_write(octet_string *str, sml_buffer *buf) {
 		return;
 	}
 
-	sml_buf_set_type_and_length(buf, SML_TYPE_OCTET_STRING, (unsigned int) str->len);
+	sml_buf_set_type_and_length(buf, SML_TYPE_OCTET_STRING, (unsigned int)str->len);
 	memcpy(sml_buf_get_current_buf(buf), str->str, str->len);
 	buf->cursor += str->len;
 }
 
 octet_string *sml_octet_string_generate_uuid() {
-#ifndef _NO_UUID_LIB
+#ifndef SML_NO_UUID_LIB
 	uuid_t uuid;
 	uuid_generate(uuid);
 #else
-	char uuid[16];
+	unsigned char uuid[16];
 
 // TODO add support for WIN32 systems
 #ifdef __linux__
@@ -112,17 +112,17 @@ octet_string *sml_octet_string_generate_uuid() {
 	read(fd, uuid, 16);
 #else
 	int i;
-	for(i = 0; i < 16; i++) {
+	for (i = 0; i < 16; i++) {
 		uuid[i] = rand() % 0xFF;
 	}
 #endif /* __linux__ */
 	uuid[6] = (uuid[6] & 0x0F) | 0x40; // set version
 	uuid[8] = (uuid[8] & 0x3F) | 0x80; // set reserved bits
-#endif /* _NO_UUID_LIB */
+#endif /* SML_NO_UUID_LIB */
 	return sml_octet_string_init(uuid, 16);
 }
 
-int sml_octet_string_cmp(octet_string *s1, octet_string *s2)  {
+int sml_octet_string_cmp(octet_string *s1, octet_string *s2) {
 	if (s1->len != s2->len) {
 		return -1;
 	}
@@ -140,26 +140,19 @@ int sml_octet_string_cmp_with_hex(octet_string *str, char *hex) {
 	return result;
 }
 
-uint8_t ctoi(uint8_t c){
+uint8_t ctoi(uint8_t c) {
 	uint8_t ret = 0;
 
-	if((c >= '0') && (c <= '9')) {
+	if ((c >= '0') && (c <= '9')) {
 		ret = c - '0';
-	}
-	else if((c >= 'a') && (c <= 'f')) {
+	} else if ((c >= 'a') && (c <= 'f')) {
 		ret = c - 'a' + 10;
-	}
-	else if((c >= 'A') && (c <= 'F')) {
+	} else if ((c >= 'A') && (c <= 'F')) {
 		ret = c - 'A' + 10;
 	}
 	return ret;
 }
 
-uint8_t c2toi(uint8_t c1, uint8_t c2) {
-	return ctoi(c1) << 4 | ctoi(c2);
-}
+uint8_t c2toi(uint8_t c1, uint8_t c2) { return ctoi(c1) << 4 | ctoi(c2); }
 
-uint8_t c2ptoi(char* c) {
-	return ctoi((uint8_t)c[0]) << 4 | ctoi((uint8_t)c[1]);
-}
-
+uint8_t c2ptoi(char *c) { return ctoi((uint8_t)c[0]) << 4 | ctoi((uint8_t)c[1]); }

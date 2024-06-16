@@ -16,13 +16,14 @@
 // You should have received a copy of the GNU General Public License
 // along with libSML.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef _SML_VALUE_H_
-#define	_SML_VALUE_H_
+#ifndef SML_VALUE_H_
+#define SML_VALUE_H_
 
-#include "sml_shared.h"
-#include "sml_octet_string.h"
-#include "sml_number.h"
 #include "sml_boolean.h"
+#include "sml_number.h"
+#include "sml_octet_string.h"
+#include "sml_shared.h"
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,7 +33,7 @@ typedef struct {
 	u8 type;
 	union {
 		sml_boolean *boolean;
-		octet_string *bytes; // can has zero length
+		octet_string *bytes; // can have zero length
 		i8 *int8;
 		i16 *int16;
 		i32 *int32;
@@ -51,11 +52,11 @@ void sml_value_free(sml_value *value);
 
 // Cast arbitrary sized sml_value to double
 double sml_value_to_double(sml_value *value);
+// Converts SML octet string to a printable hex string
+char *sml_value_to_strhex(sml_value *value, char **result, bool mixed);
 
 #ifdef __cplusplus
 }
 #endif
 
-
-#endif /* _SML_VALUE_H_ */
-
+#endif /* SML_VALUE_H_ */

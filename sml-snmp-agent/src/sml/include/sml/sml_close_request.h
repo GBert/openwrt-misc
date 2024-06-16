@@ -16,11 +16,11 @@
 // You should have received a copy of the GNU General Public License
 // along with libSML.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef _SML_CLOSE_REQUEST_H_
-#define _SML_CLOSE_REQUEST_H_
+#ifndef SML_CLOSE_REQUEST_H_
+#define SML_CLOSE_REQUEST_H_
 
-#include "sml_shared.h"
 #include "sml_octet_string.h"
+#include "sml_shared.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,7 +31,7 @@ typedef struct {
 } sml_close_request;
 
 sml_close_request *sml_close_request_init();
-sml_close_request * sml_close_request_parse(sml_buffer *buf);
+sml_close_request *sml_close_request_parse(sml_buffer *buf);
 void sml_close_request_write(sml_close_request *msg, sml_buffer *buf);
 void sml_close_request_free(sml_close_request *msg);
 
@@ -39,6 +39,4 @@ void sml_close_request_free(sml_close_request *msg);
 }
 #endif
 
-
-#endif /* _SML_CLOSE_REQUEST_H_ */
-
+#endif /* SML_CLOSE_REQUEST_H_ */
