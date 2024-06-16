@@ -17,6 +17,8 @@ PKG_SOURCE_URL=https://github.com/volkszaehler/libsml.git
 PKG_RELEASE:=1
 PKG_LICENSE:=GPL-3.0-or-later
 PKG_LICENSE_FILES:=LICENSE
+PKG_SOURCE_DATE:=2024-05-29
+PKG_SOURCE_VERSION:=559ca1e3ff8de7645fc4372f632e42b64cec780f
 
 include $(INCLUDE_DIR)/package.mk
 
