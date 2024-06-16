@@ -25,7 +25,7 @@ include $(INCLUDE_DIR)/package.mk
 define Package/$(PKG_NAME)
   SECTION:=libs
   CATEGORY:=Libraries
-  TITLE:=libsml
+  TITLE:=Smart Message Language (SML) protocol library
   URL:=volkszaehler.org
   DEPENDS:=+libuuid
 endef
