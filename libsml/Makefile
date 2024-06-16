@@ -53,7 +53,7 @@ endef
 
 define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/usr/lib
-	$(CP) $(PKG_BUILD_DIR)/sml/lib/libsml.{a,so*} $(1)/usr/lib/
+	$(CP) $(PKG_BUILD_DIR)/sml/lib/libsml.so* $(1)/usr/lib/
 	$(LN) libsml.so.$(PKG_VERSION) $(1)/usr/lib/libsml.so
 endef
 
