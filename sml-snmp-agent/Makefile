@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2025 OpenWrt.org
+# Copyright (C) 2024 OpenWrt.org
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
@@ -22,7 +22,7 @@ define Package/$(PKG_NAME)
   SECTION:=utils
   CATEGORY:=Utilities
   TITLE:= SNMP Agent for EDL21 power meter
-  URL:=http://lnxpps.de/openwrt/hame-mpra5/
+  URL:=https://github.com/GBert/openwrt-misc/blob/master/sml-snmp-agent/README.md
   DEPENDS:=+libpthread
 endef
 
