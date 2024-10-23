@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=sml_snmp_agent
-PKG_VERSION:=1.1
+PKG_VERSION:=1.2
 
 PKG_SOURCE_MIRROR:=0 
 PKG_SOURCE_VERSION:=$(PKG_REV)
@@ -21,7 +21,7 @@ include $(INCLUDE_DIR)/package.mk
 define Package/$(PKG_NAME)
   SECTION:=utils
   CATEGORY:=Utilities
-  TITLE:= SNMP Agent for EDL21 power meter
+  TITLE:= SNMP Agent for smart power meter
   URL:=https://github.com/GBert/openwrt-misc/blob/master/sml-snmp-agent/README.md
   DEPENDS:=+libpthread
 endef
