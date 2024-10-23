@@ -52,6 +52,7 @@ extern pthread_mutex_t value_mutex;
 extern unsigned int counter_tarif0;
 extern unsigned int counter_tarif1;
 extern unsigned int counter_tarif2;
+extern unsigned int counter_deliver0;
 extern unsigned int pmeter;
 
 extern int verbose;
@@ -69,6 +70,7 @@ char oid[30][30] = {
     "1.3.6.1.4.1.39241.1.8.0",
     "1.3.6.1.4.1.39241.1.8.1",
     "1.3.6.1.4.1.39241.1.8.2",
+    "1.3.6.1.4.1.39241.2.8.0",
     "1.3.6.1.4.1.39241.16.7.0"
 };
 
@@ -155,6 +157,11 @@ void process_varbind_list(struct varbind_list_rx *varbind_list) {
 	    update_varbind(varbind_list->varbind_list[i], 0x02, &counter_tarif2);
 	}
 	if (!strcmp((char *)&oid[8][0], (char *)varbind_list->varbind_list[i]->oid)) {
+	    if (verbose)
+		printf("SNMP Request Counter Lieferung 0: %d\n", counter_deliver0);
+	    update_varbind(varbind_list->varbind_list[i], 0x02, &counter_deliver0);
+	}
+	if (!strcmp((char *)&oid[9][0], (char *)varbind_list->varbind_list[i]->oid)) {
 	    if (verbose)
 		printf("SNMP Request Power Meter: %d\n", pmeter);
 	    update_varbind(varbind_list->varbind_list[i], 0x02, &pmeter);

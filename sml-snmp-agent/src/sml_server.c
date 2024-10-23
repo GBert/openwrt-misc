@@ -39,18 +39,20 @@ extern void *snmp_agent(void *);
 const char obis_tarif0[] = { 0x01, 0x00, 0x01, 0x08, 0x00 };
 const char obis_tarif1[] = { 0x01, 0x00, 0x01, 0x08, 0x01 };
 const char obis_tarif2[] = { 0x01, 0x00, 0x01, 0x08, 0x02 };
+const char obis_deliver0[] = { 0x01, 0x00, 0x02, 0x08, 0x00 };
 const char power_meter[] = { 0x01, 0x00, 0x10, 0x07, 0x00 };
 
 unsigned int counter_tarif0;
 unsigned int counter_tarif1;
 unsigned int counter_tarif2;
+unsigned int counter_deliver0;
 unsigned int pmeter;
 
 int verbose = 0;
 
 void print_usage(char *prg) {
     fprintf(stderr, "\nUsage: %s -p <snmp_port> -i <interface> [f]\n", prg);
-    fprintf(stderr, "   Version 1.1\n\n");
+    fprintf(stderr, "   Version 1.2\n\n");
     fprintf(stderr, "         -p <port>           SNMP port - default 161\n");
     fprintf(stderr, "         -i <interface>      serial interface - default /dev/ttyUSB0\n");
     fprintf(stderr, "         -f                  running in foreground\n\n");
@@ -225,6 +227,11 @@ void transport_receiver(unsigned char *buffer, size_t buffer_len) {
 		    counter_tarif2 = (int)(value + 0.5);
 		    if (verbose)
 			printf("CT2:%d\n", counter_tarif2);
+		}
+		if (!memcmp(entry->obj_name->str, obis_deliver0, sizeof(obis_deliver0))) {
+		    counter_deliver0 = (int)(value + 0.5);
+		    if (verbose)
+			printf("CB0:%d\n", counter_deliver0);
 		}
 		if (!memcmp(entry->obj_name->str, power_meter, sizeof(power_meter))) {
 		    pmeter = (int)(value + 0.5);
