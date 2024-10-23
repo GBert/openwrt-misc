@@ -50,10 +50,11 @@ Usage: sml-snmp-agent -p <snmp_port> -i <interface> [f]
 ### Usage
 Volkszaehler.org private SNMP OID 39241 is used (could be easily adapted - look at src/sml_snmp.c)
 ```
-snmpget -c public -v1 <sml-snmp-agent> 1.3.6.1.4.1.39241.16.7.0
-snmpget -c public -v1 <sml-snmp-agent> 1.3.6.1.4.1.39241.1.8.0
-snmpget -c public -v1 <sml-snmp-agent> 1.3.6.1.4.1.39241.1.8.1
-snmpget -c public -v1 <sml-snmp-agent> 1.3.6.1.4.1.39241.1.8.2
+snmpget -c public -v1 <sml-snmp-agent> 1.3.6.1.4.1.39241.16.7.0 # aktuelle Wirkleistung
+snmpget -c public -v1 <sml-snmp-agent> 1.3.6.1.4.1.39241.1.8.0 # Bezug Gesamt
+snmpget -c public -v1 <sml-snmp-agent> 1.3.6.1.4.1.39241.1.8.1 # Bezug Haupttarif
+snmpget -c public -v1 <sml-snmp-agent> 1.3.6.1.4.1.39241.1.8.2 # Bezug Nebentarif
+snmpget -c public -v1 <sml-snmp-agent> 1.3.6.1.4.1.39241.2.8.0 # Belieferung
 ```
 ### Notice
 
