@@ -47,14 +47,16 @@ unsigned int counter_tarif1;
 unsigned int counter_tarif2;
 unsigned int counter_deliver0;
 unsigned int pmeter;
+FILE *log_file_ptr = NULL;
 
 int verbose = 0;
 
 void print_usage(char *prg) {
-    fprintf(stderr, "\nUsage: %s -p <snmp_port> -i <interface> [f]\n", prg);
-    fprintf(stderr, "   Version 1.2\n\n");
+    fprintf(stderr, "\nUsage: %s -p <snmp_port> -i <interface>\n", prg);
+    fprintf(stderr, "   Version 1.3\n\n");
     fprintf(stderr, "         -p <port>           SNMP port - default 161\n");
     fprintf(stderr, "         -i <interface>      serial interface - default /dev/ttyUSB0\n");
+    fprintf(stderr, "         -l <log file>       raw serial log file\n");
     fprintf(stderr, "         -f                  running in foreground\n\n");
 }
 
@@ -134,6 +136,9 @@ void transport_receiver(unsigned char *buffer, size_t buffer_len) {
     // the buffer contains the whole message, with transport escape sequences.
     // these escape sequences are stripped here.
     sml_file *file = sml_file_parse(buffer + 8, buffer_len - 16);
+
+    if (log_file_ptr)
+	fwrite(buffer, 1, buffer_len, log_file_ptr);
     // the sml file is parsed now
 
     // read here some values ..
@@ -273,6 +278,7 @@ int main(int argc, char **argv) {
     pid_t pid;
     int opt, foreground;
     char device[MAX_STRING_LEN];
+    char *logfile;
 
     struct edl21_data edl21_thread_data;
     struct snmp_data snmp_thread_data;
@@ -282,7 +288,7 @@ int main(int argc, char **argv) {
     bzero(device, sizeof(device));
     strcpy(device, "/dev/ttyUSB0");
 
-    while ((opt = getopt(argc, argv, "p:i:fh?")) != -1) {
+    while ((opt = getopt(argc, argv, "p:i:l:fh?")) != -1) {
 	switch (opt) {
 	case 'p':
 	    snmp_thread_data.snmp_port = strtoul(optarg, (char **)NULL, 10);
@@ -299,6 +305,16 @@ int main(int argc, char **argv) {
 		exit(1);
 	    }
 	    break;
+	case 'l':
+	    if (strlen(optarg) < MAX_STRING_LEN) {
+		asprintf(&logfile, "%s", optarg);
+		log_file_ptr = fopen(logfile, "+w");
+		if (!log_file_ptr)
+		    exit(1);
+	    } else {
+		fprintf(stderr, "log file name to long\n");
+		exit(1);
+            }
 	case 'h':
 	case '?':
 	    print_usage(basename(argv[0]));
