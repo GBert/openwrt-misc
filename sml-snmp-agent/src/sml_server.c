@@ -308,13 +308,16 @@ int main(int argc, char **argv) {
 	case 'l':
 	    if (strlen(optarg) < MAX_STRING_LEN) {
 		asprintf(&logfile, "%s", optarg);
-		log_file_ptr = fopen(logfile, "+w");
-		if (!log_file_ptr)
+		log_file_ptr = fopen(logfile, "wb+");
+		if (!log_file_ptr) {
+		    fprintf(stderr, "can't open log file: %s\n", strerror(errno));
 		    exit(1);
+		}
 	    } else {
 		fprintf(stderr, "log file name to long\n");
 		exit(1);
             }
+	    break;
 	case 'h':
 	case '?':
 	    print_usage(basename(argv[0]));
